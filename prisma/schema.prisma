@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  nameEn      String
+  nameBn      String
+  descriptionEn String?
+  descriptionBn String?
+  sortOrder   Int       @default(0)
+  imageUrl    String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  nameEn         String
+  nameBn         String
+  shortDescEn    String
+  shortDescBn    String
+  fullDescEn     String   @default("")
+  fullDescBn     String   @default("")
+  images         String   // JSON array of URLs
+  specs          String   // JSON array of {keyEn, keyBn, value, unit}
+  packableIds    String   // JSON array of packable item ids
+  videoUrl       String?
+  featured       Boolean  @default(false)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model HeroSlide {
+  id         String   @id @default(cuid())
+  titleEn    String
+  titleBn    String
+  imageUrl   String
+  linkUrl    String?
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model TrustedPartner {
+  id       String   @id @default(cuid())
+  name     String
+  logoUrl  String
+  linkUrl  String?
+  sortOrder Int     @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompanyProfile {
+  id            String   @id @default(cuid())
+  logoUrl       String?
+  taglineEn     String?
+  taglineBn     String?
+  aboutEn       String?
+  aboutBn       String?
+  visionEn      String?
+  visionBn      String?
+  missionEn     String?
+  missionBn     String?
+  address       String?
+  phone         String?
+  email         String?
+  whatsapp      String?
+  website       String?
+  officeHours   String?
+  facebookUrl   String?
+  mapEmbedUrl   String?
+  updatedAt     DateTime @updatedAt
+}
+
+model OwnerProfile {
+  id          String   @id @default(cuid())
+  nameEn      String
+  nameBn      String
+  titleEn     String
+  titleBn     String
+  photoUrl    String?
+  bioEn       String?
+  bioBn       String?
+  messageEn   String?
+  messageBn   String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Industry {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  nameEn       String
+  nameBn       String
+  descriptionEn String?
+  descriptionBn String?
+  iconUrl      String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Translation {
+  id       String   @id @default(cuid())
+  key      String   @unique
+  valueEn  String
+  valueBn  String
+  updatedAt DateTime @updatedAt
+}
