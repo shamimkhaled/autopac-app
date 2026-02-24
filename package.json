@@ -2,10 +2,11 @@
   "name": "autopac-website",
   "version": "1.0.0",
   "private": true,
+    "homepage": "https://autopacbd.com/",
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts"
