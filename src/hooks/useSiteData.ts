@@ -6,9 +6,19 @@ import { products as staticProducts, categories as staticCategories, packableIte
 
 const API = process.env.NEXT_PUBLIC_SITE_URL || '';
 
+function resolveApiBase(): string {
+  if (typeof window === 'undefined') return API;
+  if (!API) return '';
+  if (API.startsWith('http://') && window.location.protocol === 'https:') {
+    return API.replace(/^http:\/\//, 'https://');
+  }
+  return API;
+}
+
 async function fetchOrNull<T>(path: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API}${path}`);
+    const base = resolveApiBase();
+    const res = await fetch(`${base}${path}`);
     if (!res.ok) return null;
     return res.json();
   } catch {

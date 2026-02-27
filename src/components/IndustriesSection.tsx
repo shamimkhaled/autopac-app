@@ -16,24 +16,24 @@ export default function IndustriesSection() {
   };
 
   return (
-    <section className="py-16 bg-industrial-light">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-industrial-dark text-center mb-12">
+    <section className="py-10 sm:py-14 md:py-16 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-industrial-dark dark:text-white text-center mb-8 md:mb-12">
           Industries We Serve
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {industries.map((ind) => (
             <Link
               key={ind.id}
               href={`/products?category=${ind.slug}`}
-              className="group block p-6 bg-white rounded-xl shadow hover:shadow-lg border border-transparent hover:border-action-orange transition"
+              className="group block p-5 sm:p-6 bg-industrial-light rounded-xl border border-transparent hover:border-action-orange/30 hover:shadow-soft transition-all duration-300"
             >
-              <div className="w-14 h-14 rounded-lg bg-action-orange/10 flex items-center justify-center mb-4 group-hover:bg-action-orange/20 transition">
-                <svg className="w-8 h-8 text-action-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-action-orange/10 flex items-center justify-center mb-4 group-hover:bg-action-orange/20 transition-colors">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-action-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icons[ind.slug] || icons.industrial} />
                 </svg>
               </div>
-              <h3 className="font-bold text-industrial-dark group-hover:text-action-orange transition">
+              <h3 className="font-bold text-industrial-dark dark:text-white group-hover:text-action-orange transition-colors text-base sm:text-lg">
                 {locale === 'bn' ? ind.nameBn : ind.nameEn}
               </h3>
               {ind.descriptionEn && (

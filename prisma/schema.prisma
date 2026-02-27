@@ -3,26 +3,86 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
+// ---------------------------
+// ADMIN & USERS
+// ---------------------------
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
+
+// ---------------------------
+// SITE SETTINGS
+// ---------------------------
+
+model SiteSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   // Store JSON string or plain text depending on key
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model CompanyProfile {
+  id            String   @id @default(uuid())
+  logoUrl       String?
+  taglineEn     String?
+  taglineBn     String?
+  aboutEn       String?
+  aboutBn       String?
+  visionEn      String?
+  visionBn      String?
+  missionEn     String?
+  missionBn     String?
+  address       String?
+  phone         String?
+  email         String?
+  whatsapp      String?
+  website       String?
+  officeHours   String?
+  facebookUrl   String?
+  youtubeUrl    String?
+  linkedinUrl   String?
+  mapEmbedUrl   String?
+  updatedAt     DateTime @updatedAt
+}
+
+// ---------------------------
+// PRODUCTS & SERVICES
+// ---------------------------
+
 model Category {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  nameEn      String
-  nameBn      String
+  id            String    @id @default(uuid())
+  slug          String    @unique
+  nameEn        String
+  nameBn        String
   descriptionEn String?
   descriptionBn String?
-  sortOrder   Int       @default(0)
-  imageUrl    String?
-  products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  sortOrder     Int       @default(0)
+  imageUrl      String?
+  products      Product[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model Product {
-  id             String   @id @default(cuid())
+  id             String   @id @default(uuid())
   slug           String   @unique
   categoryId     String
   category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -42,52 +102,84 @@ model Product {
   updatedAt      DateTime @updatedAt
 }
 
-model HeroSlide {
-  id         String   @id @default(cuid())
-  titleEn    String
-  titleBn    String
-  imageUrl   String
-  linkUrl    String?
-  sortOrder  Int      @default(0)
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model Industry {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  nameEn        String
+  nameBn        String
+  descriptionEn String?
+  descriptionBn String?
+  iconUrl       String?
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ---------------------------
+// BLOG & NEWS
+// ---------------------------
+
+model BlogPost {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  titleEn     String
+  titleBn     String
+  contentEn   String   @db.Text
+  contentBn   String   @db.Text
+  imageUrl    String?
+  published   Boolean  @default(true)
+  authorId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------
+// TESTIMONIALS & PARTNERS
+// ---------------------------
+
+model Testimonial {
+  id          String   @id @default(uuid())
+  nameEn      String
+  nameBn      String
+  company     String?
+  designation String?
+  messageEn   String   @db.Text
+  messageBn   String   @db.Text
+  rating      Int      @default(5)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model TrustedPartner {
-  id       String   @id @default(cuid())
-  name     String
-  logoUrl  String
-  linkUrl  String?
-  sortOrder Int     @default(0)
+  id        String   @id @default(uuid())
+  name      String
+  logoUrl   String
+  linkUrl   String?
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model CompanyProfile {
-  id            String   @id @default(cuid())
-  logoUrl       String?
-  taglineEn     String?
-  taglineBn     String?
-  aboutEn       String?
-  aboutBn       String?
-  visionEn      String?
-  visionBn      String?
-  missionEn     String?
-  missionBn     String?
-  address       String?
-  phone         String?
-  email         String?
-  whatsapp      String?
-  website       String?
-  officeHours   String?
-  facebookUrl   String?
-  mapEmbedUrl   String?
-  updatedAt     DateTime @updatedAt
+// ---------------------------
+// UI COMPONENTS
+// ---------------------------
+
+model HeroSlide {
+  id        String   @id @default(uuid())
+  titleEn   String
+  titleBn   String
+  imageUrl  String
+  linkUrl   String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OwnerProfile {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   nameEn      String
   nameBn      String
   titleEn     String
@@ -102,23 +194,45 @@ model OwnerProfile {
   updatedAt   DateTime @updatedAt
 }
 
-model Industry {
-  id           String   @id @default(cuid())
-  slug         String   @unique
-  nameEn       String
-  nameBn       String
-  descriptionEn String?
-  descriptionBn String?
-  iconUrl      String?
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// ---------------------------
+// LEADS & INQUIRIES
+// ---------------------------
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model QuotationRequest {
+  id              String   @id @default(uuid())
+  name            String
+  email           String
+  phone           String
+  companyName     String?
+  productInterest String?  // Specific product or category
+  message         String   @db.Text
+  status          QuoteStatus @default(PENDING)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum QuoteStatus {
+  PENDING
+  REVIEWED
+  RESPONDED
+  CLOSED
 }
 
 model Translation {
-  id       String   @id @default(cuid())
-  key      String   @unique
-  valueEn  String
-  valueBn  String
+  id        String   @id @default(uuid())
+  key       String   @unique
+  valueEn   String
+  valueBn   String
   updatedAt DateTime @updatedAt
 }

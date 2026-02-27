@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import { hash } from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 const categories = [
-  { slug: 'food-beverage', nameEn: 'Food & Beverage Packaging', nameBn: 'খাদ্য ও পানীয় প্যাকেজিং', descriptionEn: 'Complete solutions', descriptionBn: 'সম্পূর্ণ সমাধান' },
-  { slug: 'health-pharma', nameEn: 'Health & Pharma Packaging', nameBn: 'স্বাস্থ্য ও ফার্মা প্যাকেজিং', descriptionEn: 'Pharma packaging', descriptionBn: 'ফার্মা প্যাকেজিং' },
-  { slug: 'cosmetics-toiletries', nameEn: 'Cosmetics & Toiletries', nameBn: 'কসমেটিক্স ও টয়লেট্রিজ', descriptionEn: 'Cosmetics packaging', descriptionBn: 'কসমেটিক্স প্যাকেজিং' },
-  { slug: 'industrial', nameEn: 'Industrial Packaging', nameBn: 'ইন্ডাস্ট্রিয়াল প্যাকেজিং', descriptionEn: 'Industrial solutions', descriptionBn: 'শিল্প সমাধান' },
+  { slug: 'food-beverage', nameEn: 'Food & Beverage Packaging', nameBn: 'খাদ্য ও পানীয় প্যাকেজিং', descriptionEn: 'Complete solutions for food packaging', descriptionBn: 'খাদ্য প্যাকেজিং এর সম্পূর্ণ সমাধান' },
+  { slug: 'health-pharma', nameEn: 'Health & Pharma Packaging', nameBn: 'স্বাস্থ্য ও ফার্মা প্যাকেজিং', descriptionEn: 'Pharmaceutical grade packaging', descriptionBn: 'ফার্মাসিউটিক্যাল গ্রেড প্যাকেজিং' },
+  { slug: 'cosmetics-toiletries', nameEn: 'Cosmetics & Toiletries', nameBn: 'কসমেটিক্স ও টয়লেট্রিজ', descriptionEn: 'Cosmetics product packaging', descriptionBn: 'কসমেটিক্স পণ্য প্যাকেজিং' },
+  { slug: 'industrial', nameEn: 'Industrial Packaging', nameBn: 'ইন্ডাস্ট্রিয়াল প্যাকেজিং', descriptionEn: 'Heavy duty industrial solutions', descriptionBn: 'ভারী শিল্প প্যাকেজিং' },
 ];
 
 const industries = [
@@ -24,6 +25,25 @@ const partners = [
 ];
 
 async function main() {
+  // Create default admin user
+  const adminEmail = 'admin@autopacbd.com';
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail }
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await hash('autopac123', 10);
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        password: hashedPassword,
+        name: 'AutoPac Admin',
+        role: 'SUPER_ADMIN',
+      }
+    });
+    console.log(`Created default admin: ${adminEmail}`);
+  }
+
   for (let i = 0; i < categories.length; i++) {
     await prisma.category.upsert({
       where: { slug: categories[i].slug },
@@ -33,29 +53,84 @@ async function main() {
   }
 
   const foodCat = await prisma.category.findFirst({ where: { slug: 'food-beverage' } });
+  
   if (foodCat) {
-    await prisma.product.upsert({
-      where: { slug: 'granules-packing-machine' },
-      update: {},
-      create: {
+    const products = [
+      {
         slug: 'granules-packing-machine',
-        categoryId: foodCat.id,
-        nameEn: 'Granules Packing Machine',
-        nameBn: 'গ্রানুলার প্যাকিং মেশিন',
-        shortDescEn: 'Vertical form-fill-seal for granular products',
-        shortDescBn: 'গ্রানুলার পণ্যের জন্য ভার্টিকাল ফর্ম-ফিল-সিল',
-        fullDescEn: 'Fully automatic vertical form-fill-seal machine for packing dal, rice, spices, tea.',
-        fullDescBn: 'ডাল, চাল, মসলা, চা প্যাক করার জন্য সম্পূর্ণ স্বয়ংক্রিয় মেশিন।',
-        images: JSON.stringify(['/images/slider1.png']),
-        specs: JSON.stringify([
-          { keyEn: 'Voltage', keyBn: 'ভোল্টেজ', value: '220V/380V', unit: 'AC' },
-          { keyEn: 'Speed', keyBn: 'গতি', value: '30-60', unit: 'bags/min' },
+        nameEn: 'Automatic Granules Packing Machine',
+        nameBn: 'অটোমেটিক গ্রানুলস প্যাকিং মেশিন',
+        shortDescEn: 'High-speed vertical form-fill-seal machine for granular products',
+        shortDescBn: 'গ্রানুলার পণ্যের জন্য উচ্চ গতির ভার্টিকাল ফর্ম-ফিল-সিল মেশিন',
+        fullDescEn: 'The Automatic Granules Packing Machine is an industrial-grade solution designed to pack free-flowing products like sugar, rice, dal, tea, and spices. It features precise volumetric cup fillers or multi-head weighers to ensure exact measurements. Built with high-quality stainless steel, it guarantees hygiene and durability. The machine is fully automated with a PLC control system, touch screen interface, and stepper motor-driven film pulling mechanism for flawless pouch sealing and cutting.',
+        fullDescBn: 'অটোমেটিক গ্রানুলস প্যাকিং মেশিনটি চিনি, চাল, ডাল, চা এবং মসলার মতো পণ্য প্যাক করার জন্য ডিজাইন করা হয়েছে। এটিতে সঠিক পরিমাপ নিশ্চিত করার জন্য ভলিউমেট্রিক কাপ ফিলার রয়েছে। স্টেইনলেস স্টিল দিয়ে তৈরি, এটি স্বাস্থ্যবিধি এবং স্থায়িত্ব নিশ্চিত করে। পিএলসি কন্ট্রোল সিস্টেম এবং টাচ স্ক্রিন ইন্টারফেসের সাথে সম্পূর্ণ স্বয়ংক্রিয়।',
+        images: JSON.stringify([
+          '/images/slider1.png', 
+          '/images/slider2.png'
         ]),
-        packableIds: JSON.stringify(['atta', 'dal', 'rice', 'tea', 'spices']),
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Using an embed link format
+        specs: JSON.stringify([
+          { keyEn: 'Model', keyBn: 'মডেল', value: 'AP-G500' },
+          { keyEn: 'Power Supply', keyBn: 'পাওয়ার সাপ্লাই', value: '220V/380V', unit: '50Hz/60Hz' },
+          { keyEn: 'Packing Speed', keyBn: 'প্যাকিং গতি', value: '30-80', unit: 'bags/min' },
+          { keyEn: 'Filling Range', keyBn: 'ফিলিং রেঞ্জ', value: '10g - 1000g' },
+          { keyEn: 'Machine Weight', keyBn: 'মেশিনের ওজন', value: '350', unit: 'kg' },
+        ]),
+        packableIds: JSON.stringify(['sugar', 'rice', 'dal', 'tea', 'spices', 'salt']),
         featured: true,
-        sortOrder: 0,
+        sortOrder: 1,
       },
-    });
+      {
+        slug: 'liquid-filling-machine',
+        nameEn: 'Automatic Liquid Filling Machine',
+        nameBn: 'অটোমেটিক লিকুইড ফিলিং মেশিন',
+        shortDescEn: 'Precision piston-type liquid and paste filling machine',
+        shortDescBn: 'নির্ভুল পিস্টন টাইপ লিকুইড এবং পেস্ট ফিলিং মেশিন',
+        fullDescEn: 'Our Automatic Liquid Filling Machine is perfect for packaging water, oil, juice, honey, shampoo, and other liquid or semi-liquid products. It utilizes advanced pneumatic components and a stainless steel body to meet food and pharmaceutical safety standards. Easy to adjust filling volumes and speeds.',
+        fullDescBn: 'আমাদের লিকুইড ফিলিং মেশিন পানি, তেল, জুস, মধু, শ্যাম্পু ইত্যাদি প্যাক করার জন্য উপযুক্ত। এটি উন্নত নিউমেটিক প্রযুক্তি এবং স্টেইনলেস স্টিল বডি ব্যবহার করে তৈরি।',
+        images: JSON.stringify([
+          '/images/slider3.png'
+        ]),
+        videoUrl: null,
+        specs: JSON.stringify([
+          { keyEn: 'Model', keyBn: 'মডেল', value: 'AP-L200' },
+          { keyEn: 'Filling Speed', keyBn: 'ফিলিং গতি', value: '20-50', unit: 'bottles/min' },
+          { keyEn: 'Filling Range', keyBn: 'ফিলিং রেঞ্জ', value: '50ml - 1000ml' },
+        ]),
+        packableIds: JSON.stringify(['water', 'oil', 'juice', 'shampoo', 'honey']),
+        featured: true,
+        sortOrder: 2,
+      },
+      {
+        slug: 'powder-packing-machine',
+        nameEn: 'Auger Powder Packing Machine',
+        nameBn: 'অগার পাউডার প্যাকিং মেশিন',
+        shortDescEn: 'Dust-free powder packaging with auger screw filler',
+        shortDescBn: 'অগার স্ক্রু ফিলার সহ ধুলোমুক্ত পাউডার প্যাকেজিং',
+        fullDescEn: 'Specially engineered for non-free-flowing powders such as flour, milk powder, turmeric, and chemical powders. The servo-motor driven auger ensures highly accurate dosing and minimizes powder dust in the working environment.',
+        fullDescBn: 'আটা, গুঁড়ো দুধ, হলুদ এবং রাসায়নিক পাউডারের জন্য বিশেষভাবে তৈরি। সার্ভো মোটর ড্রাইভেন অগার সঠিক ওজন নিশ্চিত করে।',
+        images: JSON.stringify([
+          '/images/slider2.png'
+        ]),
+        videoUrl: 'https://www.youtube.com/watch?v=ScMzIvxBSi4', // Standard youtube link, will be parsed in UI
+        specs: JSON.stringify([
+          { keyEn: 'Model', keyBn: 'মডেল', value: 'AP-P300' },
+          { keyEn: 'Packing Speed', keyBn: 'প্যাকিং গতি', value: '25-60', unit: 'bags/min' },
+          { keyEn: 'Hopper Capacity', keyBn: 'হপারের ধারণক্ষমতা', value: '50', unit: 'Liters' },
+        ]),
+        packableIds: JSON.stringify(['flour', 'milk powder', 'spices powder', 'chemical powder']),
+        featured: true,
+        sortOrder: 3,
+      }
+    ];
+
+    for (const prod of products) {
+      await prisma.product.upsert({
+        where: { slug: prod.slug },
+        update: { ...prod, categoryId: foodCat.id },
+        create: { ...prod, categoryId: foodCat.id },
+      });
+    }
   }
 
   const heroSlides = [

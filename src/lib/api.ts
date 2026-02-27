@@ -1,7 +1,17 @@
 const API = process.env.NEXT_PUBLIC_SITE_URL || '';
 
+function resolveApiBase(): string {
+  if (typeof window === 'undefined') return API;
+  if (!API) return '';
+  if (API.startsWith('http://') && window.location.protocol === 'https:') {
+    return API.replace(/^http:\/\//, 'https://');
+  }
+  return API;
+}
+
 export async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
+  const base = resolveApiBase();
+  const res = await fetch(`${base}${path}`, {
     ...options,
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
