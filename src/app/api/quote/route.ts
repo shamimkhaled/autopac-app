@@ -89,10 +89,25 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, quote });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (error: any) {
+    if (error && error.name === 'ZodError') {
       return NextResponse.json({ success: false, errors: error.errors }, { status: 400 });
     }
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const quotes = await prisma.quotationRequest.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json(quotes);
+  } catch (e: any) {
+    console.error('Fetch Quotes Error:', e);
+    return NextResponse.json({ 
+      error: 'Fetch failed',
+      message: e.message || 'Unknown error'
+    }, { status: 500 });
   }
 }

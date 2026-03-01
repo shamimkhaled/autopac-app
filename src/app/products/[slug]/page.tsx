@@ -9,7 +9,7 @@ import ProductCard from '@/components/ProductCard';
 import { packableItems } from '@/hooks/useSiteData';
 import type { Product } from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, MessageCircle, FileText, ChevronLeft, ArrowLeft, PlayCircle } from 'lucide-react';
+import { Check, ChevronRight, MessageCircle, FileText, ChevronLeft, ArrowLeft, PlayCircle, Settings, ShieldCheck, Box, Package, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -18,221 +18,255 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [activeImage, setActiveImage] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/products/${slug}`).then((r) => r.json()).then((p) => {
-      setProduct(p);
-      if (p?.categoryId) {
-        fetch('/api/products').then((r) => r.json()).then((all: Product[]) => {
-          setRelated(all.filter((x) => x.categoryId === p.categoryId && x.id !== p.id).slice(0, 4));
-        });
-      }
-    });
+    setLoading(true);
+    fetch(`/api/products/${slug}`)
+      .then((r) => r.json())
+      .then((p) => {
+        setProduct(p);
+        if (p?.categoryId) {
+          fetch('/api/products')
+            .then((r) => r.json())
+            .then((all: Product[]) => {
+              setRelated(all.filter((x) => x.categoryId === p.categoryId && x.id !== p.id).slice(0, 4));
+            });
+        }
+      })
+      .finally(() => setLoading(false));
   }, [slug]);
 
-  if (!product) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="w-12 h-12 border-4 border-action-orange border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
       </div>
     );
   }
 
+  if (!product) return null;
+
   const category = product.category;
-  const packables = (product.packableIds || []).map((id: string) => packableItems.find((p) => p.id === id)).filter(Boolean);
+  let rawPackableIds = [];
+  try {
+    rawPackableIds = Array.isArray(product.packableIds) ? product.packableIds : JSON.parse(typeof product.packableIds === 'string' ? product.packableIds : '[]');
+  } catch (e) {
+    console.error(`Error parsing packableIds for product ${product.id}:`, e);
+  }
+  const packables = rawPackableIds.map((id: string) => packableItems.find((p) => p.id === id) || { id, nameEn: id, nameBn: id }).filter(Boolean);
   const name = locale === 'bn' && product.nameBn ? product.nameBn : product.nameEn;
   const fullDesc = locale === 'bn' && product.fullDescBn ? product.fullDescBn : product.fullDescEn;
-  const categoryName = category ? (locale === 'bn' && (category as { nameBn?: string }).nameBn ? (category as { nameBn?: string }).nameBn : (category as { nameEn?: string }).nameEn) : null;
-  const images = product.images || ['/images/slider1.png'];
+  const categoryName = category ? (locale === 'bn' && (category as any).nameBn ? (category as any).nameBn : (category as any).nameEn) : 'Machinery';
+  
+  let images = ['/images/slider1.png'];
+  try {
+    images = Array.isArray(product.images) ? product.images : JSON.parse(typeof product.images === 'string' ? product.images : '["/images/slider1.png"]');
+  } catch (e) {
+    console.error(`Error parsing images for product ${product.id}:`, e);
+  }
+
+  let specs = [] as { keyEn: string; keyBn: string; value: string; unit?: string }[];
+  try {
+    specs = Array.isArray(product.specs) ? product.specs : JSON.parse(typeof product.specs === 'string' ? product.specs : '[]') as { keyEn: string; keyBn: string; value: string; unit?: string }[];
+  } catch (e) {
+    console.error(`Error parsing specs for product ${product.id}:`, e);
+  }
 
   const nextImage = () => setActiveImage((prev) => (prev + 1) % images.length);
   const prevImage = () => setActiveImage((prev) => (prev - 1 + images.length) % images.length);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 md:pb-16 transition-colors duration-300">
-      
-      {/* Breadcrumbs & Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 pt-8 pb-6">
+    <div className="min-h-screen bg-white pb-32">
+      {/* Breadcrumbs & Modern Header */}
+      <div className="bg-gray-50 border-b border-gray-100 py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-sm mb-4 overflow-x-auto whitespace-nowrap pb-2 text-gray-500 dark:text-gray-400">
+          <nav className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-gray-400">
             <Link href="/" className="hover:text-action-orange transition-colors">Home</Link>
-            <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            <Link href="/products" className="hover:text-action-orange transition-colors">{t('products.title') || 'Products'}</Link>
-            {category && (
-              <>
-                <ChevronRight className="w-4 h-4 flex-shrink-0" />
-                <Link href={`/products?category=${(category as { slug?: string }).slug}`} className="hover:text-action-orange transition-colors">
-                  {categoryName}
-                </Link>
-              </>
-            )}
-            <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            <span className="text-industrial-dark dark:text-white font-medium truncate max-w-xs">{name}</span>
+            <ChevronRight className="w-3 h-3 flex-shrink-0" />
+            <Link href="/products" className="hover:text-action-orange transition-colors">Catalog</Link>
+            <ChevronRight className="w-3 h-3 flex-shrink-0" />
+            <span className="text-industrial-dark truncate max-w-xs">{name}</span>
           </nav>
+          
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="max-w-4xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-0.5 bg-action-orange rounded-full" />
+                <span className="text-action-orange font-black uppercase tracking-[0.2em] text-[10px]">
+                  {categoryName}
+                </span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-black text-industrial-dark uppercase tracking-tight leading-tight">
+                {name}
+              </h1>
+            </div>
+            <div className="flex gap-4">
+              <Link 
+                href={`/contact?product=${product.slug}`}
+                className="px-8 py-4 bg-action-orange text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-action-orange/20 hover:bg-orange-600 transition-all"
+              >
+                Request Quote
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="grid lg:grid-cols-12 gap-20">
           
-          {/* Image Gallery Section */}
-          <div className="space-y-6">
-            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden bg-white dark:bg-gray-900 shadow-lg border border-gray-100 dark:border-gray-800 group">
+          {/* Left: Image Gallery (7 columns) */}
+          <div className="lg:col-span-7 space-y-8">
+            <div className="relative aspect-[4/3] rounded-[60px] overflow-hidden bg-gray-50 border border-gray-100 shadow-2xl group">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeImage}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0"
                 >
                   <Image 
                     src={images[activeImage]} 
-                    alt={`${name} - View ${activeImage + 1}`} 
+                    alt={name} 
                     fill 
-                    className="object-contain p-4" 
+                    className="object-cover" 
                     priority 
-                    sizes="(max-width: 1024px) 100vw, 50vw" 
                   />
                 </motion.div>
               </AnimatePresence>
               
-              {/* Category Badge overlay */}
-              {categoryName && (
-                <span className="absolute top-6 left-6 bg-industrial-dark/80 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full uppercase tracking-wide shadow-md">
-                  {categoryName}
-                </span>
-              )}
-
-              {/* Navigation Arrows */}
               {images.length > 1 && (
-                <>
-                  <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 dark:bg-black/50 hover:bg-action-orange dark:hover:bg-action-orange text-industrial-dark hover:text-white dark:text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 shadow-lg">
+                <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
+                  <button onClick={prevImage} className="pointer-events-auto w-14 h-14 bg-white/10 backdrop-blur-xl hover:bg-white text-white hover:text-industrial-dark rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 border border-white/20">
                     <ChevronLeft className="w-6 h-6" />
                   </button>
-                  <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 dark:bg-black/50 hover:bg-action-orange dark:hover:bg-action-orange text-industrial-dark hover:text-white dark:text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 shadow-lg">
+                  <button onClick={nextImage} className="pointer-events-auto w-14 h-14 bg-white/10 backdrop-blur-xl hover:bg-white text-white hover:text-industrial-dark rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 border border-white/20">
                     <ChevronRight className="w-6 h-6" />
                   </button>
-                </>
+                </div>
               )}
             </div>
 
             {/* Thumbnails */}
-            <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide px-2">
               {images.map((img: string, i: number) => (
                 <button 
                   key={i} 
                   onClick={() => setActiveImage(i)}
-                  className={`relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden transition-all bg-white dark:bg-gray-800 ${
+                  className={`relative w-24 h-24 flex-shrink-0 rounded-3xl overflow-hidden transition-all duration-500 ${
                     activeImage === i 
-                      ? 'ring-2 ring-action-orange ring-offset-2 dark:ring-offset-gray-900 shadow-md' 
-                      : 'border border-gray-200 dark:border-gray-700 opacity-70 hover:opacity-100'
+                      ? 'ring-4 ring-action-orange ring-offset-4 scale-110 shadow-xl' 
+                      : 'border-2 border-gray-100 opacity-40 hover:opacity-100'
                   }`}
                 >
-                  <Image src={img} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="96px" />
+                  <Image src={img} alt="Thumbnail" fill className="object-cover" />
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Product Details Section */}
-          <div className="min-w-0">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-industrial-dark dark:text-white mb-6 leading-tight">
-              {name}
-            </h1>
-            
-            <div className="prose prose-lg dark:prose-invert text-gray-600 dark:text-gray-300 leading-relaxed mb-8 max-w-none">
-              <p>{fullDesc}</p>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link 
-                href={`/contact?product=${product.slug}`} 
-                className="flex-1 inline-flex items-center justify-center gap-2 py-4 bg-action-orange hover:bg-orange-600 text-white font-bold text-lg rounded-xl transition-all shadow-lg hover:shadow-orange-500/30 transform hover:-translate-y-0.5"
-              >
-                <FileText className="w-5 h-5" />
-                {t('products.requestQuote') || 'Request Quotation'}
-              </Link>
-              <a 
-                href={`https://wa.me/8801818496642?text=${encodeURIComponent(`Hi, I am interested in ${name}. Please send me a quote.`)}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex-1 inline-flex items-center justify-center gap-2 py-4 bg-[#25D366] hover:bg-[#1DA851] text-white font-bold text-lg rounded-xl transition-all shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-0.5"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {t('products.inquireWhatsApp') || 'WhatsApp Inquiry'}
-              </a>
-            </div>
-
-            {/* Specifications */}
-            {(product.specs || []).length > 0 && (
-              <div className="mb-10">
-                <h3 className="text-2xl font-bold text-industrial-dark dark:text-white mb-6 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                    <div className="w-3 h-3 bg-action-orange rounded-sm" />
-                  </div>
-                  {t('products.specifications') || 'Technical Specifications'}
-                </h3>
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                  <table className="w-full text-left border-collapse">
-                    <tbody>
-                      {product.specs!.map((spec: { keyEn: string; keyBn: string; value: string; unit?: string }, i: number) => (
-                        <tr key={i} className={`border-b border-gray-100 dark:border-gray-700 last:border-0 ${i % 2 === 0 ? 'bg-gray-50/50 dark:bg-gray-800/50' : 'bg-white dark:bg-gray-800'}`}>
-                          <th className="py-4 px-6 font-semibold text-industrial-dark dark:text-gray-200 w-1/3 border-r border-gray-100 dark:border-gray-700">
-                            {locale === 'bn' ? spec.keyBn : spec.keyEn}
-                          </th>
-                          <td className="py-4 px-6 text-gray-600 dark:text-gray-400 font-medium">
-                            {spec.value} {spec.unit && <span className="text-gray-400 ml-1">{spec.unit}</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+          {/* Right: Technical Details (5 columns) */}
+          <div className="lg:col-span-5 space-y-12">
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <ShieldCheck className="w-6 h-6 text-green-500" />
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Industrial Certified Model</span>
               </div>
-            )}
+              
+              <div className="prose prose-lg text-gray-500 font-medium leading-relaxed max-w-none">
+                <p className="whitespace-pre-line">{fullDesc}</p>
+              </div>
+            </div>
 
-            {/* Packable Items */}
-            {packables.length > 0 && (
-              <div>
-                <h3 className="text-2xl font-bold text-industrial-dark dark:text-white mb-6 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <Check className="w-5 h-5 text-green-600" />
+            {/* Specs Grid */}
+            <div className="space-y-8 bg-gray-50 rounded-[40px] p-10 border border-gray-100">
+              <h3 className="text-xl font-black text-industrial-dark uppercase tracking-tight flex items-center gap-4">
+                <Settings className="w-6 h-6 text-action-orange" />
+                Technical Specs
+              </h3>
+              <div className="grid grid-cols-1 gap-6">
+                {specs.map((spec, i) => (
+                  <div key={i} className="flex justify-between items-center border-b border-gray-200 pb-4 last:border-0">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      {locale === 'bn' ? spec.keyBn : spec.keyEn}
+                    </span>
+                    <span className="text-industrial-dark font-black">
+                      {spec.value} <span className="text-gray-400 font-medium ml-1">{spec.unit}</span>
+                    </span>
                   </div>
-                  {t('products.whatItPacks') || 'Suitable For Packing'}
+                ))}
+                {specs.length === 0 && <p className="text-gray-400 italic text-sm">Consult our engineers for detailed specs.</p>}
+              </div>
+            </div>
+
+            {/* Packables */}
+            {packables.length > 0 && (
+              <div className="space-y-8">
+                <h3 className="text-xl font-black text-industrial-dark uppercase tracking-tight flex items-center gap-4">
+                  <Box className="w-6 h-6 text-action-orange" />
+                  Compatible Materials
                 </h3>
                 <div className="flex flex-wrap gap-3">
-                  {packables.map((p) => (
-                    <span 
-                      key={p!.id} 
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-industrial-dark dark:text-white font-medium rounded-xl shadow-sm"
-                    >
-                      <Check className="w-4 h-4 text-green-500" />
-                      {locale === 'bn' ? p!.nameBn : p!.nameEn}
+                  {packables.map((p: any) => (
+                    <span key={p.id} className="inline-flex items-center gap-3 px-6 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-sm font-bold text-gray-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      {locale === 'bn' ? p.nameBn : p.nameEn}
                     </span>
                   ))}
                 </div>
               </div>
             )}
+
+            {/* Inquire Action */}
+            <div className="pt-8">
+              <a 
+                href={`https://wa.me/8801818496642?text=${encodeURIComponent(`Hi, I am interested in ${name}.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full group flex items-center justify-between p-8 bg-industrial-dark text-white rounded-[40px] hover:bg-black transition-all shadow-2xl relative overflow-hidden"
+              >
+                <div className="relative z-10">
+                  <p className="text-[10px] font-black text-action-orange uppercase tracking-[0.2em] mb-2">Live Support</p>
+                  <h4 className="text-2xl font-black uppercase tracking-tight">Deploy Inquiry</h4>
+                </div>
+                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-action-orange transition-all relative z-10">
+                  <MessageCircle className="w-8 h-8" />
+                </div>
+                <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-12 translate-x-8" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Dynamic Video Showcase Section */}
+        {/* Video Section */}
         {product.videoUrl && (
-          <section className="mt-20 pt-16 border-t border-gray-200 dark:border-gray-800">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-10">
-                <h2 className="text-3xl font-bold text-industrial-dark dark:text-white mb-4">Video Showcase</h2>
-                <p className="text-gray-600 dark:text-gray-400">See the {name} in action.</p>
+          <section className="mt-40 py-32 bg-gray-50 rounded-[80px] px-8 md:px-20 border border-gray-100">
+            <div className="grid lg:grid-cols-2 gap-20 items-center">
+              <div className="space-y-10">
+                <div className="space-y-6">
+                  <h2 className="text-4xl md:text-5xl font-black text-industrial-dark uppercase tracking-tight leading-tight">
+                    Performance <span className="text-gray-300">Showcase</span>
+                  </h2>
+                  <div className="w-20 h-2 bg-action-orange rounded-full" />
+                </div>
+                <p className="text-gray-500 font-medium text-lg leading-relaxed">
+                  Witness the high-speed precision and automated workflow of the {name} in a real-world production environment.
+                </p>
+                <div className="flex items-center gap-6">
+                  <div className="flex -space-x-4">
+                    {[1,2,3].map(i => <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-gray-200" />)}
+                  </div>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Trusted by 200+ Manufacturers</p>
+                </div>
               </div>
-              <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 bg-black">
+              <div className="relative aspect-video rounded-[40px] overflow-hidden shadow-2xl border-[12px] border-white bg-black">
                 <iframe 
                   src={product.videoUrl.includes('watch?v=') ? product.videoUrl.replace('watch?v=', 'embed/') : product.videoUrl} 
-                  title={`${name} Video Showcase`}
+                  title="Showcase"
                   className="w-full h-full" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                   allowFullScreen 
                 />
               </div>
@@ -240,32 +274,25 @@ export default function ProductDetailPage() {
           </section>
         )}
 
-        {/* Recommended Products */}
+        {/* Related Products */}
         {related.length > 0 && (
-          <section className="mt-20 pt-16 border-t border-gray-200 dark:border-gray-800">
-            <div className="flex justify-between items-end mb-10">
-              <h2 className="text-3xl font-bold text-industrial-dark dark:text-white">Recommended Products</h2>
-              <Link href={`/products?category=${(category as { slug?: string })?.slug}`} className="hidden sm:inline-flex items-center gap-2 text-action-orange font-bold hover:underline">
-                View Category <ArrowLeft className="w-4 h-4 rotate-180" />
+          <section className="mt-40">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-0.5 bg-action-orange rounded-full" />
+                  <span className="text-action-orange font-black uppercase tracking-[0.2em] text-[10px]">Similar Systems</span>
+                </div>
+                <h2 className="text-4xl font-black text-industrial-dark uppercase tracking-tight">Recommended Solutions</h2>
+              </div>
+              <Link href="/products" className="group flex items-center gap-3 font-black text-xs uppercase tracking-widest text-gray-400 hover:text-industrial-dark transition-colors">
+                View Full Catalog <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {related.map((p, index) => (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <ProductCard product={p} />
-                </motion.div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+              {related.map((p, i) => (
+                <ProductCard key={p.id} product={p} />
               ))}
-            </div>
-            <div className="mt-8 text-center sm:hidden">
-              <Link href={`/products?category=${(category as { slug?: string })?.slug}`} className="inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full font-bold text-industrial-dark dark:text-white shadow-sm">
-                View All in Category
-              </Link>
             </div>
           </section>
         )}

@@ -19,17 +19,18 @@ const config: Config = {
     extend: {
       colors: {
         industrial: {
-          dark: '#1e3a8a',    // Deep Navy Blue (Professional/Trust)
-          charcoal: '#334155', // Steel Gray (Machinery)
+          dark: '#0f172a',    // Richer Dark Slate
+          charcoal: '#334155', // Steel Gray
           silver: '#94a3b8',   // Light Steel
-          light: '#f1f5f9',    // Crisp Light Background
+          light: '#f8fafc',    // Brighter Crisp Light Background
+          accent: '#0ea5e9',   // Industrial Blue
         },
         action: {
           orange: '#f97316',
-          'orange-dark': '#ea580c',
+          'orange-dark': '#c2410c',
           'orange-light': '#ffedd5',
-          red: '#dc2626',
-          yellow: '#eab308',
+          red: '#be123c',
+          yellow: '#ca8a04',
         },
         brand: {
           maroon: '#8B2E2E',

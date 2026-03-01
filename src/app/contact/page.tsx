@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useLocale } from '@/context/LocaleContext';
 import { useCompany } from '@/hooks/useSiteData';
 import { motion } from 'framer-motion';
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle2, ClipboardList, UserCheck, Calculator } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Send, CheckCircle2, ClipboardList, UserCheck, Calculator, ArrowRight, MessageSquare, Globe, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -65,261 +65,272 @@ function ContactContent() {
   const steps = [
     {
       icon: ClipboardList,
-      title: locale === 'bn' ? '১. ফর্ম পূরণ করুন' : '1. Submit Request',
-      desc: locale === 'bn' ? 'আপনার প্রয়োজনীয় মেশিন এবং বিস্তারিত তথ্য দিন।' : 'Fill out the form with your required machinery details.',
+      title: locale === 'bn' ? '১. অনুরোধ পাঠান' : '1. Submit Request',
+      desc: locale === 'bn' ? 'আপনার প্রয়োজনীয় মেশিন এবং বিস্তারিত তথ্য দিন।' : 'Provide your machinery requirements and production capacity.',
     },
     {
       icon: UserCheck,
-      title: locale === 'bn' ? '২. বিশেষজ্ঞের পরামর্শ' : '2. Expert Consultation',
-      desc: locale === 'bn' ? 'আমাদের টিম আপনার সাথে যোগাযোগ করে সঠিক মডেলটি নির্বাচন করতে সাহায্য করবে।' : 'Our team contacts you to understand exact requirements and suggest the best model.',
+      title: locale === 'bn' ? '২. বিশেষজ্ঞ পরামর্শ' : '2. Expert Review',
+      desc: locale === 'bn' ? 'আমাদের ইঞ্জিনিয়াররা আপনার রিকোয়ারমেন্ট পর্যালোচনা করবেন।' : 'Our technical engineers will review your production needs.',
     },
     {
       icon: Calculator,
-      title: locale === 'bn' ? '৩. কাস্টম কোটেশন' : '3. Get Custom Quote',
-      desc: locale === 'bn' ? 'আপনি একটি অফিসিয়াল এবং কাস্টমাইজড মূল্যের কোটেশন পাবেন।' : 'Receive a formal, customized quotation with technical specifications and pricing.',
+      title: locale === 'bn' ? '৩. ফাইনাল কোটেশন' : '3. Final Quote',
+      desc: locale === 'bn' ? 'আপনি একটি কাস্টমাইজড মূল্যের কোটেশন পাবেন।' : 'Receive a formal quotation with full technical specs.',
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {/* Page header */}
-      <div className="bg-industrial-charcoal dark:bg-black text-white py-16 sm:py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-action-orange/10 dark:bg-action-orange/5" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold"
-          >
-            {locale === 'bn' ? 'কোটেশন অনুরোধ করুন' : 'Request a Quotation'}
-          </motion.h1>
-          <motion.p 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="mt-4 text-white/80 text-lg max-w-2xl mx-auto"
-          >
-            {locale === 'bn' 
-              ? 'মেশিনের বিস্তারিত এবং মূল্য জানতে নিচের ফর্মটি পূরণ করুন।' 
-              : 'Get in touch with us for machinery details, pricing, and technical support.'}
-          </motion.p>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+    <div className="min-h-screen bg-white">
+      {/* Premium Industrial Header */}
+      <section className="relative py-32 md:py-48 bg-industrial-dark overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/images/slider3.png')] bg-cover bg-center opacity-10 grayscale" />
+        <div className="absolute inset-0 bg-gradient-to-b from-industrial-dark/50 via-industrial-dark to-industrial-dark" />
         
-        {/* User Friendly Guide Steps */}
-        <div className="mb-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className="w-12 h-0.5 bg-action-orange rounded-full" />
+              <span className="text-action-orange font-black uppercase tracking-[0.3em] text-xs">
+                Acquisition & Support
+              </span>
+              <div className="w-12 h-0.5 bg-action-orange rounded-full" />
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tight leading-tight mb-8">
+              Request <span className="text-gray-400">Engineering</span> Quote
+            </h1>
+            <p className="text-white/60 text-xl font-medium max-w-2xl mx-auto leading-relaxed italic">
+              {locale === 'bn' 
+                ? 'মেশিনের বিস্তারিত এবং মূল্য জানতে নিচের ফর্মটি পূরণ করুন।' 
+                : 'Accelerate your production with world-class automated machinery.'}
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-20 pb-32">
+        {/* Modern Workflow Steps */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
           {steps.map((step, idx) => (
             <motion.div 
               key={idx}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 + (idx * 0.1) }}
-              className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="bg-white p-10 rounded-[40px] shadow-2xl shadow-gray-200/50 border border-gray-100 flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-500"
             >
-              <div className="w-14 h-14 mx-auto bg-orange-100 dark:bg-orange-900/30 text-action-orange flex items-center justify-center rounded-full mb-4">
-                <step.icon className="w-7 h-7" />
+              <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-action-orange transition-colors duration-500">
+                <step.icon className="w-8 h-8 text-action-orange group-hover:text-white transition-colors duration-500" />
               </div>
-              <h3 className="text-lg font-bold text-industrial-dark dark:text-white mb-2">{step.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">{step.desc}</p>
+              <h3 className="text-lg font-black text-industrial-dark uppercase tracking-tight mb-4">{step.title}</h3>
+              <p className="text-gray-400 text-sm font-medium leading-relaxed">{step.desc}</p>
             </motion.div>
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-10 lg:gap-12">
-          
-          {/* Form - 3 columns */}
+        <div className="grid lg:grid-cols-12 gap-16 items-start">
+          {/* Main Form Area */}
           <motion.div 
-            initial={{ x: -30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-3 space-y-8"
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-7 bg-white rounded-[60px] shadow-2xl shadow-gray-200/50 border border-gray-100 p-10 md:p-16"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700 p-8 sm:p-10 relative overflow-hidden">
-              
-              {isSuccess ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
-                    <CheckCircle2 className="w-10 h-10 text-green-500" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-industrial-dark dark:text-white mb-2">
-                    {locale === 'bn' ? 'অনুরোধ সফলভাবে পাঠানো হয়েছে!' : 'Request Sent Successfully!'}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                    {locale === 'bn' 
-                      ? 'আপনার আগ্রহের জন্য ধন্যবাদ। আমাদের প্রতিনিধি শীঘ্রই ইমেইল বা ফোনের মাধ্যমে আপনার সাথে যোগাযোগ করবে।' 
-                      : 'Thank you for your interest. An automated confirmation email has been sent to you. Our team will contact you shortly with the quotation.'}
-                  </p>
-                  <button 
-                    onClick={() => setIsSuccess(false)}
-                    className="px-8 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-industrial-dark dark:text-white rounded-full font-medium transition-colors"
-                  >
-                    {locale === 'bn' ? 'নতুন অনুরোধ পাঠান' : 'Send Another Request'}
-                  </button>
+            {isSuccess ? (
+              <div className="py-20 text-center space-y-8">
+                <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
+                  <CheckCircle2 className="w-12 h-12 text-green-500" />
                 </div>
-              ) : (
-                <>
-                  <h2 className="text-2xl font-bold text-industrial-dark dark:text-white mb-8">
-                    {locale === 'bn' ? 'বিস্তারিত ফর্ম' : 'Quotation Form'}
-                  </h2>
-                  
-                  {errorMsg && (
-                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium">
-                      {errorMsg}
-                    </div>
-                  )}
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">
+                    Transmission Successful
+                  </h3>
+                  <p className="text-gray-400 font-medium max-w-sm mx-auto">
+                    Your inquiry has been logged in our system. A technical specialist will contact you shortly.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setIsSuccess(false)}
+                  className="px-10 py-4 bg-industrial-dark text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-black transition-all"
+                >
+                  Send New Inquiry
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-12">
+                <div className="space-y-4">
+                  <h2 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">Technical Inquiry Form</h2>
+                  <p className="text-gray-400 font-medium">Please provide accurate data for precise engineering evaluation.</p>
+                </div>
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1.5 text-sm">{locale === 'bn' ? 'আপনার নাম' : 'Full Name'} *</label>
-                        <input 
-                          type="text" 
-                          {...register('name')}
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all outline-none text-industrial-dark dark:text-white" 
-                        />
-                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-                      </div>
-                      
-                      <div>
-                        <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1.5 text-sm">{locale === 'bn' ? 'ফোন নম্বর' : 'Phone Number'} *</label>
-                        <input 
-                          type="tel" 
-                          {...register('phone')}
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all outline-none text-industrial-dark dark:text-white" 
-                        />
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1.5 text-sm">{locale === 'bn' ? 'ইমেইল অ্যাড্রেস' : 'Email Address'} *</label>
-                        <input 
-                          type="email" 
-                          {...register('email')}
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all outline-none text-industrial-dark dark:text-white" 
-                        />
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1.5 text-sm">{locale === 'bn' ? 'কোম্পানির নাম (ঐচ্ছিক)' : 'Company Name (Optional)'}</label>
-                        <input 
-                          type="text" 
-                          {...register('companyName')}
-                          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all outline-none text-industrial-dark dark:text-white" 
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1.5 text-sm">{locale === 'bn' ? 'পছন্দের মেশিন / পণ্য' : 'Product of Interest'} *</label>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name *</label>
                       <input 
-                        type="text" 
-                        {...register('productInterest')}
-                        placeholder={locale === 'bn' ? 'যেমন: গ্রানুল প্যাকিং মেশিন' : 'e.g. Granules Packing Machine'}
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all outline-none text-industrial-dark dark:text-white" 
+                        {...register('name')}
+                        className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all" 
                       />
-                      {errors.productInterest && <p className="text-red-500 text-xs mt-1">{errors.productInterest.message}</p>}
+                      {errors.name && <p className="text-red-500 text-[10px] font-bold uppercase mt-1 ml-1">{errors.name.message}</p>}
                     </div>
-
-                    <div>
-                      <label className="block text-gray-700 dark:text-gray-300 font-medium mb-1.5 text-sm">{locale === 'bn' ? 'বিস্তারিত বার্তা' : 'Message / Requirements'} *</label>
-                      <textarea 
-                        {...register('message')}
-                        rows={4} 
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all outline-none resize-none text-industrial-dark dark:text-white" 
-                        placeholder={locale === 'bn' ? 'আপনার প্রোডাকশন ক্যাপাসিটি এবং অন্যান্য রিকোয়ারমেন্ট লিখুন...' : 'Please describe your packaging requirements, capacity needed, etc.'}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contact Phone *</label>
+                      <input 
+                        type="tel" 
+                        {...register('phone')}
+                        className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all" 
                       />
-                      {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message.message}</p>}
+                      {errors.phone && <p className="text-red-500 text-[10px] font-bold uppercase mt-1 ml-1">{errors.phone.message}</p>}
                     </div>
+                  </div>
 
-                    <button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="w-full py-4 bg-industrial-dark hover:bg-black dark:bg-action-orange dark:hover:bg-orange-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <Send className="w-5 h-5" />
-                          {locale === 'bn' ? 'রিকোয়েস্ট সাবমিট করুন' : 'Submit Request'}
-                        </>
-                      )}
-                    </button>
-                  </form>
-                </>
-              )}
-            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Work Email *</label>
+                      <input 
+                        type="email" 
+                        {...register('email')}
+                        className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all" 
+                      />
+                      {errors.email && <p className="text-red-500 text-[10px] font-bold uppercase mt-1 ml-1">{errors.email.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Company Name</label>
+                      <input 
+                        {...register('companyName')}
+                        className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Product/Machine Interest *</label>
+                    <input 
+                      {...register('productInterest')}
+                      placeholder="e.g. Automatic Liquid Filling Machine"
+                      className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all" 
+                    />
+                    {errors.productInterest && <p className="text-red-500 text-[10px] font-bold uppercase mt-1 ml-1">{errors.productInterest.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Project Requirements / Scope *</label>
+                    <textarea 
+                      {...register('message')}
+                      rows={5} 
+                      className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all resize-none"
+                      placeholder="Describe your production capacity, material types, and specific requirements..."
+                    />
+                    {errors.message && <p className="text-red-500 text-[10px] font-bold uppercase mt-1 ml-1">{errors.message.message}</p>}
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full group flex items-center justify-center gap-3 py-5 bg-action-orange text-white font-black text-xs uppercase tracking-[0.3em] rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-action-orange/30 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                      <>
+                        Deploy Inquiry <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
           </motion.div>
 
-          {/* Contact info & Support - 2 columns */}
+          {/* Contact Details Sidebar */}
           <motion.div 
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="lg:col-span-2 space-y-6"
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="lg:col-span-5 space-y-10"
           >
-            {/* Quick Support Card */}
-            <div className="bg-gradient-to-br from-action-orange to-orange-600 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10" />
-              <h3 className="text-xl font-bold mb-2">Need Immediate Help?</h3>
-              <p className="text-orange-100 mb-6 text-sm">Skip the form and chat directly with our sales experts on WhatsApp for instant replies.</p>
-              
-              <a
-                href={`https://wa.me/${whatsapp}?text=${encodeURIComponent('Hi, I want to request a quotation.')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 bg-white text-action-orange hover:bg-gray-50 font-bold py-3 px-6 rounded-xl transition-all shadow-md transform hover:-translate-y-0.5"
-              >
-                <svg className="w-5 h-5 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
-                {locale === 'bn' ? 'হোয়াটসঅ্যাপে চ্যাট করুন' : 'Chat on WhatsApp'}
-              </a>
+            {/* WhatsApp Premium Card */}
+            <div className="bg-industrial-dark rounded-[50px] p-12 text-white shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-action-orange/10 rounded-full blur-[100px] -mr-20 -mt-20 group-hover:bg-action-orange/20 transition-all duration-700" />
+              <div className="relative z-10 space-y-8">
+                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
+                  <MessageSquare className="w-8 h-8 text-action-orange" />
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-black uppercase tracking-tight">Direct Access</h3>
+                  <p className="text-white/50 font-medium leading-relaxed">
+                    Connect instantly with our industrial sales department via WhatsApp for rapid technical support.
+                  </p>
+                </div>
+                <a
+                  href={`https://wa.me/${whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-white text-industrial-dark font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl"
+                >
+                  Start Live Chat <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
             </div>
 
-            {/* General Contact Info */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
-              <h3 className="text-lg font-bold text-industrial-dark dark:text-white mb-6">Contact Information</h3>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            {/* Corporate HQ Info */}
+            <div className="bg-gray-50 rounded-[50px] p-12 space-y-12 border border-gray-100">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-industrial-dark uppercase tracking-tight">Corporate HQ</h3>
+                <p className="text-gray-400 font-medium text-sm tracking-widest uppercase">Global Headquarters</p>
+              </div>
+
+              <div className="space-y-10">
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-action-orange" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-industrial-dark dark:text-white text-sm">Address</h4>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">{company?.address || '128/3 Kawran Bazar, Dhaka 1215, Bangladesh'}</p>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Office Address</p>
+                    <p className="text-industrial-dark font-bold leading-relaxed">{company?.address || '128/3 Kawran Bazar, Dhaka 1215, Bangladesh'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Phone className="w-5 h-5 text-action-orange" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-industrial-dark dark:text-white text-sm">Phone</h4>
-                    <a href={`tel:+88${(company?.phone || '').replace(/\D/g, '').slice(0, 11)}`} className="text-gray-600 dark:text-gray-400 hover:text-action-orange transition-colors mt-1 block text-sm">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone Lines</p>
+                    <a href={`tel:${company?.phone}`} className="text-industrial-dark font-bold hover:text-action-orange transition-colors">
                       {company?.phone || '01631769707, 01818496642'}
                     </a>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-5 h-5 text-action-orange" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-industrial-dark dark:text-white text-sm">Email</h4>
-                    <a href={`mailto:${company?.email || 'autopacbd@gmail.com'}`} className="text-gray-600 dark:text-gray-400 hover:text-action-orange transition-colors mt-1 block text-sm">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Services</p>
+                    <a href={`mailto:${company?.email}`} className="text-industrial-dark font-bold hover:text-action-orange transition-colors">
                       {company?.email || 'autopacbd@gmail.com'}
                     </a>
                   </div>
                 </div>
+
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-5 h-5 text-action-orange" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Web Presence</p>
+                    <p className="text-industrial-dark font-bold">www.autopacbd.com</p>
+                  </div>
+                </div>
               </div>
             </div>
-
           </motion.div>
         </div>
       </div>
@@ -329,7 +340,7 @@ function ContactContent() {
 
 export default function ContactPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><div className="w-12 h-12 border-4 border-action-orange border-t-transparent rounded-full animate-spin"></div></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="w-12 h-12 text-action-orange animate-spin" /></div>}>
       <ContactContent />
     </Suspense>
   );

@@ -28,7 +28,18 @@ export const api = {
   company: () => fetchAPI<CompanyProfile | null>('/api/company'),
   owner: () => fetchAPI<OwnerProfile | null>('/api/owner'),
   industries: () => fetchAPI<Industry[]>('/api/industries'),
+  news: () => fetchAPI<NewsItem[]>('/api/news'),
 };
+
+export interface NewsItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  contentSnippet: string;
+  source: string;
+  category: 'bangladesh' | 'international';
+  thumbnail: string;
+}
 
 export interface Category {
   id: string;
@@ -82,16 +93,19 @@ export interface TrustedPartner {
 
 export interface CompanyProfile {
   id: string;
-  logoUrl?: string;
-  taglineEn?: string;
-  taglineBn?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  whatsapp?: string;
-  website?: string;
-  officeHours?: string;
-  mapEmbedUrl?: string;
+  logoUrl?: string | null;
+  taglineEn?: string | null;
+  taglineBn?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  officeHours?: string | null;
+  mapEmbedUrl?: string | null;
+  facebookUrl?: string | null;
+  youtubeUrl?: string | null;
+  linkedinUrl?: string | null;
 }
 
 export interface OwnerProfile {

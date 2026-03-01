@@ -20,9 +20,20 @@ export default function AdminOwnerPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/owner').then((r) => r.json()).then((d) => setOwner(d || {
-      id: '', nameEn: '', nameBn: '', titleEn: '', titleBn: '', photoUrl: '', bioEn: '', bioBn: '', messageEn: '', messageBn: '',
-    }));
+    fetch('/api/owner')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && !d.error) {
+          setOwner(d);
+        } else {
+          setOwner({
+            id: '', nameEn: '', nameBn: '', titleEn: '', titleBn: '', photoUrl: '', bioEn: '', bioBn: '', messageEn: '', messageBn: '',
+          });
+        }
+      })
+      .catch(() => setOwner({
+        id: '', nameEn: '', nameBn: '', titleEn: '', titleBn: '', photoUrl: '', bioEn: '', bioBn: '', messageEn: '', messageBn: '',
+      }));
   }, []);
 
   const update = (field: keyof Owner, value: string) => {

@@ -7,8 +7,12 @@ export async function GET() {
       orderBy: { sortOrder: 'asc' },
     });
     return NextResponse.json(categories);
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+  } catch (e: any) {
+    console.error('Categories API Error:', e);
+    return NextResponse.json({ 
+      error: 'Failed to fetch categories',
+      message: e.message || 'Unknown error',
+      code: e.code
+    }, { status: 500 });
   }
 }
