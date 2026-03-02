@@ -25,9 +25,12 @@ export default function NewsCard({ item }: NewsCardProps) {
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-slate-800">
         {item.thumbnail ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={item.thumbnail}
             alt={item.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             onError={(e) => {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1000';

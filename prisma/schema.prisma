@@ -262,3 +262,31 @@ model Translation {
   valueBn   String
   updatedAt DateTime @updatedAt
 }
+
+// ---------------------------
+// SITE STATS / COUNTERS
+// ---------------------------
+
+model SiteStat {
+  id        String   @id @default(uuid())
+  labelEn   String
+  labelBn   String
+  value     String   // e.g. "500+"
+  icon      String   @default("award") // icon identifier
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------
+// REAL-TIME VISITOR TRACKING
+// ---------------------------
+
+model ActiveVisitor {
+  id        String   @id @default(uuid())
+  visitorId String   @unique
+  page      String?  @db.VarChar(512)
+  lastPing  DateTime @default(now())
+  createdAt DateTime @default(now())
+}

@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLocale } from '@/context/LocaleContext';
 import HeroSlider from '@/components/HeroSlider';
 import ProductCategory from '@/components/ProductCategory';
 import TrustedPartners from '@/components/TrustedPartners';
 import IndustriesSection from '@/components/IndustriesSection';
+import OurLegacy from '@/components/OurLegacy';
 import { useProducts, useCategories, useCompany } from '@/hooks/useSiteData';
 import type { Product, Category } from '@/lib/api';
 import { motion } from 'framer-motion';
@@ -79,11 +81,13 @@ export default function HomePage() {
               className="relative aspect-[2/1] lg:aspect-[4/3] rounded-[24px] sm:rounded-[32px] overflow-hidden shadow-2xl"
             >
               <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/60 to-transparent z-10" />
-              <img 
-                src="/images/intro-machinery.jpg" 
-                alt="Industrial Machinery" 
-                className="w-full h-full object-cover"
-                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=2070'; }}
+              <Image
+                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=2070"
+                alt="Industrial Machinery"
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
               />
               <div className="absolute bottom-4 left-4 sm:bottom-8 sm:left-8 z-20">
                 <div className="p-3 sm:p-5 bg-white/10 backdrop-blur-3xl rounded-[16px] sm:rounded-[24px] border border-white/20 shadow-2xl">
@@ -188,7 +192,7 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-8 uppercase tracking-tighter leading-tight">
               {locale === 'bn' 
                 ? 'অটো প্যাক মানে, হাতের ছোঁয়া ছাড়াই স্বয়ংক্রিয় ভাবে প্যাক করা' 
-                : 'Advanced Industrial <br /> Automation Starts Here'}
+                : <><span>Advanced Industrial</span> <br /> <span>Automation Starts Here</span></>}
             </h2>
             <p className="text-gray-400 font-bold mb-16 max-w-2xl mx-auto text-xl uppercase tracking-tight">
               {locale === 'bn'
@@ -215,6 +219,8 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      <OurLegacy />
     </div>
   );
 }

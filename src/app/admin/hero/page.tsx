@@ -98,7 +98,9 @@ export default function AdminHeroPage() {
                       src={s.imageUrl}
                       alt={s.titleEn || 'Hero Slide'}
                       fill
+                      sizes="(max-width: 1024px) 100vw, 384px"
                       className="object-cover"
+                      unoptimized
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button 

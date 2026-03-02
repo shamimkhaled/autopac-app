@@ -364,7 +364,7 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
                 <div key={i} className="group relative aspect-square bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden">
                   {img ? (
                     <>
-                      <Image src={img} alt="Product" fill className="object-cover" />
+                      <Image src={img} alt="Product" fill sizes="96px" unoptimized className="object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                         <button 
                           type="button"

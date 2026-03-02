@@ -1,14 +1,32 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function PUT(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const industries = await req.json();
     
+    interface IndustryPayload {
+      id?: string;
+      nameEn: string;
+      nameBn: string;
+      slug?: string;
+      descriptionEn?: string;
+      descriptionBn?: string;
+      sortOrder?: number;
+      iconUrl?: string;
+    }
+
     // Get existing IDs from incoming payload
-    const existingIds = industries
-      .filter((i: any) => i.id && !i.id.startsWith('new-'))
-      .map((i: any) => i.id);
+    const existingIds = (industries as IndustryPayload[])
+      .filter((i) => i.id && !i.id.startsWith('new-'))
+      .map((i) => i.id as string);
 
     // 1. Delete those not in current payload
     await prisma.industry.deleteMany({
@@ -18,7 +36,7 @@ export async function PUT(req: Request) {
     });
 
     // 2. Upsert (Create/Update) remaining industries
-    for (const i of industries) {
+    for (const i of industries as IndustryPayload[]) {
       const data = {
         slug: i.slug || i.nameEn.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
         nameEn: i.nameEn,

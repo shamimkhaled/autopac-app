@@ -2,18 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import type { Product, Category, HeroSlide, TrustedPartner, CompanyProfile, OwnerProfile, Industry } from '@/lib/api';
+import { resolveApiBase } from '@/lib/api';
 import { products as staticProducts, categories as staticCategories, packableItems } from '@/data/products';
-
-const API = process.env.NEXT_PUBLIC_SITE_URL || '';
-
-function resolveApiBase(): string {
-  if (typeof window === 'undefined') return API;
-  if (!API) return '';
-  if (API.startsWith('http://') && window.location.protocol === 'https:') {
-    return API.replace(/^http:\/\//, 'https://');
-  }
-  return API;
-}
 
 async function fetchOrNull<T>(path: string): Promise<T | null> {
   try {

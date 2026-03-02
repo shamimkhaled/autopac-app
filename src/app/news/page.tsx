@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, MapPin, Search, Newspaper, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Globe, MapPin, Search, Newspaper, ArrowRight, Loader2, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { api, type NewsItem } from '@/lib/api';
 import NewsCard from '@/components/News/NewsCard';
 import AdSense from '@/components/News/AdSense';
@@ -12,12 +12,45 @@ import Script from 'next/script';
 // via a parent layout or by using a separate metadata object if this were a Server Component.
 // For now, since it's 'use client', metadata is best handled in a layout or via document title.
 
+type TabId = 'all' | 'bangladesh' | 'international';
+
 export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'bangladesh' | 'international'>('all');
+  const [activeTab, setActiveTab] = useState<TabId>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
+  const newsletterRef = useRef<HTMLInputElement>(null);
+
+  const handleNewsletterSubmit = async () => {
+    if (!newsletterEmail.trim()) return;
+    setNewsletterStatus('loading');
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewsletterStatus('success');
+        setNewsletterMessage('You\'re subscribed!');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+        setNewsletterMessage(data.error || 'Please try again.');
+      }
+    } catch {
+      setNewsletterStatus('error');
+      setNewsletterMessage('Something went wrong. Please try again.');
+    }
+  };
 
   useEffect(() => {
     async function loadNews() {
@@ -36,6 +69,11 @@ export default function NewsPage() {
     loadNews();
   }, []);
 
+  // Reset pagination when filter/search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
+
   const filteredNews = news.filter((item) => {
     const matchesTab = activeTab === 'all' || item.category === activeTab;
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -43,15 +81,26 @@ export default function NewsPage() {
     return matchesTab && matchesSearch;
   });
 
+  const totalPages = Math.ceil(filteredNews.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedNews = filteredNews.slice(startIndex, startIndex + itemsPerPage);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <main className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
-      {/* Google AdSense Script - LOADED ONLY ON THIS PAGE */}
-      <Script
-        id="adsbygoogle-init"
-        strategy="afterInteractive"
-        crossOrigin="anonymous"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID"
-      />
+      {/* Google AdSense Script - only loaded when publisher ID is configured */}
+      {process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID && (
+        <Script
+          id="adsbygoogle-init"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID}`}
+        />
+      )}
 
       {/* Hero Header */}
       <section className="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800 py-16 md:py-24 overflow-hidden relative">
@@ -106,7 +155,7 @@ export default function NewsPage() {
                   ].map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
+                      onClick={() => setActiveTab(tab.id as TabId)}
                       className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                         activeTab === tab.id
                           ? 'bg-action-orange text-white shadow-lg shadow-action-orange/20'
@@ -156,19 +205,74 @@ export default function NewsPage() {
                     Try Again
                   </button>
                 </div>
-              ) : filteredNews.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {filteredNews.map((item, index) => (
-                    <div key={index} className="contents">
-                      <NewsCard item={item} />
-                      {/* Strategic Inline Ads every 4 items */}
-                      {(index + 1) % 4 === 0 && (
-                        <div className="md:col-span-2">
-                          <AdSense slot="inline-news-ad" format="fluid" />
-                        </div>
-                      )}
+              ) : paginatedNews.length > 0 ? (
+                <div className="space-y-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {paginatedNews.map((item, index) => (
+                      <div key={index} className="contents">
+                        <NewsCard item={item} />
+                        {/* Strategic Inline Ads every 4 items */}
+                        {(index + 1) % 4 === 0 && (
+                          <div className="md:col-span-2">
+                            <AdSense slot="inline-news-ad" format="fluid" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-12 border-t border-gray-100 dark:border-slate-800">
+                      <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="p-3 rounded-xl bg-gray-50 dark:bg-slate-900 text-industrial-dark dark:text-white disabled:opacity-30 transition-all hover:bg-gray-100 dark:hover:bg-slate-800"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: totalPages }).map((_, i) => {
+                          const page = i + 1;
+                          // Show first, last, current, and pages around current
+                          if (
+                            page === 1 ||
+                            page === totalPages ||
+                            (page >= currentPage - 1 && page <= currentPage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={page}
+                                onClick={() => goToPage(page)}
+                                className={`w-12 h-12 rounded-xl text-xs font-black transition-all ${
+                                  currentPage === page
+                                    ? 'bg-action-orange text-white shadow-lg shadow-action-orange/20'
+                                    : 'bg-white dark:bg-slate-900 text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            );
+                          } else if (
+                            page === currentPage - 2 ||
+                            page === currentPage + 2
+                          ) {
+                            return <span key={page} className="text-gray-300">...</span>;
+                          }
+                          return null;
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="p-3 rounded-xl bg-gray-50 dark:bg-slate-900 text-industrial-dark dark:text-white disabled:opacity-30 transition-all hover:bg-gray-100 dark:hover:bg-slate-800"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
                     </div>
-                  ))}
+                  )}
                 </div>
               ) : (
                 <div className="py-32 text-center space-y-4">
@@ -193,7 +297,7 @@ export default function NewsPage() {
                   />
                 </div>
 
-                {/* Newsletter Signup (Placeholder) */}
+                {/* Newsletter Signup */}
                 <div className="bg-industrial-dark p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
                   <div className="relative z-10 space-y-6">
                     <h3 className="text-2xl font-black text-white uppercase tracking-tight leading-tight">
@@ -202,16 +306,39 @@ export default function NewsPage() {
                     <p className="text-white/50 text-sm font-medium">
                       Get the most relevant industrial news delivered straight to your inbox.
                     </p>
-                    <div className="space-y-3">
-                      <input
-                        type="email"
-                        placeholder="your@email.com"
-                        className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-sm outline-none focus:border-action-orange transition-all"
-                      />
-                      <button className="w-full py-4 bg-action-orange text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-action-orange/20 hover:bg-orange-600 transition-all">
-                        Subscribe
-                      </button>
-                    </div>
+
+                    {newsletterStatus === 'success' ? (
+                      <div className="flex items-center gap-3 py-4 px-5 bg-green-500/20 border border-green-500/30 rounded-2xl">
+                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                        <span className="text-green-300 text-sm font-bold">{newsletterMessage}</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <input
+                          ref={newsletterRef}
+                          type="email"
+                          placeholder="your@email.com"
+                          value={newsletterEmail}
+                          onChange={(e) => setNewsletterEmail(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubmit()}
+                          className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-sm outline-none focus:border-action-orange transition-all placeholder:text-white/30"
+                        />
+                        {newsletterStatus === 'error' && (
+                          <p className="text-red-400 text-xs font-bold px-1">{newsletterMessage}</p>
+                        )}
+                        <button
+                          onClick={handleNewsletterSubmit}
+                          disabled={newsletterStatus === 'loading'}
+                          className="w-full py-4 bg-action-orange text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-action-orange/20 hover:bg-orange-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {newsletterStatus === 'loading' ? (
+                            <><Loader2 className="w-4 h-4 animate-spin" /> Subscribing...</>
+                          ) : (
+                            'Subscribe'
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-12 translate-x-8" />
                 </div>

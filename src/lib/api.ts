@@ -1,6 +1,6 @@
 const API = process.env.NEXT_PUBLIC_SITE_URL || '';
 
-function resolveApiBase(): string {
+export function resolveApiBase(): string {
   if (typeof window === 'undefined') return API;
   if (!API) return '';
   if (API.startsWith('http://') && window.location.protocol === 'https:') {
@@ -96,6 +96,12 @@ export interface CompanyProfile {
   logoUrl?: string | null;
   taglineEn?: string | null;
   taglineBn?: string | null;
+  aboutEn?: string | null;
+  aboutBn?: string | null;
+  visionEn?: string | null;
+  visionBn?: string | null;
+  missionEn?: string | null;
+  missionBn?: string | null;
   address?: string | null;
   phone?: string | null;
   email?: string | null;

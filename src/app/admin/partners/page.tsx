@@ -107,7 +107,7 @@ export default function AdminPartnersPage() {
             <div className="relative aspect-[3/2] bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden">
               {p.logoUrl ? (
                 <>
-                  <Image src={p.logoUrl} alt={p.name} fill className="object-contain p-6" />
+                  <Image src={p.logoUrl} alt={p.name} fill sizes="160px" unoptimized className="object-contain p-6" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button 
                       onClick={() => setShowMediaPicker({ active: true, partnerId: p.id })}

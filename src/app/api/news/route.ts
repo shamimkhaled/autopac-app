@@ -24,7 +24,7 @@ const FEEDS = [
   },
   {
     name: 'BBC News',
-    url: 'http://feeds.bbci.co.uk/news/rss.xml',
+    url: 'https://feeds.bbci.co.uk/news/rss.xml',
     category: 'international',
   },
 ];
@@ -50,10 +50,10 @@ export async function GET() {
           }
 
           return {
-            title: item.title,
-            link: item.link,
-            pubDate: item.pubDate,
-            contentSnippet: item.contentSnippet || item.description,
+            title: item.title ?? '',
+            link: item.link ?? '',
+            pubDate: item.pubDate ?? new Date().toISOString(),
+            contentSnippet: item.contentSnippet ?? '',
             source: f.name,
             category: f.category,
             thumbnail: thumbnail,
@@ -67,7 +67,7 @@ export async function GET() {
 
     const results = await Promise.all(feedPromises);
     const allNews = results.flat().sort((a, b) => {
-      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+      return new Date(b.pubDate ?? 0).getTime() - new Date(a.pubDate ?? 0).getTime();
     });
 
     return NextResponse.json(allNews, {

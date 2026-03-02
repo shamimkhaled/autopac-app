@@ -138,7 +138,7 @@ export default function AdminProductsPage() {
                         <div className="flex items-center gap-4">
                           <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden relative border border-gray-100">
                             {firstImage ? (
-                              <Image src={firstImage} alt={p.nameEn} fill className="object-cover" />
+                              <Image src={firstImage} alt={p.nameEn} fill sizes="56px" unoptimized className="object-cover" />
                             ) : (
                               <Package className="w-6 h-6 text-gray-300 absolute inset-0 m-auto" />
                             )}

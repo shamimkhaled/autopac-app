@@ -1,12 +1,24 @@
 import type { Metadata } from 'next';
+import { Inter, Hind_Siliguri } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import StickyCTA from '@/components/StickyCTA';
-import WhatsAppFloating from '@/components/WhatsAppFloating';
-import Chatbot from '@/components/Chatbot';
+import SiteShell from '@/components/SiteShell';
 import Analytics from '@/components/Analytics';
+
+// Optimized system fonts — no layout shift, no external CDN requests at runtime
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+// Hind Siliguri for crisp Bengali text rendering
+const hindSiliguri = Hind_Siliguri({
+  subsets: ['bengali', 'latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-hind',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -47,14 +59,12 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://autopacbd.com/',
-    languages: {
-      'en-US': 'https://autopacbd.com/en',
-      'bn-BD': 'https://autopacbd.com/bn',
+  },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
     },
-  },
-  verification: {
-    google: 'your-google-verification-code', // Add actual code later
-  },
+  }),
   robots: {
     index: true,
     follow: true,
@@ -102,19 +112,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col antialiased bg-industrial-light text-industrial-charcoal dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <html lang="en" suppressHydrationWarning className={`scroll-smooth ${inter.variable} ${hindSiliguri.variable}`}>
+      <body className="min-h-screen flex flex-col antialiased bg-industrial-light text-industrial-charcoal dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <Providers>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <StickyCTA />
-          <WhatsAppFloating />
-          <Chatbot />
+          <SiteShell>
+            {children}
+          </SiteShell>
         </Providers>
         <Analytics />
       </body>

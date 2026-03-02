@@ -34,7 +34,13 @@ export default function AdminCompanyPage() {
     fetch('/api/company')
       .then((r) => r.json())
       .then((d) => {
-        if (d && !d.error) setForm((f) => ({ ...f, ...d }));
+        if (d && !d.error) {
+          // Coerce null/undefined DB values to empty strings to avoid controlled input warnings
+          const sanitized = Object.fromEntries(
+            Object.entries(d).map(([k, v]) => [k, v === null || v === undefined ? '' : v])
+          );
+          setForm((f) => ({ ...f, ...sanitized }));
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -98,7 +104,7 @@ export default function AdminCompanyPage() {
               <div className="relative aspect-video bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden group">
                 {form.logoUrl ? (
                   <>
-                    <Image src={form.logoUrl} alt="Logo" fill className="object-contain p-4" />
+                    <Image src={form.logoUrl} alt="Logo" fill sizes="100vw" unoptimized className="object-contain p-4" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button 
                         onClick={() => setShowMediaPicker(true)}

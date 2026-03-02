@@ -1,1 +1,0 @@
-console.log(encodeURIComponent("~Dpw$V+m0dF*EaWa").replace(/[!'()*~]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase()));

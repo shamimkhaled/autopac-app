@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import nodemailer from 'nodemailer';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 const quoteSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -23,8 +26,24 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req: Request) {
+  // Rate limit: max 3 quote submissions per minute per IP
+  const ip = getClientIp(req);
+  const rateCheck = checkRateLimit(`quote:${ip}`, 3, 60_000);
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { success: false, error: 'Too many requests. Please wait before submitting again.' },
+      { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfter) } }
+    );
+  }
+
   try {
     const body = await req.json();
+
+    // Honeypot check — bots fill hidden fields, humans don't
+    if (body._hp) {
+      return NextResponse.json({ success: true }); // Silently accept (fool bots)
+    }
+
     const data = quoteSchema.parse(body);
 
     // Save to Database
@@ -89,9 +108,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, quote });
-  } catch (error: any) {
-    if (error && error.name === 'ZodError') {
-      return NextResponse.json({ success: false, errors: error.errors }, { status: 400 });
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({ success: false, errors: error.issues }, { status: 400 });
     }
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
@@ -99,15 +118,21 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const quotes = await prisma.quotationRequest.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(quotes);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Fetch Quotes Error:', e);
+    const message = e instanceof Error ? e.message : 'Unknown error';
     return NextResponse.json({ 
       error: 'Fetch failed',
-      message: e.message || 'Unknown error'
+      message,
     }, { status: 500 });
   }
 }

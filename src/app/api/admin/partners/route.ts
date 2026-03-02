@@ -1,14 +1,29 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function PUT(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const partners = await req.json();
     
+    interface PartnerPayload {
+      id?: string;
+      name: string;
+      logoUrl: string;
+      linkUrl?: string;
+      sortOrder?: number;
+    }
+
     // Get existing IDs from incoming payload
-    const existingIds = partners
-      .filter((p: any) => p.id && !p.id.startsWith('new-'))
-      .map((p: any) => p.id);
+    const existingIds = (partners as PartnerPayload[])
+      .filter((p) => p.id && !p.id.startsWith('new-'))
+      .map((p) => p.id as string);
 
     // 1. Delete those not in the current payload
     await prisma.trustedPartner.deleteMany({
@@ -18,7 +33,7 @@ export async function PUT(req: Request) {
     });
 
     // 2. Upsert (Create/Update) remaining partners
-    for (const p of partners) {
+    for (const p of partners as PartnerPayload[]) {
       const partnerData = {
         name: p.name,
         logoUrl: p.logoUrl,

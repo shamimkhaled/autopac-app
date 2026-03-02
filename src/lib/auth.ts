@@ -17,20 +17,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
+          where: { email: credentials.email }
         })
 
-        if (!user) {
-          return null
-        }
+        if (!user) return null
 
         const isPasswordValid = await compare(credentials.password, user.password)
-
-        if (!isPasswordValid) {
-          return null
-        }
+        if (!isPasswordValid) return null
 
         return {
           id: user.id,
@@ -48,17 +41,15 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = (user as any).role
+        token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user = {
-          ...session.user,
-          id: token.id as string,
-          role: token.role as string,
-        } as any
+      session.user = {
+        ...session.user,
+        id: token.id,
+        role: token.role,
       }
       return session
     }
