@@ -14,20 +14,20 @@ export async function GET() {
 
       try {
         images = JSON.parse(p.images || '[]');
-      } catch (e) {
-        console.error(`Error parsing images for product ${p.id}:`, e);
+      } catch {
+        console.warn(`[products] Malformed images JSON for product ${p.id} — using empty array`);
       }
 
       try {
         specs = JSON.parse(p.specs || '[]');
-      } catch (e) {
-        console.error(`Error parsing specs for product ${p.id}:`, e);
+      } catch {
+        console.warn(`[products] Malformed specs JSON for product ${p.id} — using empty array`);
       }
 
       try {
         packableIds = JSON.parse(p.packableIds || '[]');
-      } catch (e) {
-        console.error(`Error parsing packableIds for product ${p.id}:`, e);
+      } catch {
+        console.warn(`[products] Malformed packableIds JSON for product ${p.id} — using empty array`);
       }
 
       return {

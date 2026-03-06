@@ -100,7 +100,7 @@ export default function Footer() {
                 { href: '/about',    label: t('nav.about')    || 'About Us' },
                 { href: '/products', label: t('nav.products') || 'Products' },
                 { href: '/gallery',  label: t('nav.gallery')  || 'Gallery' },
-                { href: '/news',     label: t('nav.news')     || 'Industry News' },
+                { href: '/news',     label: t('nav.news')     || 'News' },
                 { href: '/contact',  label: t('nav.contact')  || 'Contact Us' },
               ].map((link) => (
                 <li key={link.href}>

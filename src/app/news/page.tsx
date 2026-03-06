@@ -123,7 +123,7 @@ export default function NewsPage() {
               transition={{ delay: 0.1 }}
               className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight mb-8"
             >
-              Industry <span className="text-gray-300 dark:text-slate-800">& Global</span> News
+              Latest <span className="text-action-orange">News</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -150,8 +150,8 @@ export default function NewsPage() {
                 <div className="flex p-1 bg-white dark:bg-slate-800 rounded-2xl shadow-sm">
                   {[
                     { id: 'all', label: 'All News', icon: Newspaper },
-                    { id: 'bangladesh', label: 'Bangladesh', icon: MapPin },
-                    { id: 'international', label: 'International', icon: Globe },
+                    { id: 'bangladesh', label: 'BD News', icon: MapPin },
+                    { id: 'international', label: 'Global', icon: Globe },
                   ].map((tab) => (
                     <button
                       key={tab.id}

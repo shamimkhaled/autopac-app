@@ -5,6 +5,10 @@ import type { Product, Category, HeroSlide, TrustedPartner, CompanyProfile, Owne
 import { resolveApiBase } from '@/lib/api';
 import { products as staticProducts, categories as staticCategories, packableItems } from '@/data/products';
 
+// Shared promise cache — ensures concurrent callers share one in-flight request
+// instead of each firing their own fetch. Keyed by path.
+const promiseCache = new Map<string, Promise<unknown>>();
+
 async function fetchOrNull<T>(path: string): Promise<T | null> {
   try {
     const base = resolveApiBase();
@@ -21,7 +25,14 @@ function useFetch<T>(path: string, fallback: T): [T, boolean] {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetchOrNull<T>(path).then((d) => {
+    let pending = promiseCache.get(path) as Promise<T | null> | undefined;
+    if (!pending) {
+      pending = fetchOrNull<T>(path);
+      promiseCache.set(path, pending);
+      // Evict from cache after settlement so a future re-mount gets fresh data
+      pending.finally(() => promiseCache.delete(path));
+    }
+    pending.then((d) => {
       if (d !== null) setData(d);
       setLoaded(true);
     });

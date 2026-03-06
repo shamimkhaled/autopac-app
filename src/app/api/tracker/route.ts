@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 // A visitor is "active" if their last ping is within 3 minutes
 const ACTIVE_WINDOW_MS = 3 * 60 * 1000;
@@ -12,11 +13,29 @@ export async function POST(req: Request) {
     }
 
     const now = new Date();
-    await prisma.activeVisitor.upsert({
-      where: { visitorId },
-      update: { lastPing: now, page: page ?? null },
-      create: { visitorId, page: page ?? null, lastPing: now },
-    });
+
+    try {
+      await prisma.activeVisitor.upsert({
+        where: { visitorId },
+        update: { lastPing: now, page: page ?? null },
+        create: { visitorId, page: page ?? null, lastPing: now },
+      });
+    } catch (upsertErr) {
+      // P2002 = unique constraint violation; happens when two concurrent requests
+      // (e.g. React StrictMode double-effect) both SELECT→INSERT the same visitorId.
+      // Recover gracefully by simply updating the existing record.
+      if (
+        upsertErr instanceof Prisma.PrismaClientKnownRequestError &&
+        upsertErr.code === 'P2002'
+      ) {
+        await prisma.activeVisitor.update({
+          where: { visitorId },
+          data: { lastPing: now, page: page ?? null },
+        });
+      } else {
+        throw upsertErr;
+      }
+    }
 
     // Prune stale sessions older than 10 minutes
     await prisma.activeVisitor.deleteMany({

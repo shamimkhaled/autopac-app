@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLocale } from '@/context/LocaleContext';
-import { useCategories } from '@/hooks/useSiteData';
 import { packableItems } from '@/hooks/useSiteData';
 import type { Product } from '@/lib/api';
 import { motion } from 'framer-motion';
@@ -15,8 +14,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { locale, t } = useLocale();
-  const [categories] = useCategories();
-  const category = product.category || categories.find((c: { id: string }) => c.id === product.categoryId);
+  const category = product.category ?? null;
   
   let images = [];
   try {

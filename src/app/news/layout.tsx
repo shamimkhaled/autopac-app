@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Industry & Global News — Auto Pac',
+  title: 'News — Auto Pac Machinery',
   description: 'Stay updated with the latest trends in food processing, packaging, and industrial technology. Bangladesh and international news curated for manufacturers.',
-  keywords: 'industrial news Bangladesh, food processing news, packaging industry news, manufacturing news',
+  keywords: 'industrial news Bangladesh, food processing news, packaging industry news, manufacturing news, machinery news',
   openGraph: {
-    title: 'Industry News — Auto Pac',
-    description: 'Latest food processing, packaging, and industrial technology news.',
+    title: 'News — Auto Pac Machinery',
+    description: 'Latest food processing, packaging, and industrial technology news from Bangladesh and around the world.',
     url: 'https://autopacbd.com/news',
   },
   alternates: { canonical: 'https://autopacbd.com/news' },
