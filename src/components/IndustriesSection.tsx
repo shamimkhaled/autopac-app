@@ -23,7 +23,7 @@ export default function IndustriesSection() {
       <div className="absolute top-0 right-0 w-1/3 h-full bg-slate-50 dark:bg-slate-900/50 -skew-x-12 translate-x-1/2 z-0" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 sm:gap-12 mb-6 sm:mb-10">
           <div className="max-w-3xl">
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
@@ -57,10 +57,10 @@ export default function IndustriesSection() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="hidden lg:block pb-2"
+            className="pb-2"
           >
-            <Link href="/products" className="group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-action-orange transition-colors">
-              View All Industries <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform duration-500" />
+            <Link href="/products" className="group flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-action-orange transition-colors touch-manipulation py-2">
+              {locale === 'bn' ? 'সব ইন্ডাস্ট্রি দেখুন' : 'View All Industries'} <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform duration-500" />
             </Link>
           </motion.div>
         </div>
@@ -78,20 +78,20 @@ export default function IndustriesSection() {
               >
                 <Link
                   href={`/products?category=${ind.slug}`}
-                  className="group block relative p-8 bg-white dark:bg-slate-900 rounded-[32px] shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] dark:hover:shadow-action-orange/5 hover:-translate-y-4 transition-all duration-700 border border-gray-100 dark:border-slate-800 overflow-hidden"
+                  className="group block relative p-5 sm:p-8 bg-white dark:bg-slate-900 rounded-[32px] shadow-sm hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] dark:hover:shadow-action-orange/5 hover:-translate-y-2 sm:hover:-translate-y-4 transition-all duration-700 border border-gray-100 dark:border-slate-800 overflow-hidden"
                 >
                   {/* Hover Background Accent */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-action-orange/5 rounded-bl-full translate-x-full -translate-y-full group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-700" />
 
                   <div className="relative z-10">
-                    <div className="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center mb-10 group-hover:bg-action-orange group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-inner">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center mb-6 sm:mb-10 group-hover:bg-action-orange group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-inner">
                       <Icon className="w-10 h-10 text-action-orange group-hover:text-white transition-colors" />
                     </div>
-                    <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-2xl mb-6 group-hover:text-action-orange transition-colors leading-none">
+                    <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-xl sm:text-2xl mb-3 sm:mb-6 group-hover:text-action-orange transition-colors leading-none">
                       {locale === 'bn' ? ind.nameBn : ind.nameEn}
                     </h3>
-                    <div className="w-12 h-1 bg-gray-200 dark:bg-slate-800 group-hover:w-full group-hover:bg-action-orange/20 transition-all duration-700 mb-8 rounded-full" />
-                    <p className="text-gray-400 dark:text-slate-500 font-medium text-sm leading-relaxed mb-10 min-h-[60px]">
+                    <div className="w-12 h-1 bg-gray-200 dark:bg-slate-800 group-hover:w-full group-hover:bg-action-orange/20 transition-all duration-700 mb-4 sm:mb-8 rounded-full" />
+                    <p className="text-gray-400 dark:text-slate-500 font-medium text-sm leading-relaxed mb-6 sm:mb-10">
                       {locale === 'bn' ? (ind.descriptionBn || 'উন্নত প্রযুক্তি এবং নির্ভরযোগ্য মেশিনারি সমাধান।') : (ind.descriptionEn || 'Advanced technology and reliable machinery solutions for high-volume production.')}
                     </p>
                     <div className="flex items-center gap-3 text-action-orange font-black text-[10px] uppercase tracking-[0.3em] opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-700">

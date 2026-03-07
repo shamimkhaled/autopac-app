@@ -260,7 +260,7 @@ function ProductsContent() {
 
                 {/* Modern Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center items-center gap-2">
+                  <div className="mt-12 flex justify-center items-center gap-2 overflow-x-auto pb-2">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
@@ -270,7 +270,7 @@ function ProductsContent() {
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     
-                    <div className="flex items-center gap-1.5 px-2">
+                    <div className="flex items-center gap-1.5 px-2 flex-wrap justify-center">
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
                         // Show first, last, current, and adjacent pages
                         if (

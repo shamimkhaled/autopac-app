@@ -121,7 +121,7 @@ export default function NewsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight mb-8"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight mb-8"
             >
               Latest <span className="text-action-orange">News</span>
             </motion.h1>
@@ -156,7 +156,7 @@ export default function NewsPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as TabId)}
-                      className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      className={`flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all touch-manipulation ${
                         activeTab === tab.id
                           ? 'bg-action-orange text-white shadow-lg shadow-action-orange/20'
                           : 'text-gray-400 hover:text-industrial-dark dark:hover:text-white'
@@ -288,12 +288,12 @@ export default function NewsPage() {
             <aside className="lg:w-[380px] space-y-10">
               
               {/* Sidebar Ad */}
-              <div className="sticky top-[100px] space-y-10">
-                <div className="bg-gray-50 dark:bg-slate-900/50 p-1 rounded-3xl border border-gray-100 dark:border-slate-800 overflow-hidden min-h-[600px] flex flex-col items-center justify-center">
+              <div className="lg:sticky lg:top-[100px] space-y-10">
+                <div className="bg-gray-50 dark:bg-slate-900/50 p-1 rounded-3xl border border-gray-100 dark:border-slate-800 overflow-hidden">
                   <AdSense 
                     slot="sidebar-news-ad" 
-                    format="rectangle" 
-                    style={{ display: 'block', width: '300px', height: '600px' }} 
+                    format="auto" 
+                    style={{ display: 'block', width: '100%', height: 'auto' }} 
                   />
                 </div>
 
@@ -314,8 +314,10 @@ export default function NewsPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
+                        <label htmlFor="newsletter-email" className="sr-only">Email address for newsletter</label>
                         <input
                           ref={newsletterRef}
+                          id="newsletter-email"
                           type="email"
                           placeholder="your@email.com"
                           value={newsletterEmail}

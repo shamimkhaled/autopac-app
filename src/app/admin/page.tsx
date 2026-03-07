@@ -102,7 +102,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           const isLive = stat.title === 'Live Visitors';
@@ -116,13 +116,13 @@ export default function AdminDashboard() {
                 <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${stat.color} ${isLive && visitorPulse ? 'animate-ping' : ''}`} />
               </div>
               <div>
-                <p className="text-[9px] sm:text-xs font-black text-gray-400 uppercase tracking-widest">{stat.title}</p>
+                <p className="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest">{stat.title}</p>
                 <div className="flex items-baseline gap-2 mt-0.5">
                   <h3 className={`text-2xl sm:text-4xl font-black text-industrial-dark tabular-nums transition-all ${isLive && visitorPulse ? 'text-purple-600 scale-105' : ''}`}>
                     {stat.value}
                   </h3>
                   {isLive ? (
-                    <span className="flex items-center gap-1 text-[9px] font-black text-green-500 uppercase">
+                    <span className="flex items-center gap-1 text-xs font-black text-green-500 uppercase">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                       Live
                     </span>
@@ -208,7 +208,7 @@ export default function AdminDashboard() {
                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Top Pages</p>
                 {visitors.topPages.map(({ page, _count }, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500 truncate max-w-[140px] font-medium">{page || '/'}</span>
+                    <span className="text-gray-500 truncate max-w-[180px] font-medium">{page || '/'}</span>
                     <span className="font-black text-industrial-dark flex-shrink-0 ml-2">{_count.page}</span>
                   </div>
                 ))}

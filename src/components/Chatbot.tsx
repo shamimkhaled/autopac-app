@@ -37,7 +37,7 @@ export default function Chatbot() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden flex flex-col"
+            className="fixed right-3 sm:right-4 md:right-6 bottom-24 w-[calc(100vw-1.5rem)] max-w-[320px] sm:w-80 sm:max-w-[384px] md:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[60] overflow-hidden flex flex-col"
             style={{ maxHeight: 'calc(100vh - 120px)', height: '500px' }}
           >
             {/* Header */}
@@ -100,12 +100,14 @@ export default function Chatbot() {
         )}
       </AnimatePresence>
 
-      {/* Floating Button */}
+      {/* Floating Button — responsive size, positioned to avoid overlap with WhatsApp */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-industrial-dark hover:bg-black dark:bg-white dark:hover:bg-gray-200 text-white dark:text-industrial-dark rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110 z-40 group"
+        className="fixed z-40 w-11 h-11 sm:w-14 sm:h-14 right-[4.5rem] sm:right-24 md:right-28 bottom-5 sm:bottom-6 md:bottom-8 bg-industrial-dark hover:bg-black dark:bg-white dark:hover:bg-gray-200 text-white dark:text-industrial-dark rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110 active:scale-95 touch-manipulation group"
+        aria-label="Open chat"
       >
-        <MessageSquare className="w-6 h-6" />
+        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
         <span className="absolute right-full mr-4 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
           Chat with AI
         </span>

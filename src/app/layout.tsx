@@ -20,13 +20,16 @@ const hindSiliguri = Hind_Siliguri({
   display: 'swap',
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://autopacbd.com';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: {
-    default: 'Auto Pac – World Class Food Processing & Packaging Machinery',
+    default: 'Auto Pac – World Class Food Processing & Packaging Machinery Since 1990',
     template: '%s | Auto Pac Machinery'
   },
-  description: 'Auto Pac is the premier importer and local manufacturer of world-class food processing and packaging machinery in Bangladesh. Serving Food, Pharma, Cosmetics & Chemical industries.',
-  keywords: 'packaging machine, food processing, Bangladesh, automatic packing, spice packing, bottling machine, detergent packing, liquid filling, industrial automation',
+  description: 'Auto Pac — established 1990, Kawran Bazar, Dhaka. Premier importer, manufacturer & supplier of world-class food processing and packaging machinery in Bangladesh. 500+ machines delivered, 300+ happy clients, 22+ machine categories.',
+  keywords: 'Auto Pac machinery Bangladesh, packaging machine Dhaka, food processing equipment, automatic packing machine, spice packing, bottling machine, detergent packing, liquid filling, industrial automation, Kawran Bazar machinery, since 1990',
   authors: [{ name: 'Auto Pac Engineering Team' }],
   creator: 'Auto Pac',
   publisher: 'Auto Pac',
@@ -84,7 +87,8 @@ const jsonLd = {
   name: 'Auto Pac',
   url: 'https://autopacbd.com/',
   logo: 'https://autopacbd.com/images/logo.png',
-  description: 'Auto Pac is the premier importer and local manufacturer of world-class food processing and packaging machinery in Bangladesh.',
+  foundingDate: '1990',
+  description: 'Auto Pac — established 1990 — is the premier importer, manufacturer, and supplier of world-class food processing and packaging machinery in Bangladesh, serving 300+ clients across 22+ machine categories.',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '128/3 Kawran Bazar',

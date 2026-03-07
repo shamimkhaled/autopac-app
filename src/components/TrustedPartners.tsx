@@ -2,8 +2,7 @@
 
 import { useLocale } from '@/context/LocaleContext';
 import { usePartners } from '@/hooks/useSiteData';
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 /** Only attempt to load images from external URLs or the /uploads/ path.
  *  Legacy seed data uses /images/partners/*.png which don't exist on disk —
@@ -41,6 +40,23 @@ function PartnerLogo({ name, logoUrl }: { name: string; logoUrl?: string | null 
 export default function TrustedPartners() {
   const { locale } = useLocale();
   const [partners, loaded] = usePartners();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [trackWidth, setTrackWidth] = useState(0);
+
+  // Measure the first set of logos so the animation loops seamlessly
+  useEffect(() => {
+    if (!trackRef.current || partners.length === 0) return;
+    const firstHalf = trackRef.current.querySelectorAll<HTMLElement>('[data-logo-item]');
+    // Only measure the first N items (one copy of the list)
+    let total = 0;
+    for (let i = 0; i < partners.length && i < firstHalf.length; i++) {
+      const el = firstHalf[i];
+      total += el.getBoundingClientRect().width;
+    }
+    // Add gap width: gap-8 = 32px, gap-12 = 48px, gap-16 = 64px — use 48px average
+    const gapPerItem = window.innerWidth >= 1024 ? 64 : window.innerWidth >= 640 ? 48 : 32;
+    setTrackWidth(total + gapPerItem * partners.length);
+  }, [partners]);
 
   if (loaded && partners.length === 0) return null;
 
@@ -50,35 +66,33 @@ export default function TrustedPartners() {
     <section className="py-8 sm:py-12 bg-white dark:bg-slate-950 border-y border-gray-100 dark:border-slate-800 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6 sm:mb-8">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-lg sm:text-xl md:text-2xl font-black text-industrial-dark dark:text-white uppercase tracking-tight"
-          >
-            {title.split('Industry Leaders')[0]}
-            <span className="text-action-orange">
-              {locale === 'bn' ? 'শিল্প নেতাদের বিশ্বাস' : 'Industry Leaders'}
-            </span>
-          </motion.h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-black text-industrial-dark dark:text-white uppercase tracking-tight">
+            {locale === 'bn'
+              ? title
+              : <>Trusted by <span className="text-action-orange">Industry Leaders</span></>}
+          </h2>
           <div className="w-10 h-1 bg-action-orange mx-auto mt-2 rounded-full" aria-hidden="true" />
         </div>
 
         <div className="relative">
           <div className="flex overflow-hidden">
-            <motion.div
+            <div
+              ref={trackRef}
               className="flex gap-8 sm:gap-12 lg:gap-16 py-4 items-center"
-              animate={{ x: [0, partners.length > 0 ? -(partners.length * 192) : -1035] }}
-              transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+              style={trackWidth > 0 ? {
+                animation: `marquee-scroll ${partners.length * 3}s linear infinite`,
+                willChange: 'transform',
+              } : undefined}
             >
               {[...partners, ...partners].map((partner, index) => (
-                <PartnerLogo
-                  key={`${partner.id}-${index}`}
-                  name={partner.name}
-                  logoUrl={partner.logoUrl}
-                />
+                <div key={`${partner.id}-${index}`} data-logo-item="">
+                  <PartnerLogo
+                    name={partner.name}
+                    logoUrl={partner.logoUrl}
+                  />
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
 
           {/* Fade edges */}
@@ -86,6 +100,13 @@ export default function TrustedPartners() {
           <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white dark:from-slate-950 to-transparent z-10 pointer-events-none" aria-hidden="true" />
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes marquee-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(calc(-50%)); }
+        }
+      `}</style>
     </section>
   );
 }

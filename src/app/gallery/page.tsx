@@ -122,7 +122,7 @@ function LightboxModal({
         </div>
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-xl font-bold transition-colors"
+          className="absolute top-3 right-3 w-11 h-11 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center text-2xl font-bold transition-colors touch-manipulation active:scale-90"
           aria-label="Close lightbox"
         >
           ×
@@ -182,17 +182,17 @@ function GalleryCard({
           <Link
             href={`/contact?product=${encodeURIComponent(item.nameEn)}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 flex items-center justify-center gap-1 py-2 bg-action-orange text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wide rounded-lg hover:bg-orange-600 transition-colors active:scale-95 touch-manipulation"
+            className="flex-1 flex items-center justify-center gap-1 py-2.5 sm:py-3 bg-action-orange text-white font-black text-[10px] sm:text-xs uppercase tracking-wide rounded-lg hover:bg-orange-600 transition-colors active:scale-95 touch-manipulation"
           >
-            <MessageSquare className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+            <MessageSquare className="w-3 h-3" />
             {locale === 'bn' ? 'কোট' : 'Quote'}
           </Link>
           <button
-            className="flex items-center justify-center w-9 h-[34px] bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors touch-manipulation"
+            className="flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors touch-manipulation active:scale-90"
             onClick={(e) => { e.stopPropagation(); onClick(); }}
             aria-label="Enlarge image"
           >
-            <ZoomIn className="w-3.5 h-3.5" />
+            <ZoomIn className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -400,7 +400,7 @@ export default function GalleryPage() {
               role="tab"
               aria-selected={activeCat === cat.id}
               onClick={() => handleCatChange(cat.id)}
-              className={`flex-shrink-0 px-4 sm:px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all touch-manipulation ${
+              className={`flex-shrink-0 px-4 sm:px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all touch-manipulation ${
                 activeCat === cat.id
                   ? 'bg-action-orange text-white shadow-lg shadow-action-orange/30'
                   : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
@@ -504,13 +504,13 @@ export default function GalleryPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage === 1}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1.5 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all touch-manipulation"
             >
               <ChevronLeft className="w-4 h-4" />
               {locale === 'bn' ? 'আগে' : 'Prev'}
             </button>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap justify-center">
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter((n) => n === 1 || n === totalPages || Math.abs(n - safePage) <= 1)
                 .reduce<(number | '…')[]>((acc, n, i, arr) => {
@@ -526,7 +526,7 @@ export default function GalleryPage() {
                       key={pg}
                       onClick={() => setPage(pg as number)}
                       aria-current={safePage === pg ? 'page' : undefined}
-                      className={`w-9 h-9 rounded-xl font-black text-xs transition-all ${
+                      className={`w-10 h-10 rounded-xl font-black text-xs transition-all touch-manipulation ${
                         safePage === pg
                           ? 'bg-action-orange text-white shadow-lg shadow-action-orange/30'
                           : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
@@ -541,7 +541,7 @@ export default function GalleryPage() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1.5 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all touch-manipulation"
             >
               {locale === 'bn' ? 'পরে' : 'Next'}
               <ChevronRight className="w-4 h-4" />

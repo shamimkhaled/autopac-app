@@ -35,7 +35,7 @@ export default function ProductCategory({ category, products }: ProductCategoryP
               className="flex items-center gap-5 mb-8"
             >
               <div className="w-14 h-1 bg-action-orange rounded-full" />
-              <span className="text-action-orange font-black uppercase tracking-[0.4em] text-[10px]">
+              <span className="text-action-orange font-black uppercase tracking-[0.4em] text-xs break-words">
                 {locale === 'bn' ? 'মেশিনারি ক্যাটাগরি' : 'Machinery Category'}
               </span>
             </motion.div>
@@ -69,9 +69,9 @@ export default function ProductCategory({ category, products }: ProductCategoryP
           >
             <Link
               href={`/products?category=${category.slug}`}
-              className="group flex items-center gap-5 px-10 py-5 bg-gray-50 dark:bg-slate-900 hover:bg-slate-900 dark:hover:bg-slate-800 text-slate-900 dark:text-white hover:text-white font-black text-[10px] uppercase tracking-[0.3em] rounded-2xl transition-all duration-700 border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:-translate-y-1"
+              className="group flex items-center gap-5 px-6 sm:px-10 py-4 sm:py-5 bg-gray-50 dark:bg-slate-900 hover:bg-slate-900 dark:hover:bg-slate-800 text-slate-900 dark:text-white hover:text-white font-black text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] rounded-2xl transition-all duration-700 border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:-translate-y-1 touch-manipulation break-words overflow-wrap-anywhere"
             >
-              View Full Range <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform duration-500" />
+              {locale === 'bn' ? 'সম্পূর্ণ রেঞ্জ দেখুন' : 'View Full Range'} <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform duration-500 flex-shrink-0" />
             </Link>
           </motion.div>
         </div>

@@ -22,9 +22,9 @@ const quoteSchema = z.object({
 type QuoteFormValues = z.infer<typeof quoteSchema>;
 
 const inputClass =
-  'w-full px-4 sm:px-6 py-3.5 sm:py-4 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl font-bold text-sm text-industrial-dark dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all';
+  'w-full px-4 sm:px-6 py-3.5 sm:py-4 min-h-[48px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl sm:rounded-2xl font-bold text-base sm:text-sm text-industrial-dark dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all';
 
-const labelClass = 'block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1';
+const labelClass = 'block text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1';
 
 function ContactContent() {
   const searchParams = useSearchParams();
@@ -80,7 +80,7 @@ function ContactContent() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors">
       {/* Header */}
-      <section className="relative py-20 sm:py-28 md:py-36 bg-industrial-dark overflow-hidden">
+      <section className="relative py-12 sm:py-20 md:py-28 lg:py-36 bg-industrial-dark overflow-hidden">
         <div className="absolute inset-0 bg-[url('/images/slider3.png')] bg-cover bg-center opacity-10 grayscale pointer-events-none" aria-hidden="true" />
         <div className="absolute inset-0 bg-gradient-to-b from-industrial-dark/40 via-industrial-dark to-industrial-dark pointer-events-none" aria-hidden="true" />
 
@@ -93,7 +93,7 @@ function ContactContent() {
               </span>
               <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tight leading-tight mb-5">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase tracking-tight leading-tight mb-4 sm:mb-5">
               {t('contact.subtitle')}
             </h1>
             <p className="text-white/60 text-base sm:text-lg font-medium max-w-xl mx-auto leading-relaxed">
@@ -105,7 +105,7 @@ function ContactContent() {
         </div>
       </section>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 relative z-20 pb-20 sm:pb-32">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 relative z-20 pb-16 sm:pb-24 md:pb-32">
         {/* Workflow Steps */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-20">
           {steps.map((step, idx) => (
@@ -324,17 +324,17 @@ function ContactContent() {
 
             {/* Google Maps Embed */}
             {(company?.mapEmbedUrl || true) && (
-              <div className="rounded-[40px] sm:rounded-[50px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-lg">
+              <div className="rounded-2xl sm:rounded-[40px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-lg relative h-[220px] sm:h-[260px] md:h-[280px]">
                 <iframe
                   src={company?.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3652.1562059738454!2d90.39299931498197!3d23.750885784590633!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8b33cffc3fb%3A0x4a826f475fd312af!2sKawran%20Bazar%2C%20Dhaka!5e0!3m2!1sen!2sbd!4v1620000000000!5m2!1sen!2sbd'}
                   width="100%"
-                  height="220"
+                  height="100%"
                   style={{ border: 0 }}
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Auto Pac Office Location"
-                  className="w-full"
+                  className="absolute inset-0 w-full h-full"
                 />
               </div>
             )}

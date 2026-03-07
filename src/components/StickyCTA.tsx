@@ -6,6 +6,7 @@ import { useLocale } from '@/context/LocaleContext';
 interface StickyCTAProps {
   productName?: string;
   productSlug?: string;
+  pathname?: string | null;
 }
 
 const WHATSAPP_NUMBER = '8801818496642';
@@ -13,13 +14,14 @@ const WHATSAPP_NUMBER = '8801818496642';
 export default function StickyCTA({ productName, productSlug }: StickyCTAProps) {
   const { t } = useLocale();
 
+  // Hide on mobile entirely — keeps About, Contact, Gallery, Products, News cleaner on small screens
   const whatsappMessage = productName
     ? `Hi, I am interested in ${productName}. Please send me a quote.`
     : 'Hi, I am interested in Auto Pac machinery. Please send me more information.';
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-industrial-dark/95 backdrop-blur-sm border-t border-white/10 shadow-lg safe-area-pb">
+    <div className="hidden md:block fixed bottom-0 left-0 right-0 z-40 bg-industrial-dark/95 backdrop-blur-sm border-t border-white/10 shadow-lg safe-area-pb">
       <div className="flex gap-3 p-4">
         <Link
           href={productSlug ? `/contact?product=${productSlug}` : '/contact'}
