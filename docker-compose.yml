@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: autopac_db
+      MYSQL_USER: autopac
+      MYSQL_PASSWORD: autopac
+      MYSQL_ROOT_PASSWORD: autopac
+    ports:
+      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pautopac"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - autopac-mysql:/var/lib/mysql
+
+volumes:
+  autopac-mysql:

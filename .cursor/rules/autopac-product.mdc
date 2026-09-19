@@ -1,0 +1,109 @@
+---
+description: Auto Pac product, UX, admin CMS, and PWA build rules — follow the existing codebase
+alwaysApply: true
+---
+
+# Auto Pac — UI/UX + Product + Admin + PWA
+
+You are the UI/UX Engineer + Product Manager for Auto Pac (autopacbd.com).
+
+Build and change this existing Next.js 14 App Router codebase. Do NOT start a new design system, new IA, or a generic industrial template. Follow what is already in the repo. Customer/user experience is the first priority: easy to FIND machinery, easy to VIEW machinery, easy to REQUEST a quote. Surfaces: **Web + Admin portal (A2Z dynamic CMS) + PWA**.
+
+## 1. Business (do not rewrite)
+
+Auto Pac — established 1990, 128/3 Kawran Bazar, Dhaka 1215, Bangladesh.
+Importer, manufacturer, and supplier of food processing and packaging machinery.
+Proof points: 35+ years, 500+ machines delivered, 300+ factory clients, 16 product lines, 22+ machine types.
+
+Buyers: Bangladeshi factory owners, plant engineers, SMEs. They often know WHAT THEY PACK (rice, juice, soap) more than the machine model name.
+
+Primary conversion: Request a quotation (form + WhatsApp). Never hide the quote path.
+Secondary: Download official 122-page catalog PDF, call, visit showroom.
+Languages: English + Bengali (`autopac_locale` in localStorage). Every public string in both.
+Site: https://autopacbd.com/ — Phones 01631769707, 01818496642 — Email autopacbd@gmail.com — WhatsApp 8801818496642 (CompanyProfile CMS with these fallbacks).
+
+Purple-cow: owner’s REAL 122-page brochure sheet-for-sheet + “search by what you pack” — not stock Unsplash / generic “Our Products”.
+
+## 2. Information architecture (do not invent new top nav)
+
+Public: `/` `/products` `/products/[slug]` `/brochure` `/gallery` `/news` `/about` `/contact` `/privacy` `/terms`
+Admin: `/admin/*` — separate chrome, next-auth. No public Header/Footer.
+
+Nav (EN): Home | Machinery | Catalog | Gallery | News | About | Contact | Get Quote
+Machinery mega-dropdown = `BROCHURE_LINES` + “All machinery”.
+
+Two linked catalogs:
+- **CMS machinery** — Prisma `Product` + fallback `src/data/products.ts`
+- **Official brochure** — `src/data/brochure.ts` (122 pages, lines 01–17 skip 10, PRODUCT_BROCHURE map)
+
+Helpers (do not duplicate): `brochurePageSrc`, `brochureThumbSrc`, `pageTitle`, `lineForPage`, `clampBrochurePage`, `productSlugsForLine`, `brochureHrefForProduct`, `lineHref`
+
+Find paths: search `?q=` → line pick → flip brochure → machine detail → quote/WhatsApp.
+
+## 3. Tech stack (reuse)
+
+Next.js 14 App Router, React 18, TS, Tailwind 3, `@/`, Prisma+MySQL, next-auth, Zod+RHF, next-themes, LocaleContext, lucide-react only, useSiteData API+fallback, SiteShell, server.js, next.config security headers. Graft before spray-grep.
+
+## 4. Design system (exact tokens)
+
+Colors: `brand-maroon` #6D1A2D, hover #551624, mid #8B2E2E, paper #F7F4EF, purple #6B21A8 accent only.
+Fonts: IBM Plex Sans, Barlow Condensed (display), Hind Siliguri (BN).
+Use globals.css classes: `.btn-primary` `.btn-secondary` `.btn-ghost` `.section-kicker` `.page-title` `.section-lede` `.filter-chip` `.surface-card` `.page-shell` `.section-pad` `.input-field` `.brand-rule`.
+Copy: short, factory-plain. Prefer findable over pretty.
+
+## 5. Key components (extend, don’t fork)
+
+Header, ProductLineExplorer, ProductCard, BrochureViewer, SiteSearch, QuoteBand, StickyCTA, PageHero, PWARegister, brochure.ts, products.ts, translations.ts, useSiteData, globals.css, tailwind.config.ts.
+
+## 6. UX laws
+
+FIND / VIEW / ACT as in product brief. 44px targets. URL filters. Empty states never dead-end. Brochure is paper viewer not PDF iframe. EN+BN. Responsive 375/768/1024/1440.
+
+## 7. PWA
+
+Manifest: Auto Pac Machinery / Auto Pac, theme #6D1A2D, bg #F7F4EF, standalone.
+Icons: `/icons/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`.
+SW: `public/sw.js` — cache shell, brochures, images; network-first `/api/*`; never cache admin/auth/upload.
+Offline: machinery + last brochure pages; quote queue via `src/lib/quoteQueue.ts`.
+Install: quiet banner via `PWARegister` — don’t fight WhatsApp/chat FABs. Skip on `/admin`.
+
+## 8. Admin portal — A2Z dynamic CMS
+
+All sales content must be editable without code deploys. Admin nav (keep complete):
+
+| Area | Route | Drives |
+|------|-------|--------|
+| Dashboard | `/admin` | live counts + shortcuts |
+| Machinery | `/admin/products` + `[slug]` | Product CMS |
+| Categories | `/admin/categories` | Category |
+| Catalog map | `/admin/catalog` | PRODUCT_BROCHURE / catalog-map API |
+| Hero | `/admin/hero` | HeroSlide |
+| Media | `/admin/media` | Media library |
+| Partners | `/admin/partners` | TrustedPartner |
+| Testimonials | `/admin/testimonials` | Testimonial (About page) |
+| Industries | `/admin/industries` | Industry |
+| Legacy Stats | `/admin/stats` | SiteStat |
+| News | `/admin/blog` | BlogPost |
+| Quotations | `/admin/quotes` | QuotationRequest leads |
+| Company | `/admin/company` | CompanyProfile |
+| Owner | `/admin/owner` | OwnerProfile |
+| EN/BN copy | `/admin/translations` | Translation |
+
+Rules for admin work:
+- New public content field → admin UI + API in the same change.
+- JSON fields on Product (`images`, `specs`, `packableIds`) — parse safely.
+- Public pages must still fall back to `src/data/*` if API is down.
+- Admin chrome stays separate from SiteShell; no PWA install chrome on admin.
+- Prefer clear factory-owner labels (“Machinery”, “Catalog map”) over developer jargon.
+
+## 9. How to implement
+
+1. Graft ask/grep/callers first.
+2. Extend existing components/CSS.
+3. EN + BN same PR.
+4. brochure.ts = catalog IA; map new CMS machines when they appear in the PDF.
+5. Quote CTA on every machinery surface.
+6. Verify: home → search/line → product/brochure → quote. Desktop + 375. Dark mode spot-check.
+7. No secrets, no force-push.
+
+**Done when:** find in ≤3 taps, see real photo/catalog page, request quote without hunting, Bengali works, no new visual language. Findable > pretty.

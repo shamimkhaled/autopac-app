@@ -8,6 +8,7 @@ const STATIC_PAGES: MetadataRoute.Sitemap = [
   { url: `${BASE}/about`,    changeFrequency: 'monthly', priority: 0.8, lastModified: new Date() },
   { url: `${BASE}/products`, changeFrequency: 'daily',   priority: 0.9, lastModified: new Date() },
   { url: `${BASE}/gallery`,  changeFrequency: 'weekly',  priority: 0.8, lastModified: new Date() },
+  { url: `${BASE}/brochure`, changeFrequency: 'weekly',  priority: 0.95, lastModified: new Date() },
   { url: `${BASE}/news`,     changeFrequency: 'hourly',  priority: 0.7, lastModified: new Date() },
   { url: `${BASE}/contact`,  changeFrequency: 'monthly', priority: 0.8, lastModified: new Date() },
 ];

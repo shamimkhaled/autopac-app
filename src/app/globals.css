@@ -1,38 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --background: #f1f5f9;
-    --foreground: #1e3a8a;
+    --background: #f7f4ef;
+    --foreground: #1c1917;
     --surface: #ffffff;
-    --border: #e2e8f0;
+    --border: #e7e5e4;
   }
 
   .dark {
-    --background: #111827; /* Very dark slate/blue for dark mode bg */
-    --foreground: #f8fafc;
-    --surface: #1f2937;
-    --border: #374151;
+    --background: #1c1917;
+    --foreground: #fafaf9;
+    --surface: #292524;
+    --border: #44403c;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-maroon;
   }
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: 'Inter', 'Noto Sans Bengali', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .font-bengali {
-  font-family: 'Noto Sans Bengali', sans-serif;
+  font-family: var(--font-hind), system-ui, sans-serif;
 }
 
 .line-clamp-2 {
@@ -53,17 +66,85 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
-/* Container for consistent max-width and padding */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @layer components {
   .container-narrow {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
   }
-}
 
-/* Focus styles for accessibility */
-@layer base {
-  *:focus-visible {
-    @apply outline-2 outline-offset-2 outline-action-orange;
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5
+      bg-brand-maroon text-white text-sm font-semibold rounded-md
+      hover:bg-brand-maroon-hover transition-colors duration-200
+      cursor-pointer touch-manipulation;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5
+      border border-stone-300 bg-white text-stone-900 text-sm font-semibold rounded-md
+      hover:border-brand-maroon hover:text-brand-maroon transition-colors duration-200
+      cursor-pointer touch-manipulation dark:bg-stone-900 dark:border-stone-700 dark:text-stone-100;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2
+      text-sm font-semibold text-stone-700 hover:text-brand-maroon
+      transition-colors duration-200 cursor-pointer dark:text-stone-300;
+  }
+
+  .section-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-maroon;
+  }
+
+  .page-title {
+    @apply font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-stone-900 dark:text-white leading-[1.12];
+  }
+
+  .section-lede {
+    @apply text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl;
+  }
+
+  .filter-chip {
+    @apply flex-shrink-0 min-h-[40px] px-4 py-2 rounded-md text-sm font-medium border border-stone-200 dark:border-stone-700
+      text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-900 hover:border-brand-maroon transition-colors duration-200 cursor-pointer;
+  }
+
+  .filter-chip-active {
+    @apply bg-brand-maroon text-white border-brand-maroon hover:bg-brand-maroon-hover;
+  }
+
+  .surface-card {
+    @apply bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md
+      transition-[border-color,box-shadow] duration-200;
+  }
+
+  .surface-card-hover {
+    @apply hover:border-brand-maroon hover:shadow-[0_12px_40px_-24px_rgba(109,26,45,0.45)];
+  }
+
+  .page-shell {
+    @apply min-h-screen bg-brand-paper dark:bg-stone-950;
+  }
+
+  .section-pad {
+    @apply py-14 sm:py-20;
+  }
+
+  .input-field {
+    @apply w-full h-11 px-3.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700
+      rounded-md text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400
+      focus:outline-none focus:ring-2 focus:ring-brand-maroon/25 focus:border-brand-maroon;
+  }
+
+  .brand-rule {
+    @apply h-1 w-full bg-brand-maroon;
   }
 }
 
@@ -77,8 +158,13 @@ body {
 .partners-marquee:hover {
   animation-play-state: paused;
 }
+.process-marquee {
+  animation: partners-scroll 45s linear infinite;
+}
+.process-marquee:hover {
+  animation-play-state: paused;
+}
 
-/* Fade-in animation */
 @keyframes fadeInUp {
   from {
     opacity: 0;

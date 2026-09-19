@@ -19,26 +19,30 @@ const config: Config = {
     extend: {
       colors: {
         industrial: {
-          dark: '#0f172a',    // Richer Dark Slate
-          charcoal: '#334155', // Steel Gray
-          silver: '#94a3b8',   // Light Steel
-          light: '#f8fafc',    // Brighter Crisp Light Background
-          accent: '#0ea5e9',   // Industrial Blue
+          dark: '#1C1917',
+          charcoal: '#44403C',
+          silver: '#A8A29E',
+          light: '#F7F4EF',
+          accent: '#6D1A2D',
         },
         action: {
-          orange: '#f97316',
-          'orange-dark': '#c2410c',
-          'orange-light': '#ffedd5',
-          red: '#be123c',
-          yellow: '#ca8a04',
+          orange: '#6D1A2D',
+          'orange-dark': '#4A1220',
+          'orange-light': '#F3E8EA',
+          red: '#6D1A2D',
+          yellow: '#A16207',
         },
         brand: {
-          maroon: '#8B2E2E',
+          maroon: '#6D1A2D',
+          'maroon-hover': '#551624',
+          'maroon-mid': '#8B2E2E',
+          paper: '#F7F4EF',
           purple: '#6B21A8',
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'var(--font-hind)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-ibm)', 'var(--font-hind)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-hind)', 'sans-serif'],
         bengali: ['var(--font-hind)', 'system-ui', 'sans-serif'],
       },
       animation: {

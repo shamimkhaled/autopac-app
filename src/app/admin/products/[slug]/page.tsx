@@ -13,13 +13,14 @@ import {
   Check, 
   ArrowLeft,
   Loader2,
-  X,
   Type,
   FileText
 } from 'lucide-react';
 import MediaPicker from '@/components/Admin/MediaPicker';
 import Image from 'next/image';
 import Link from 'next/link';
+import { packableItems } from '@/data/products';
+import { BROCHURE_LINES, BROCHURE_PAGE_COUNT } from '@/data/brochure';
 
 export default function AdminProductEdit({ params }: { params: { slug: string } }) {
   const isNew = params.slug === 'new';
@@ -43,7 +44,9 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
     packableIds: [] as string[],
     videoUrl: '',
     featured: false,
-    slug: ''
+    slug: '',
+    brochureLineId: '',
+    brochurePage: 1,
   });
 
   useEffect(() => {
@@ -53,9 +56,11 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
       .catch(console.error);
 
     if (!isNew) {
-      fetch(`/api/products/${params.slug}`)
-        .then(r => r.json())
-        .then(d => {
+      Promise.all([
+        fetch(`/api/products/${params.slug}`).then((r) => r.json()),
+        fetch('/api/catalog-map').then((r) => r.json()).catch(() => ({})),
+      ])
+        .then(([d, catalog]) => {
           if (d && !d.error) {
             let images = [];
             let specs = [];
@@ -73,12 +78,15 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
               packableIds = Array.isArray(d.packableIds) ? d.packableIds : (typeof d.packableIds === 'string' ? JSON.parse(d.packableIds || '[]') : []);
             } catch (e) { console.error('Error parsing packableIds', e); }
 
+            const catalogMeta = catalog?.[d.slug];
             setForm({
               ...d,
               images,
               specs,
               packableIds,
               videoUrl: d.videoUrl || '',
+              brochureLineId: catalogMeta?.lineId || '',
+              brochurePage: catalogMeta?.page || 1,
             });
           }
         })
@@ -142,16 +150,6 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
   };
   const removeSpec = (idx: number) => {
     setForm({ ...form, specs: form.specs.filter((_, i) => i !== idx) });
-  };
-
-  const addPackable = () => setForm({ ...form, packableIds: [...form.packableIds, ''] });
-  const updatePackable = (idx: number, val: string) => {
-    const newPackableIds = [...form.packableIds];
-    newPackableIds[idx] = val;
-    setForm({ ...form, packableIds: newPackableIds });
-  };
-  const removePackable = (idx: number) => {
-    setForm({ ...form, packableIds: form.packableIds.filter((_, i) => i !== idx) });
   };
 
   if (loading) {
@@ -268,12 +266,30 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Short Description (Bengali)</label>
+                  <textarea 
+                    value={form.shortDescBn} 
+                    onChange={e => setForm({...form, shortDescBn: e.target.value})} 
+                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[100px] outline-none"
+                    placeholder="কার্ডে দেখানো সংক্ষিপ্ত বর্ণনা..."
+                  />
+                </div>
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Technical Description</label>
                   <textarea 
                     value={form.fullDescEn} 
                     onChange={e => setForm({...form, fullDescEn: e.target.value})} 
                     className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[250px] outline-none"
                     placeholder="Detailed features, benefits, and operation guide..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Description (Bengali)</label>
+                  <textarea 
+                    value={form.fullDescBn} 
+                    onChange={e => setForm({...form, fullDescBn: e.target.value})} 
+                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[250px] outline-none"
+                    placeholder="পূর্ণ বিবরণ বাংলায়..."
                   />
                 </div>
               </div>
@@ -442,30 +458,65 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
 
             <div className="space-y-6 pt-4">
               <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-2">
-                <Package className="w-3 h-3" /> Packable Materials
+                <Package className="w-3 h-3" /> Packable materials
               </h4>
-              <div className="space-y-3">
-                {form.packableIds.map((item, i) => (
-                  <div key={i} className="flex gap-2">
-                    <input 
-                      value={item} 
-                      onChange={e => updatePackable(i, e.target.value)} 
-                      placeholder="e.g. Sugar, Rice..."
-                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white font-medium outline-none focus:border-action-orange transition-colors"
-                    />
-                    <button type="button" onClick={() => removePackable(i)} className="text-white/30 hover:text-red-400">
-                      <X className="w-4 h-4" />
+              <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                {packableItems.map((item) => {
+                  const on = form.packableIds.includes(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          packableIds: on
+                            ? form.packableIds.filter((id) => id !== item.id)
+                            : [...form.packableIds, item.id],
+                        })
+                      }
+                      className={`text-left px-3 py-2 rounded-xl text-xs font-bold border ${
+                        on ? 'bg-action-orange border-action-orange text-white' : 'bg-white/5 border-white/10 text-white/70'
+                      }`}
+                    >
+                      {item.nameEn}
                     </button>
-                  </div>
-                ))}
-                <button 
-                  type="button" 
-                  onClick={addPackable}
-                  className="w-full py-2 bg-white/5 border border-white/10 border-dashed rounded-xl text-[10px] font-black text-white/50 uppercase tracking-widest hover:bg-white/10 transition-colors"
-                >
-                  + Add Material
-                </button>
+                  );
+                })}
               </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Official catalog page</h4>
+              <select
+                value={form.brochureLineId}
+                onChange={(e) => {
+                  const line = BROCHURE_LINES.find((l) => l.id === e.target.value);
+                  setForm({
+                    ...form,
+                    brochureLineId: e.target.value,
+                    brochurePage: line?.startPage || form.brochurePage,
+                  });
+                }}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white"
+              >
+                <option value="">Not in catalog</option>
+                {BROCHURE_LINES.map((line) => (
+                  <option key={line.id} value={line.id} className="text-industrial-dark">
+                    {line.number} {line.shortEn}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min={1}
+                max={BROCHURE_PAGE_COUNT}
+                disabled={!form.brochureLineId}
+                value={form.brochurePage}
+                onChange={(e) => setForm({ ...form, brochurePage: Number(e.target.value) })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white disabled:opacity-40"
+                placeholder="Catalog page"
+              />
             </div>
           </div>
         </div>

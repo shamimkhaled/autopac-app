@@ -1,13 +1,14 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLocale } from '@/context/LocaleContext';
 import { useCompany } from '@/hooks/useSiteData';
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle2, ClipboardList, UserCheck, Calculator, ArrowRight, MessageSquare, Globe, Loader2 } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, CheckCircle2, ClipboardList, UserCheck, Calculator, MessageSquare, Globe, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { queueQuote } from '@/lib/quoteQueue';
 
 const quoteSchema = z.object({
   name: z.string().min(2),
@@ -21,10 +22,8 @@ const quoteSchema = z.object({
 
 type QuoteFormValues = z.infer<typeof quoteSchema>;
 
-const inputClass =
-  'w-full px-4 sm:px-6 py-3.5 sm:py-4 min-h-[48px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl sm:rounded-2xl font-bold text-base sm:text-sm text-industrial-dark dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all';
-
-const labelClass = 'block text-xs font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1';
+const inputClass = 'input-field min-h-[48px]';
+const labelClass = 'block text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400 mb-1.5';
 
 function ContactContent() {
   const searchParams = useSearchParams();
@@ -33,14 +32,19 @@ function ContactContent() {
   const [company] = useCompany();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [queuedOffline, setQueuedOffline] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   const whatsapp = company?.whatsapp || '8801818496642';
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<QuoteFormValues>({
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteSchema),
     defaultValues: { productInterest: defaultProduct },
   });
+
+  useEffect(() => {
+    if (defaultProduct) setValue('productInterest', defaultProduct);
+  }, [defaultProduct, setValue]);
 
   const onSubmit = async (data: QuoteFormValues) => {
     // If honeypot is filled, silently succeed (bot detected)
@@ -48,6 +52,28 @@ function ContactContent() {
 
     setIsSubmitting(true);
     setErrorMsg('');
+    setQueuedOffline(false);
+
+    const enqueue = () => {
+      queueQuote({
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        companyName: data.companyName,
+        productInterest: data.productInterest,
+        message: data.message,
+      });
+      setQueuedOffline(true);
+      setIsSuccess(true);
+      reset();
+    };
+
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      enqueue();
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/quote', {
         method: 'POST',
@@ -65,7 +91,7 @@ function ContactContent() {
         setErrorMsg(locale === 'bn' ? 'জমা দিতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।' : 'Failed to submit. Please try again.');
       }
     } catch {
-      setErrorMsg(locale === 'bn' ? 'একটি অপ্রত্যাশিত ত্রুটি হয়েছে।' : 'An unexpected error occurred.');
+      enqueue();
     } finally {
       setIsSubmitting(false);
     }
@@ -78,95 +104,87 @@ function ContactContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors">
-      {/* Header */}
-      <section className="relative py-12 sm:py-20 md:py-28 lg:py-36 bg-industrial-dark overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/slider3.png')] bg-cover bg-center opacity-10 grayscale pointer-events-none" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-b from-industrial-dark/40 via-industrial-dark to-industrial-dark pointer-events-none" aria-hidden="true" />
+    <div className="page-shell">
+      <PageHero
+        kicker={locale === 'bn' ? 'কোটেশন' : 'Request a quotation'}
+        title={t('contact.subtitle')}
+        description={
+          locale === 'bn'
+            ? 'মেশিনের নাম, কারখানা এবং সক্ষমতা লিখুন। আমরা স্পেসিফিকেশন ও মূল্য নিয়ে যোগাযোগ করব।'
+            : 'Name the machine, your factory, and capacity. We reply with specifications and pricing.'
+        }
+      />
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
-              <span className="text-action-orange font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
-                {t('contact.acquisitionLabel')}
-              </span>
-              <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
-            </div>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white uppercase tracking-tight leading-tight mb-4 sm:mb-5">
-              {t('contact.subtitle')}
-            </h1>
-            <p className="text-white/60 text-base sm:text-lg font-medium max-w-xl mx-auto leading-relaxed">
-              {locale === 'bn'
-                ? 'মেশিনের বিস্তারিত এবং মূল্য জানতে নিচের ফর্মটি পূরণ করুন।'
-                : 'Accelerate your production with world-class automated machinery.'}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 relative z-20 pb-16 sm:pb-24 md:pb-32">
-        {/* Workflow Steps */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
           {steps.map((step, idx) => (
-            <div
-              key={idx}
-              className="bg-white dark:bg-slate-900 p-6 sm:p-8 lg:p-10 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-800 flex flex-col items-center text-center group hover:-translate-y-1 transition-all duration-500"
-            >
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-orange-50 dark:bg-action-orange/10 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-action-orange transition-colors duration-500">
-                <step.icon className="w-6 h-6 sm:w-7 sm:h-7 text-action-orange group-hover:text-white transition-colors duration-500" aria-hidden="true" />
-              </div>
-              <h3 className="text-sm font-black text-industrial-dark dark:text-white uppercase tracking-tight mb-2">{step.title}</h3>
-              <p className="text-gray-400 dark:text-slate-400 text-xs font-medium leading-relaxed">{step.desc}</p>
+            <div key={idx} className="surface-card p-5 sm:p-6">
+              <step.icon className="w-5 h-5 text-brand-maroon mb-3" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-stone-900 dark:text-white mb-1">{step.title}</h3>
+              <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed">{step.desc}</p>
             </div>
           ))}
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
           {/* Main Form */}
-          <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-[40px] sm:rounded-[50px] shadow-2xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-slate-800 p-6 sm:p-10 lg:p-14">
+          <div className="lg:col-span-7 surface-card p-6 sm:p-8 lg:p-10">
             {isSuccess ? (
               <div
                 role="status"
                 aria-live="polite"
-                className="py-16 sm:py-20 text-center space-y-6"
+                className="py-12 sm:py-16 text-center space-y-5"
               >
-                <div className="w-20 h-20 bg-green-50 dark:bg-green-950/30 rounded-full flex items-center justify-center mx-auto border-4 border-white dark:border-slate-900 shadow-lg">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" aria-hidden="true" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-2xl sm:text-3xl font-black text-industrial-dark dark:text-white uppercase tracking-tight">
-                    {t('contact.successTitle')}
+                <CheckCircle2 className="w-10 h-10 text-brand-maroon mx-auto" aria-hidden="true" />
+                <div className="space-y-2">
+                  <h3 className="font-display text-2xl font-semibold text-stone-900 dark:text-white tracking-tight">
+                    {queuedOffline
+                      ? locale === 'bn'
+                        ? 'কোটেশন সংরক্ষিত'
+                        : 'Quote saved on this phone'
+                      : t('contact.successTitle')}
                   </h3>
-                  <p className="text-gray-400 font-medium max-w-sm mx-auto text-sm">
-                    {t('contact.successDesc')}
+                  <p className="text-stone-500 max-w-sm mx-auto text-sm">
+                    {queuedOffline
+                      ? locale === 'bn'
+                        ? 'আপনি অফলাইন। ইন্টারনেট ফিরলে কোটেশন স্বয়ংক্রিয়ভাবে পাঠানো হবে।'
+                        : 'You are offline. When you reconnect, we send this quotation automatically.'
+                      : t('contact.successDesc')}
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsSuccess(false)}
-                  className="px-8 py-3.5 bg-industrial-dark dark:bg-slate-800 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-action-orange dark:hover:bg-action-orange transition-all"
+                  onClick={() => {
+                    setIsSuccess(false);
+                    setQueuedOffline(false);
+                  }}
+                  className="btn-primary"
                 >
                   {t('contact.submitNew')}
                 </button>
               </div>
             ) : (
-              <div className="space-y-8 sm:space-y-10">
-                <div className="space-y-3">
-                  <h2 className="text-2xl sm:text-3xl font-black text-industrial-dark dark:text-white uppercase tracking-tight">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h2 className="font-display text-2xl font-semibold text-stone-900 dark:text-white tracking-tight">
                     {t('contact.getInTouch')}
                   </h2>
-                  <p className="text-gray-400 dark:text-slate-400 font-medium text-sm">
-                    {locale === 'bn' ? 'সঠিক তথ্য প্রদান করলে দ্রুত সাড়া পাবেন।' : 'Please provide accurate data for precise engineering evaluation.'}
+                  {defaultProduct && (
+                    <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-brand-maroon/10 text-brand-maroon text-sm font-medium">
+                      {locale === 'bn' ? 'কোটেশনের মেশিন:' : 'Quoting:'} {defaultProduct}
+                    </p>
+                  )}
+                  <p className="text-stone-500 dark:text-stone-400 text-sm">
+                    {locale === 'bn' ? 'সঠিক তথ্য দিলে দ্রুত সাড়া পাবেন।' : 'Accurate details help us specify the right machine.'}
                   </p>
                 </div>
 
                 {errorMsg && (
-                  <div role="alert" aria-live="assertive" className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-2xl text-red-600 dark:text-red-400 text-sm font-bold">
+                  <div role="alert" aria-live="assertive" className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md text-red-700 dark:text-red-400 text-sm">
                     {errorMsg}
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5 sm:space-y-6">
+                <form onSubmit={handleSubmit(onSubmit)} noValidate className="relative space-y-5 sm:space-y-6">
                   {/* Honeypot — hidden from humans, bots fill this */}
                   <div aria-hidden="true" className="absolute opacity-0 pointer-events-none h-0 overflow-hidden">
                     <label htmlFor="_hp">Leave this empty</label>
@@ -283,13 +301,13 @@ function ContactContent() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full group flex items-center justify-center gap-3 py-4 sm:py-5 bg-action-orange text-white font-black text-xs uppercase tracking-[0.25em] rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-action-orange/30 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+                    className="btn-primary w-full disabled:opacity-70 disabled:cursor-not-allowed"
                     aria-label={isSubmitting ? (locale === 'bn' ? 'পাঠানো হচ্ছে...' : 'Submitting...') : t('contact.submit')}
                   >
                     {isSubmitting ? (
                       <><Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" /> {locale === 'bn' ? 'পাঠানো হচ্ছে...' : 'Submitting...'}</>
                     ) : (
-                      <><Send className="w-4 h-4" aria-hidden="true" /> {t('contact.submit')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" /></>
+                      <><Send className="w-4 h-4" aria-hidden="true" /> {t('contact.submit')}</>
                     )}
                   </button>
                 </form>
@@ -298,33 +316,24 @@ function ContactContent() {
           </div>
 
           {/* Sidebar — moves above form on mobile */}
-          <div className="lg:col-span-5 space-y-6 sm:space-y-8">
-            {/* WhatsApp Card */}
-            <div className="bg-industrial-dark rounded-[40px] sm:rounded-[50px] p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-action-orange/10 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none" aria-hidden="true" />
-              <div className="relative z-10 space-y-5">
-                <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
-                  <MessageSquare className="w-7 h-7 text-action-orange" aria-hidden="true" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">{t('contact.directAccess')}</h3>
-                  <p className="text-white/50 font-medium leading-relaxed text-sm">{t('contact.directAccessDesc')}</p>
-                </div>
-                <a
-                  href={`https://wa.me/${whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${t('contact.startChat')} ${t('common.openInNewTab') || '(opens in new tab)'}`}
-                  className="inline-flex items-center gap-3 px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-industrial-dark font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-xl touch-manipulation"
-                >
-                  {t('contact.startChat')} <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </a>
-              </div>
+          <div className="lg:col-span-5 space-y-5">
+            <div className="bg-brand-maroon text-white p-6 sm:p-8">
+              <MessageSquare className="w-6 h-6 mb-4" aria-hidden="true" />
+              <h3 className="font-display text-2xl font-semibold tracking-tight">{t('contact.directAccess')}</h3>
+              <p className="mt-2 text-white/80 text-sm leading-relaxed">{t('contact.directAccessDesc')}</p>
+              <a
+                href={`https://wa.me/${whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${t('contact.startChat')} ${t('common.openInNewTab') || '(opens in new tab)'}`}
+                className="btn-primary bg-white text-brand-maroon hover:bg-stone-100 mt-6"
+              >
+                {t('contact.startChat')}
+              </a>
             </div>
 
-            {/* Google Maps Embed */}
             {(company?.mapEmbedUrl || true) && (
-              <div className="rounded-2xl sm:rounded-[40px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-lg relative h-[220px] sm:h-[260px] md:h-[280px]">
+              <div className="overflow-hidden border border-stone-200 dark:border-stone-800 rounded-md relative h-[220px] sm:h-[260px]">
                 <iframe
                   src={company?.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3652.1562059738454!2d90.39299931498197!3d23.750885784590633!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8b33cffc3fb%3A0x4a826f475fd312af!2sKawran%20Bazar%2C%20Dhaka!5e0!3m2!1sen!2sbd!4v1620000000000!5m2!1sen!2sbd'}
                   width="100%"
@@ -339,28 +348,23 @@ function ContactContent() {
               </div>
             )}
 
-            {/* Corporate Info */}
-            <div className="bg-gray-50 dark:bg-slate-900/60 rounded-[40px] sm:rounded-[50px] p-8 sm:p-10 space-y-7 border border-gray-100 dark:border-slate-800">
-              <div>
-                <h3 className="text-xl sm:text-2xl font-black text-industrial-dark dark:text-white uppercase tracking-tight">{t('contact.corporateHQ')}</h3>
-              </div>
-              <ul className="space-y-6">
+            <div className="surface-card p-6 sm:p-8 space-y-5">
+              <h3 className="font-display text-xl font-semibold text-stone-900 dark:text-white tracking-tight">{t('contact.corporateHQ')}</h3>
+              <ul className="space-y-4">
                 {[
                   { icon: MapPin, label: t('contact.officeAddress'), value: company?.address || '128/3 Kawran Bazar, Dhaka 1215' },
                   { icon: Phone,  label: t('contact.phoneLines'),   value: company?.phone   || '01631769707, 01818496642', href: `tel:${company?.phone || '01631769707'}` },
                   { icon: Mail,   label: t('contact.emailServices'), value: company?.email  || 'autopacbd@gmail.com',       href: `mailto:${company?.email || 'autopacbd@gmail.com'}` },
                   { icon: Globe,  label: t('contact.webPresence'),   value: company?.website || 'www.autopacbd.com' },
                 ].map(({ icon: Icon, label, value, href }) => (
-                  <li key={label} className="flex gap-4">
-                    <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-action-orange" aria-hidden="true" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">{label}</p>
+                  <li key={label} className="flex gap-3">
+                    <Icon className="w-4 h-4 text-brand-maroon flex-shrink-0 mt-1" aria-hidden="true" />
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400">{label}</p>
                       {href ? (
-                        <a href={href} className="text-industrial-dark dark:text-white font-bold text-sm hover:text-action-orange transition-colors">{value}</a>
+                        <a href={href} className="text-stone-900 dark:text-white text-sm hover:text-brand-maroon">{value}</a>
                       ) : (
-                        <p className="text-industrial-dark dark:text-white font-bold text-sm">{value}</p>
+                        <p className="text-stone-900 dark:text-white text-sm">{value}</p>
                       )}
                     </div>
                   </li>
@@ -377,8 +381,8 @@ function ContactContent() {
 export default function ContactPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
-        <Loader2 className="w-10 h-10 text-action-orange animate-spin" aria-label="Loading..." />
+      <div className="page-shell flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" aria-label="Loading..." />
       </div>
     }>
       <ContactContent />

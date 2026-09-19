@@ -2,15 +2,39 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Package, MessageSquare, Users, Eye, TrendingUp, ArrowRight, Loader2,
-  FileText, Settings, ShieldCheck, Activity, ExternalLink, Image as ImageIcon,
-  Radio, BarChart3, Globe
+  Package,
+  MessageSquare,
+  Users,
+  TrendingUp,
+  ArrowRight,
+  Loader2,
+  Settings,
+  ShieldCheck,
+  Activity,
+  ExternalLink,
+  Image as ImageIcon,
+  Radio,
+  BarChart3,
+  Globe,
 } from 'lucide-react';
 import Link from 'next/link';
 
-interface DashboardStats { products: number; quotes: number; partners: number; }
-interface RecentLead { id: string; name: string; productInterest: string; status: string; createdAt: string; }
-interface VisitorData { activeVisitors: number; topPages: Array<{ page: string; _count: { page: number } }> }
+interface DashboardStats {
+  products: number;
+  quotes: number;
+  partners: number;
+}
+interface RecentLead {
+  id: string;
+  name: string;
+  productInterest: string;
+  status: string;
+  createdAt: string;
+}
+interface VisitorData {
+  activeVisitors: number;
+  topPages: Array<{ page: string; _count: { page: number } }>;
+}
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ products: 0, quotes: 0, partners: 0 });
@@ -26,17 +50,23 @@ export default function AdminDashboard() {
       setVisitors(data);
       setVisitorPulse(true);
       setTimeout(() => setVisitorPulse(false), 400);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [productsRes, quotesRes, partnersRes] = await Promise.all([
-          fetch('/api/products'), fetch('/api/quote'), fetch('/api/partners'),
+          fetch('/api/products'),
+          fetch('/api/quote'),
+          fetch('/api/partners'),
         ]);
         const [products, quotes, partners] = await Promise.all([
-          productsRes.json(), quotesRes.json(), partnersRes.json(),
+          productsRes.json(),
+          quotesRes.json(),
+          partnersRes.json(),
         ]);
         setStats({
           products: Array.isArray(products) ? products.length : 0,
@@ -57,77 +87,102 @@ export default function AdminDashboard() {
   }, [fetchVisitors]);
 
   const statCards = [
-    { title: 'Total Machines',  value: stats.products, icon: Package,      color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-100',   href: '/admin/products' },
-    { title: 'Active Leads',    value: stats.quotes,   icon: MessageSquare, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100', href: '/admin/quotes' },
-    { title: 'Global Partners', value: stats.partners, icon: Users,         color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-100',  href: '/admin/partners' },
-    { title: 'Live Visitors',   value: visitors.activeVisitors, icon: Radio, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', href: '#visitors' },
+    {
+      title: 'Machines',
+      value: stats.products,
+      icon: Package,
+      href: '/admin/products',
+    },
+    {
+      title: 'Quotations',
+      value: stats.quotes,
+      icon: MessageSquare,
+      href: '/admin/quotes',
+    },
+    {
+      title: 'Partners',
+      value: stats.partners,
+      icon: Users,
+      href: '/admin/partners',
+    },
+    {
+      title: 'Live visitors',
+      value: visitors.activeVisitors,
+      icon: Radio,
+      href: '#visitors',
+      live: true,
+    },
   ];
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 gap-6">
-        <Loader2 className="w-16 h-16 text-action-orange animate-spin" />
-        <div className="text-center">
-          <p className="text-xl font-black text-industrial-dark uppercase tracking-widest animate-pulse">Initializing Control Center...</p>
-          <p className="text-gray-400 font-medium mt-1">Establishing secure connection to database</p>
-        </div>
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <Loader2 className="w-10 h-10 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading dashboard…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 sm:space-y-10">
-      {/* Welcome Banner */}
-      <div className="relative bg-industrial-dark rounded-3xl sm:rounded-[40px] p-6 sm:p-10 overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-action-orange/20 to-transparent pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+    <div className="space-y-8">
+      <div className="bg-brand-maroon text-white rounded-md p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tight">
-              Control <span className="text-action-orange">Center</span>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70 mb-2">
+              Auto Pac CMS
+            </p>
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">
+              Machinery control desk
             </h2>
-            <p className="text-white/60 font-medium mt-2 max-w-md text-sm">
-              Your industrial machinery portal is running.{' '}
-              <span className="text-white font-bold">{stats.quotes} active inquiries</span> await review.
+            <p className="text-white/80 mt-2 text-sm max-w-md">
+              <span className="font-semibold text-white">{stats.quotes}</span> quotation
+              {stats.quotes === 1 ? '' : 's'} waiting. Keep machines, catalog map, and company copy current.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/admin/products/new" className="px-5 sm:px-8 py-3 sm:py-4 bg-white text-industrial-dark font-black rounded-2xl hover:bg-gray-100 transition-all active:scale-95 shadow-lg text-xs uppercase tracking-wider">
-              Add Machine
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/products/new"
+              className="btn-primary bg-white text-brand-maroon hover:bg-stone-100"
+            >
+              Add machine
             </Link>
-            <Link href="/" target="_blank" className="p-3 sm:p-4 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all border border-white/10">
-              <ExternalLink className="w-5 h-5" />
+            <Link
+              href="/"
+              target="_blank"
+              className="inline-flex items-center justify-center min-h-[44px] px-4 border border-white/40 text-white text-sm font-semibold rounded-md hover:bg-white/10"
+            >
+              <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
-          const isLive = stat.title === 'Live Visitors';
           return (
             <Link
               key={stat.title}
               href={stat.href}
-              className={`bg-white p-5 sm:p-8 rounded-2xl sm:rounded-[32px] shadow-sm border ${stat.border} flex flex-col gap-4 sm:gap-6 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group`}
+              className="surface-card surface-card-hover p-5 flex flex-col gap-4 cursor-pointer"
             >
-              <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center ${stat.bg} group-hover:scale-110 transition-transform`}>
-                <Icon className={`w-5 h-5 sm:w-7 sm:h-7 ${stat.color} ${isLive && visitorPulse ? 'animate-ping' : ''}`} />
+              <div className="w-10 h-10 rounded-md bg-brand-paper border border-stone-200 flex items-center justify-center">
+                <Icon
+                  className={`w-5 h-5 text-brand-maroon ${stat.live && visitorPulse ? 'animate-pulse' : ''}`}
+                />
               </div>
               <div>
-                <p className="text-xs sm:text-sm font-black text-gray-400 uppercase tracking-widest">{stat.title}</p>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <h3 className={`text-2xl sm:text-4xl font-black text-industrial-dark tabular-nums transition-all ${isLive && visitorPulse ? 'text-purple-600 scale-105' : ''}`}>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                  {stat.title}
+                </p>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <p className="font-display text-3xl font-semibold text-stone-900 tabular-nums">
                     {stat.value}
-                  </h3>
-                  {isLive ? (
-                    <span className="flex items-center gap-1 text-xs font-black text-green-500 uppercase">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                      Live
-                    </span>
+                  </p>
+                  {stat.live ? (
+                    <span className="text-[10px] font-semibold uppercase text-emerald-700">Live</span>
                   ) : (
-                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
+                    <TrendingUp className="w-3.5 h-3.5 text-stone-400" />
                   )}
                 </div>
               </div>
@@ -136,44 +191,54 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-10">
-        {/* Recent Leads */}
-        <div className="lg:col-span-2 bg-white p-6 sm:p-10 rounded-3xl sm:rounded-[40px] shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6 sm:mb-10 border-b border-gray-50 pb-4 sm:pb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 surface-card p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-5 pb-4 border-b border-stone-100">
             <div>
-              <h3 className="text-lg sm:text-xl font-black text-industrial-dark uppercase tracking-tight">Inbound Leads</h3>
-              <p className="text-gray-400 font-medium text-xs mt-0.5">Most recent quotation requests</p>
+              <h3 className="font-display text-lg font-semibold text-stone-900">Inbound quotations</h3>
+              <p className="text-sm text-stone-500 mt-0.5">Most recent quote requests</p>
             </div>
-            <Link href="/admin/quotes" className="flex items-center gap-1.5 text-xs font-black text-action-orange uppercase tracking-widest hover:translate-x-1 transition-transform">
-              View All <ArrowRight className="w-3.5 h-3.5" />
+            <Link href="/admin/quotes" className="btn-ghost text-xs px-2">
+              View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {recentLeads.length === 0 ? (
-              <div className="text-center py-14 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
-                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No leads yet</p>
+              <div className="text-center py-12 border border-dashed border-stone-200 rounded-md">
+                <p className="text-sm text-stone-500">No quotations yet</p>
               </div>
             ) : (
               recentLeads.map((lead) => (
-                <div key={lead.id} className="flex items-center justify-between p-4 sm:p-5 bg-gray-50/50 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 rounded-2xl sm:rounded-3xl transition-all group">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center font-black text-industrial-dark group-hover:text-action-orange transition-colors text-sm flex-shrink-0">
+                <div
+                  key={lead.id}
+                  className="flex items-center justify-between p-3 sm:p-4 rounded-md border border-stone-100 hover:border-brand-maroon/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center font-semibold text-brand-maroon text-sm flex-shrink-0">
                       {lead.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-industrial-dark text-sm truncate">{lead.name}</p>
-                      <p className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mt-0.5 truncate">
+                      <p className="font-medium text-stone-900 text-sm truncate">{lead.name}</p>
+                      <p className="text-xs text-stone-500 flex items-center gap-1.5 mt-0.5 truncate">
                         <Package className="w-3 h-3 flex-shrink-0" />
                         <span className="truncate">{lead.productInterest}</span>
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0 ml-3">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                      lead.status === 'PENDING' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' : 'bg-green-50 text-green-600 border-green-100'
-                    }`}>{lead.status}</span>
-                    <span className="text-[9px] text-gray-400 font-bold">{new Date(lead.createdAt).toLocaleDateString()}</span>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-3">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
+                        lead.status === 'PENDING'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-100'
+                          : 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                      }`}
+                    >
+                      {lead.status}
+                    </span>
+                    <span className="text-[10px] text-stone-400">
+                      {new Date(lead.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               ))
@@ -181,84 +246,90 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-6 sm:space-y-8">
-          {/* Live Visitor Widget */}
-          <div id="visitors" className="bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[36px] shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-black text-industrial-dark uppercase tracking-tight text-sm sm:text-base flex items-center gap-2">
-                <Globe className="w-4 h-4 text-purple-500" />
-                Live Traffic
+        <div className="space-y-4">
+          <div id="visitors" className="surface-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-base font-semibold text-stone-900 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-brand-maroon" />
+                Live traffic
               </h3>
-              <span className="flex items-center gap-1.5 text-[10px] font-black text-green-500 uppercase bg-green-50 px-2.5 py-1 rounded-full border border-green-100">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[10px] font-semibold uppercase text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
                 Real-time
               </span>
             </div>
-
-            <div className="text-center py-4">
-              <div className={`text-5xl sm:text-6xl font-black tabular-nums transition-all duration-300 ${visitorPulse ? 'text-purple-600 scale-110' : 'text-industrial-dark'}`}>
+            <div className="text-center py-3">
+              <p
+                className={`font-display text-5xl font-semibold tabular-nums ${
+                  visitorPulse ? 'text-brand-maroon' : 'text-stone-900'
+                }`}
+              >
                 {visitors.activeVisitors}
-              </div>
-              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-1">Active Users Now</p>
+              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500 mt-1">
+                Active now
+              </p>
             </div>
-
             {visitors.topPages.length > 0 && (
-              <div className="mt-4 space-y-2 border-t border-gray-50 pt-4">
-                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Top Pages</p>
+              <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+                  Top pages
+                </p>
                 {visitors.topPages.map(({ page, _count }, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500 truncate max-w-[180px] font-medium">{page || '/'}</span>
-                    <span className="font-black text-industrial-dark flex-shrink-0 ml-2">{_count.page}</span>
+                    <span className="text-stone-600 truncate max-w-[180px]">{page || '/'}</span>
+                    <span className="font-semibold text-stone-900 ml-2">{_count.page}</span>
                   </div>
                 ))}
               </div>
             )}
-
-            <div className="mt-4 flex items-center gap-2 text-[9px] text-gray-300 font-bold">
+            <p className="mt-3 flex items-center gap-1.5 text-[10px] text-stone-400">
               <BarChart3 className="w-3 h-3" />
               Updates every 30 seconds
-            </div>
+            </p>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[36px] shadow-sm border border-gray-100">
-            <h3 className="text-sm sm:text-base font-black text-industrial-dark uppercase tracking-tight mb-5">Quick Launch</h3>
-            <div className="grid grid-cols-1 gap-3">
+          <div className="surface-card p-5">
+            <h3 className="font-display text-base font-semibold text-stone-900 mb-4">Quick actions</h3>
+            <div className="grid grid-cols-1 gap-2">
               {[
-                { href: '/admin/products/new', label: 'Add New Machine',  icon: Package,     bg: 'bg-blue-50/50 hover:bg-blue-50 text-blue-700' },
-                { href: '/admin/media',        label: 'Upload Assets',    icon: ImageIcon,   bg: 'bg-orange-50/50 hover:bg-orange-50 text-action-orange' },
-                { href: '/admin/stats',        label: 'Edit Counters',    icon: BarChart3,   bg: 'bg-green-50/50 hover:bg-green-50 text-green-700' },
-                { href: '/admin/company',      label: 'Company Settings', icon: Settings,    bg: 'bg-purple-50/50 hover:bg-purple-50 text-purple-700' },
-              ].map(({ href, label, icon: Icon, bg }) => (
-                <Link key={href} href={href} className={`flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl transition-all group ${bg}`}>
-                  <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
-                    <Icon className="w-4 h-4" />
+                { href: '/admin/products/new', label: 'Add machine', icon: Package },
+                { href: '/admin/media', label: 'Upload media', icon: ImageIcon },
+                { href: '/admin/catalog', label: 'Catalog map', icon: BarChart3 },
+                { href: '/admin/company', label: 'Company settings', icon: Settings },
+              ].map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 p-3 rounded-md border border-stone-200 hover:border-brand-maroon transition-colors cursor-pointer"
+                >
+                  <div className="w-9 h-9 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4 text-brand-maroon" />
                   </div>
-                  <span className="font-bold text-xs sm:text-sm">{label}</span>
+                  <span className="text-sm font-medium text-stone-800">{label}</span>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* System Status */}
-          <div className="bg-industrial-dark p-6 sm:p-8 rounded-3xl sm:rounded-[36px] shadow-xl space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-action-orange/10 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-            <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-tight flex items-center gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-action-orange" /> System Status
+          <div className="bg-stone-900 text-white p-5 rounded-md space-y-4">
+            <h3 className="font-display text-base font-semibold flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-brand-maroon-mid" /> System
             </h3>
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {[
-                { icon: Activity, label: 'Database',      status: 'Operational', color: 'text-green-500' },
-                { icon: Radio,    label: 'Visitor Track', status: 'Active',      color: 'text-green-500' },
-                { icon: Settings, label: 'CMS Version',   status: 'v2.5.0',     color: 'text-white/40' },
-              ].map(({ icon: Icon, label, status, color }) => (
-                <div key={label} className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0 last:pb-0">
-                  <div className="flex items-center gap-2.5">
-                    <Icon className="w-3.5 h-3.5 text-action-orange" />
-                    <span className="text-xs font-medium text-white/70">{label}</span>
+                { icon: Activity, label: 'Database', status: 'Operational' },
+                { icon: Radio, label: 'Visitor track', status: 'Active' },
+                { icon: Settings, label: 'CMS', status: 'Live' },
+              ].map(({ icon: Icon, label, status }) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-3.5 h-3.5 text-brand-maroon-mid" />
+                    <span className="text-xs text-white/70">{label}</span>
                   </div>
-                  <span className={`text-[10px] font-black uppercase ${color}`}>{status}</span>
+                  <span className="text-[10px] font-semibold uppercase text-emerald-400">{status}</span>
                 </div>
               ))}
             </div>

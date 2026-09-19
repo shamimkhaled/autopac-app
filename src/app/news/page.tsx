@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, MapPin, Search, Newspaper, ArrowRight, Loader2, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Globe, MapPin, Search, Newspaper, Loader2, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { api, type NewsItem } from '@/lib/api';
 import NewsCard from '@/components/News/NewsCard';
 import AdSense from '@/components/News/AdSense';
+import PageHero from '@/components/PageHero';
 import Script from 'next/script';
 
 // This is a Client Component, but we can still set basic metadata if needed 
@@ -27,6 +27,14 @@ export default function NewsPage() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [newsletterMessage, setNewsletterMessage] = useState('');
   const newsletterRef = useRef<HTMLInputElement>(null);
+  const [cmsPosts, setCmsPosts] = useState<Array<{
+    slug: string;
+    titleEn: string;
+    titleBn: string;
+    contentEn: string;
+    imageUrl?: string | null;
+    createdAt: string;
+  }>>([]);
 
   const handleNewsletterSubmit = async () => {
     if (!newsletterEmail.trim()) return;
@@ -91,8 +99,7 @@ export default function NewsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
-      {/* Google AdSense Script - only loaded when publisher ID is configured */}
+    <main className="page-shell">
       {process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID && (
         <Script
           id="adsbygoogle-init"
@@ -102,40 +109,11 @@ export default function NewsPage() {
         />
       )}
 
-      {/* Hero Header */}
-      <section className="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800 py-16 md:py-24 overflow-hidden relative">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-action-orange to-transparent opacity-20" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-4 mb-6"
-            >
-              <div className="w-12 h-0.5 bg-action-orange rounded-full" />
-              <span className="text-action-orange font-black uppercase tracking-[0.4em] text-[10px] md:text-xs">
-                Real-time Insights
-              </span>
-            </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight mb-8"
-            >
-              Latest <span className="text-action-orange">News</span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-gray-500 dark:text-slate-400 text-lg md:text-xl font-medium max-w-2xl leading-relaxed"
-            >
-              Stay updated with the latest trends in food processing, packaging, and industrial technology from Bangladesh and around the world.
-            </motion.p>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        kicker="Industry briefing"
+        title="Packaging and processing news"
+        description="Trends in food processing, packaging, and industrial equipment from Bangladesh and around the world."
+      />
 
       {/* Main Content */}
       <section className="py-12 md:py-20">
@@ -146,8 +124,8 @@ export default function NewsPage() {
             <div className="flex-1 space-y-12">
               
               {/* Filters & Search */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gray-50 dark:bg-slate-900/50 p-4 rounded-3xl border border-gray-100 dark:border-slate-800">
-                <div className="flex p-1 bg-white dark:bg-slate-800 rounded-2xl shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-stone-900 p-3 rounded-md border border-stone-200 dark:border-stone-800">
+                <div className="flex p-1 bg-stone-50 dark:bg-stone-800 rounded-md overflow-x-auto">
                   {[
                     { id: 'all', label: 'All News', icon: Newspaper },
                     { id: 'bangladesh', label: 'BD News', icon: MapPin },
@@ -156,10 +134,10 @@ export default function NewsPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as TabId)}
-                      className={`flex items-center gap-2 px-4 sm:px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all touch-manipulation ${
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap ${
                         activeTab === tab.id
-                          ? 'bg-action-orange text-white shadow-lg shadow-action-orange/20'
-                          : 'text-gray-400 hover:text-industrial-dark dark:hover:text-white'
+                          ? 'bg-brand-maroon text-white'
+                          : 'text-stone-500 hover:text-stone-900 dark:hover:text-white'
                       }`}
                     >
                       <tab.icon className="w-3.5 h-3.5" />
@@ -169,25 +147,22 @@ export default function NewsPage() {
                 </div>
 
                 <div className="relative group min-w-[280px]">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-action-orange transition-colors" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                   <input
                     type="text"
                     placeholder="Search news..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-6 py-3 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-action-orange/10 transition-all shadow-sm"
+                    className="input-field pl-11"
                   />
                 </div>
               </div>
 
               {/* News Grid */}
               {loading ? (
-                <div className="py-32 flex flex-col items-center justify-center gap-6">
-                  <div className="relative">
-                    <Loader2 className="w-16 h-16 text-action-orange animate-spin" />
-                    <div className="absolute inset-0 bg-action-orange/10 blur-2xl rounded-full" />
-                  </div>
-                  <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-xs">Aggregating Feeds...</p>
+                <div className="py-24 flex flex-col items-center justify-center gap-4">
+                  <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+                  <p className="text-stone-400 text-sm">Loading news…</p>
                 </div>
               ) : error ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-6 text-center">
@@ -195,12 +170,12 @@ export default function NewsPage() {
                     <AlertCircle className="w-10 h-10" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Sync Failed</h3>
+                    <h3 className="text-xl font-semibold text-stone-900 dark:text-white">Unable to load news</h3>
                     <p className="text-gray-500 max-w-sm">{error}</p>
                   </div>
                   <button 
                     onClick={() => window.location.reload()}
-                    className="px-8 py-3 bg-slate-900 dark:bg-slate-800 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-action-orange transition-all"
+                    className="btn-primary"
                   >
                     Try Again
                   </button>
@@ -223,11 +198,11 @@ export default function NewsPage() {
 
                   {/* Pagination Controls */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 pt-12 border-t border-gray-100 dark:border-slate-800">
+                    <div className="flex items-center justify-center gap-2 pt-10 border-t border-stone-200 dark:border-stone-800">
                       <button
                         onClick={() => goToPage(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="p-3 rounded-xl bg-gray-50 dark:bg-slate-900 text-industrial-dark dark:text-white disabled:opacity-30 transition-all hover:bg-gray-100 dark:hover:bg-slate-800"
+                        className="p-2.5 rounded-md btn-secondary disabled:opacity-30"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
@@ -245,10 +220,10 @@ export default function NewsPage() {
                               <button
                                 key={page}
                                 onClick={() => goToPage(page)}
-                                className={`w-12 h-12 rounded-xl text-xs font-black transition-all ${
+                                className={`w-10 h-10 rounded-md text-sm font-semibold ${
                                   currentPage === page
-                                    ? 'bg-action-orange text-white shadow-lg shadow-action-orange/20'
-                                    : 'bg-white dark:bg-slate-900 text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'
+                                    ? 'bg-brand-maroon text-white'
+                                    : 'bg-white dark:bg-stone-900 text-stone-500 border border-stone-200 dark:border-stone-700'
                                 }`}
                               >
                                 {page}
@@ -267,7 +242,7 @@ export default function NewsPage() {
                       <button
                         onClick={() => goToPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="p-3 rounded-xl bg-gray-50 dark:bg-slate-900 text-industrial-dark dark:text-white disabled:opacity-30 transition-all hover:bg-gray-100 dark:hover:bg-slate-800"
+                        className="p-2.5 rounded-md btn-secondary disabled:opacity-30"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
@@ -275,11 +250,9 @@ export default function NewsPage() {
                   )}
                 </div>
               ) : (
-                <div className="py-32 text-center space-y-4">
-                  <div className="w-16 h-16 bg-gray-50 dark:bg-slate-900 mx-auto rounded-full flex items-center justify-center text-gray-300">
-                    <Search className="w-8 h-8" />
-                  </div>
-                  <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No results matching your query</p>
+                <div className="py-20 text-center space-y-3">
+                  <Search className="w-8 h-8 text-stone-300 mx-auto" />
+                  <p className="text-stone-500 text-sm">No results matching your query</p>
                 </div>
               )}
             </div>
@@ -289,7 +262,7 @@ export default function NewsPage() {
               
               {/* Sidebar Ad */}
               <div className="lg:sticky lg:top-[100px] space-y-10">
-                <div className="bg-gray-50 dark:bg-slate-900/50 p-1 rounded-3xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+                <div className="surface-card overflow-hidden">
                   <AdSense 
                     slot="sidebar-news-ad" 
                     format="auto" 
@@ -297,20 +270,19 @@ export default function NewsPage() {
                   />
                 </div>
 
-                {/* Newsletter Signup */}
-                <div className="bg-industrial-dark p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
-                  <div className="relative z-10 space-y-6">
-                    <h3 className="text-2xl font-black text-white uppercase tracking-tight leading-tight">
-                      Weekly <br /> <span className="text-action-orange">Digest</span>
+                <div className="bg-brand-maroon p-6 sm:p-8 text-white">
+                  <div className="space-y-4">
+                    <h3 className="font-display text-2xl font-semibold tracking-tight">
+                      Weekly digest
                     </h3>
-                    <p className="text-white/50 text-sm font-medium">
-                      Get the most relevant industrial news delivered straight to your inbox.
+                    <p className="text-white/80 text-sm">
+                      Machinery and packaging news, sent to your inbox.
                     </p>
 
                     {newsletterStatus === 'success' ? (
-                      <div className="flex items-center gap-3 py-4 px-5 bg-green-500/20 border border-green-500/30 rounded-2xl">
-                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
-                        <span className="text-green-300 text-sm font-bold">{newsletterMessage}</span>
+                      <div className="flex items-center gap-3 py-3 px-4 bg-white/10 border border-white/20 rounded-md">
+                        <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+                        <span className="text-white text-sm font-medium">{newsletterMessage}</span>
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -323,15 +295,15 @@ export default function NewsPage() {
                           value={newsletterEmail}
                           onChange={(e) => setNewsletterEmail(e.target.value)}
                           onKeyDown={(e) => e.key === 'Enter' && handleNewsletterSubmit()}
-                          className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white text-sm outline-none focus:border-action-orange transition-all placeholder:text-white/30"
+                          className="w-full h-11 px-3.5 bg-white/10 border border-white/30 rounded-md text-white text-sm outline-none focus:border-white placeholder:text-white/50"
                         />
                         {newsletterStatus === 'error' && (
-                          <p className="text-red-400 text-xs font-bold px-1">{newsletterMessage}</p>
+                          <p className="text-red-200 text-xs px-1">{newsletterMessage}</p>
                         )}
                         <button
                           onClick={handleNewsletterSubmit}
                           disabled={newsletterStatus === 'loading'}
-                          className="w-full py-4 bg-action-orange text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-action-orange/20 hover:bg-orange-600 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          className="btn-primary w-full bg-white text-brand-maroon hover:bg-stone-100 disabled:opacity-60"
                         >
                           {newsletterStatus === 'loading' ? (
                             <><Loader2 className="w-4 h-4 animate-spin" /> Subscribing...</>
@@ -342,7 +314,6 @@ export default function NewsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-12 translate-x-8" />
                 </div>
               </div>
             </aside>
@@ -352,7 +323,7 @@ export default function NewsPage() {
       </section>
 
       {/* Bottom Full Width Ad */}
-      <section className="py-12 border-t border-gray-50 dark:border-slate-900">
+      <section className="py-10 border-t border-stone-200 dark:border-stone-800">
         <div className="container mx-auto px-4">
           <AdSense slot="bottom-banner-ad" format="auto" />
         </div>

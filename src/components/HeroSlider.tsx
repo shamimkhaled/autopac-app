@@ -5,27 +5,37 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import { useHeroSlides } from '@/hooks/useSiteData';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function HeroSlider() {
   const { locale } = useLocale();
   const [slides] = useHeroSlides();
   const [current, setCurrent] = useState(0);
   const isBn = locale === 'bn';
-
-  // Touch/swipe state
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const timer = setInterval(() => setCurrent((c) => (c + 1) % slides.length), 6000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
+  const slidesOrFallback =
+    slides.length > 0
+      ? slides
+      : [
+          {
+            id: 'fallback',
+            imageUrl: '/images/slider1.png',
+            titleEn: '',
+            titleBn: '',
+          },
+        ];
+  const count = slidesOrFallback.length;
 
-  const goPrev = () => setCurrent((c) => (c - 1 + slides.length) % slides.length);
-  const goNext = () => setCurrent((c) => (c + 1) % slides.length);
+  useEffect(() => {
+    if (count <= 1) return;
+    const timer = setInterval(() => setCurrent((c) => (c + 1) % count), 7000);
+    return () => clearInterval(timer);
+  }, [count]);
+
+  const goPrev = () => setCurrent((c) => (c - 1 + count) % count);
+  const goNext = () => setCurrent((c) => (c + 1) % count);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -36,7 +46,6 @@ export default function HeroSlider() {
     if (touchStartX.current === null || touchStartY.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     const dy = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
-    // Only trigger if horizontal swipe dominates (not a scroll)
     if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
       dx < 0 ? goNext() : goPrev();
     }
@@ -44,151 +53,123 @@ export default function HeroSlider() {
     touchStartY.current = null;
   };
 
-  if (slides.length === 0) return null;
+  const stats = [
+    { value: '35+', label: isBn ? 'বছর ঢাকায়' : 'Years in Dhaka' },
+    { value: '500+', label: isBn ? 'মেশিন সরবরাহ' : 'Machines delivered' },
+    { value: '300+', label: isBn ? 'কারখানা' : 'Factory clients' },
+    { value: '16', label: isBn ? 'পণ্য লাইন' : 'Product lines' },
+  ];
 
   return (
-    <div
-      className="relative h-[55vh] min-h-[380px] sm:min-h-[450px] sm:h-[65vh] md:h-[75vh] md:min-h-[500px] max-h-[900px] overflow-hidden bg-slate-950 select-none"
+    <section
+      className="relative min-h-[480px] h-[min(72vh,640px)] overflow-hidden bg-stone-950"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      aria-roledescription="carousel"
+      aria-label={isBn ? 'মেশিনারি হাইলাইট' : 'Machinery highlights'}
     >
-      {/* Decorative Grid Background */}
-      <div
-        className="absolute inset-0 z-0 opacity-20"
-        style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px' }}
-      />
-
-      <AnimatePresence initial={false}>
-        <motion.div
-          key={current}
-          className="absolute inset-0"
-          initial={{ opacity: 0, scale: 1.15 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
+      {slidesOrFallback.map((item, i) => (
+        <div
+          key={item.id || i}
+          className={`absolute inset-0 transition-opacity duration-700 ${i === current ? 'opacity-100' : 'opacity-0'}`}
+          aria-hidden={i !== current}
         >
-          <div className="relative w-full h-full">
-            <Image
-              src={slides[current].imageUrl || '/images/slider1.png'}
-              alt={isBn ? slides[current].titleBn : slides[current].titleEn}
-              fill
-              className="object-cover object-center sm:scale-105"
-              priority
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1920px"
-            />
+          <Image
+            src={item.imageUrl || '/images/slider1.png'}
+            alt={
+              (isBn ? item.titleBn : item.titleEn) ||
+              (isBn ? 'অটো প্যাক মেশিনারি' : 'Auto Pac packaging machinery')
+            }
+            fill
+            className="object-cover object-[70%_center]"
+            priority={i === 0}
+            sizes="100vw"
+          />
+        </div>
+      ))}
 
-            {/* Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent z-10" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 opacity-80" />
+      {/* Dark only behind copy so the machine stays visible on the right */}
+      <div className="absolute inset-y-0 left-0 w-full md:w-[68%] bg-gradient-to-r from-stone-950/80 via-stone-950/45 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-stone-950/70 to-transparent" />
 
-            <div className="absolute inset-0 flex items-center z-20">
-              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="max-w-5xl">
-                  <motion.div
-                    initial={{ y: 80, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
-                  >
-                    <div className="flex items-center gap-2 sm:gap-6 mb-2 sm:mb-6">
-                      <div className="w-8 sm:w-16 h-0.5 sm:h-1 bg-action-orange rounded-full shadow-[0_0_20px_rgba(249,115,22,0.8)]" />
-                      <span className="text-action-orange font-black uppercase tracking-[0.15em] sm:tracking-[0.4em] text-[8px] sm:text-[10px] md:text-xs">
-                        {isBn ? 'শিল্প প্রকৌশল উৎকর্ষ' : 'Industrial Engineering Excellence'}
-                      </span>
-                    </div>
-
-                    <h2 className="text-lg sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight uppercase tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                      {isBn ? (
-                        <span className="block">{slides[current].titleBn}</span>
-                      ) : (
-                        <span className="block sm:inline">
-                          {slides[current].titleEn.split(' ').map((word, i) => (
-                            <span key={i} className={i % 2 === 1 ? 'text-white' : 'text-gray-400'}>
-                              {word}{' '}
-                            </span>
-                          ))}
-                        </span>
-                      )}
-                    </h2>
-
-                    <div className="mt-3 sm:mt-8 flex items-start gap-3 sm:gap-8 max-w-3xl">
-                      <div className="hidden sm:block w-px h-32 bg-gradient-to-b from-action-orange to-transparent mt-2" />
-                      <div className="space-y-2 sm:space-y-6">
-                        <p className="text-gray-300 text-xs sm:text-lg md:text-xl font-bold leading-tight uppercase tracking-tight max-w-xl">
-                          {isBn
-                            ? 'খাদ্য, পানীয়, কসমেটিকস এবং ফার্মাসিউটিক্যাল শিল্পের জন্য সম্পূর্ণ স্বয়ংক্রিয় প্যাকেজিং সমাধান।'
-                            : 'Pioneering fully automatic packaging solutions for high-performance industrial production lines.'}
-                        </p>
-                        <p className="hidden sm:block text-gray-500 text-sm md:text-base font-medium leading-relaxed max-w-lg">
-                          {isBn
-                            ? 'আমাদের উন্নত প্রযুক্তির মেশিনারি আপনার উৎপাদন ক্ষমতা বাড়িয়ে তুলবে বহুগুণ।'
-                            : 'Engineered for precision and reliability. Our world-class machinery empowers global manufacturing standards in Bangladesh.'}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ y: 40, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.8, duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
-                    className="flex flex-col sm:flex-row gap-2 sm:gap-6 mt-4 sm:mt-10"
-                  >
-                    <Link
-                      href="/products"
-                      className="group relative inline-flex items-center justify-center gap-1.5 sm:gap-3 px-4 sm:px-10 py-2.5 sm:py-4 bg-action-orange text-white font-black text-[11px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.3em] rounded-lg sm:rounded-2xl overflow-hidden transition-all shadow-2xl shadow-action-orange/40 hover:-translate-y-1 active:scale-95 touch-manipulation min-h-[40px] sm:min-h-[48px] w-fit"
-                    >
-                      <span className="relative z-10">
-                        {isBn ? 'মেশিন দেখুন' : 'Browse Machines'}
-                      </span>
-                      <ArrowRight className="relative z-10 w-3.5 h-3.5 sm:w-5 sm:h-5 group-hover:translate-x-2 transition-transform duration-500" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-action-orange opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    </Link>
-                    {/* Request Quote — hidden on mobile, single CTA is Browse Machines */}
-                    <Link
-                      href="/contact"
-                      className="hidden sm:inline-flex items-center justify-center px-5 sm:px-10 py-3.5 sm:py-4 bg-white/5 text-white font-black text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] rounded-xl sm:rounded-2xl hover:bg-white/10 transition-all backdrop-blur-3xl border border-white/10 hover:border-white/30 hover:-translate-y-1 active:scale-95 touch-manipulation min-h-[48px]"
-                    >
-                      {isBn ? 'কোটেশন চান' : 'Request Quote'}
-                    </Link>
-                  </motion.div>
-                </div>
+      <div className="relative z-10 h-full flex flex-col">
+        <div className="flex-1 flex items-center pb-24 sm:pb-20">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl border-l-[3px] border-brand-maroon pl-5 sm:pl-7">
+              <p className="text-sm sm:text-base font-medium text-white">
+                {isBn ? 'অটো প্যাক · ১৯৯০ থেকে · কাওরান বাজার, ঢাকা' : 'Auto Pac · Since 1990 · Kawran Bazar, Dhaka'}
+              </p>
+              <h1 className="mt-3 font-display text-[1.85rem] sm:text-5xl lg:text-[3.15rem] font-semibold tracking-tight text-white leading-[1.2] [text-shadow:0_2px_18px_rgba(0,0,0,0.55)]">
+                {isBn
+                  ? 'আপনার কারখানার জন্য প্রক্রিয়াকরণ ও প্যাকিং মেশিন'
+                  : 'Processing and packing machines for your factory'}
+              </h1>
+              <p className="mt-4 text-base sm:text-xl text-white leading-relaxed max-w-xl [text-shadow:0_1px_12px_rgba(0,0,0,0.5)]">
+                {isBn
+                  ? '১৬টি পণ্য লাইন দেখুন। যে মেশিন দরকার, তার কোটেশন চান।'
+                  : 'Browse 16 product lines. Request a quote for the machine you need.'}
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <a href="#find-machinery" className="btn-primary bg-white text-brand-maroon hover:bg-stone-100">
+                  {isBn ? 'মেশিন খুঁজুন' : 'Find a machine'}
+                </a>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 border-2 border-white text-white text-sm font-semibold rounded-md hover:bg-white/15 transition-colors"
+                >
+                  {isBn ? 'কোটেশন চান' : 'Request a quote'}
+                </Link>
               </div>
             </div>
           </div>
-        </motion.div>
-      </AnimatePresence>
+        </div>
 
-      {/* Slide indicators — compact on mobile */}
-      <div className="absolute bottom-3 sm:bottom-10 left-0 right-0 z-30 flex justify-center items-center gap-2 sm:gap-6">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => setCurrent(i)}
-            aria-label={`Go to slide ${i + 1}`}
-            aria-current={i === current ? 'true' : undefined}
-            className="group relative flex flex-col items-center gap-1 sm:gap-2 outline-none p-2 sm:p-3 touch-manipulation"
-          >
-            <span className={`text-[8px] sm:text-[10px] font-black tracking-[0.3em] sm:tracking-[0.4em] transition-all duration-700 ${
-              i === current ? 'text-action-orange scale-125' : 'text-gray-600 group-hover:text-gray-400'
-            }`}>
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <div className={`h-1 sm:h-1.5 transition-all duration-1000 rounded-full ${
-              i === current
-                ? 'w-8 sm:w-24 bg-action-orange shadow-[0_0_25px_rgba(249,115,22,1)]'
-                : 'w-2 sm:w-4 bg-gray-800 group-hover:bg-gray-600'
-            }`} />
-          </button>
-        ))}
+        <div className="border-t border-white/15 bg-stone-950/55">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3.5 grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {stats.map((s) => (
+              <div key={s.label} className="text-white">
+                <div className="font-display text-xl sm:text-2xl font-semibold tracking-tight">{s.value}</div>
+                <div className="text-sm text-white/90 mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Swipe hint — only on mobile */}
-      {slides.length > 1 && (
-        <div className="absolute bottom-3 right-3 z-30 sm:hidden flex items-center gap-1 opacity-30 pointer-events-none">
-          <span className="text-white text-[8px] font-bold uppercase tracking-widest">swipe</span>
-        </div>
+      {count > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={goPrev}
+            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 items-center justify-center rounded-md border border-white/25 bg-stone-950/40 text-white hover:bg-stone-950/70"
+            aria-label={isBn ? 'আগের স্লাইড' : 'Previous slide'}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={goNext}
+            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 items-center justify-center rounded-md border border-white/25 bg-stone-950/40 text-white hover:bg-stone-950/70"
+            aria-label={isBn ? 'পরের স্লাইড' : 'Next slide'}
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+          <div className="hidden sm:flex absolute bottom-[4.75rem] left-0 right-0 z-20 justify-center gap-2">
+            {slidesOrFallback.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setCurrent(i)}
+                aria-label={`${isBn ? 'স্লাইড' : 'Slide'} ${i + 1}`}
+                aria-current={i === current ? 'true' : undefined}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  i === current ? 'w-8 bg-white' : 'w-3 bg-white/40 hover:bg-white/70'
+                }`}
+              />
+            ))}
+          </div>
+        </>
       )}
-    </div>
+    </section>
   );
 }

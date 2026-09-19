@@ -2,7 +2,16 @@ node_modules
 .next
 .env
 prisma/dev.db
+.data/
 out
 .env*.local
 *.log
 .DS_Store
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/
+
+# Cursor local state — keep committed project rules only
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**

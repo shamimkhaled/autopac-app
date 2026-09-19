@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Product, Category, HeroSlide, TrustedPartner, CompanyProfile, OwnerProfile, Industry } from '@/lib/api';
+import type { Product, Category, HeroSlide, TrustedPartner, CompanyProfile, OwnerProfile, Industry, Testimonial } from '@/lib/api';
 import { resolveApiBase } from '@/lib/api';
 import { products as staticProducts, categories as staticCategories, packableItems } from '@/data/products';
+import type { ProductBrochureMap } from '@/data/brochure';
+import { PRODUCT_BROCHURE } from '@/data/brochure';
 
 // Shared promise cache — ensures concurrent callers share one in-flight request
 // instead of each firing their own fetch. Keyed by path.
@@ -43,15 +45,37 @@ function useFetch<T>(path: string, fallback: T): [T, boolean] {
 
 export function useProducts() {
   const [api, loaded] = useFetch<Product[] | null>('/api/products', null);
-  if (api && Array.isArray(api)) return [api, loaded] as const;
+  const catMap = Object.fromEntries(staticCategories.map((c) => [c.id, c]));
+  if (api && Array.isArray(api)) {
+    const withCats = api.map((p) => ({
+      ...p,
+      category: p.category || (catMap[p.categoryId] as Category | undefined),
+    }));
+    return [withCats, loaded] as const;
+  }
   const mapped = staticProducts.map((p) => ({
     ...p,
     id: p.id,
     categoryId: p.categoryId,
+    category: catMap[p.categoryId] as Category | undefined,
     fullDescEn: p.fullDescEn,
     fullDescBn: p.fullDescBn,
   }));
   return [mapped as Product[], loaded] as const;
+}
+
+export function useCatalogMap() {
+  const [api, loaded] = useFetch<ProductBrochureMap | null>('/api/catalog-map', null);
+  if (api && typeof api === 'object' && !Array.isArray(api)) {
+    return [{ ...PRODUCT_BROCHURE, ...api }, loaded] as const;
+  }
+  return [PRODUCT_BROCHURE, loaded] as const;
+}
+
+export type CmsTranslationMap = Record<string, { en: string; bn: string }>;
+
+export function useCmsTranslations() {
+  return useFetch<CmsTranslationMap>('/api/translations', {});
 }
 
 export function useCategories() {
@@ -117,6 +141,11 @@ export function useIndustries() {
     { id: '4', slug: 'industrial', nameEn: 'Industrial & Other', nameBn: 'ইন্ডাস্ট্রিয়াল ও অন্যান্য', descriptionEn: '', descriptionBn: '' },
   ];
   return [api || fallback, loaded] as const;
+}
+
+export function useTestimonials() {
+  const [api, loaded] = useFetch<Testimonial[] | null>('/api/testimonials', null);
+  return [Array.isArray(api) ? api : [], loaded] as const;
 }
 
 export { packableItems };

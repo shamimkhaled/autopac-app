@@ -51,7 +51,9 @@ const nextConfig = {
               "media-src 'self'",
               // ws:/wss: needed for Next.js HMR in dev; 'self' covers same-origin API calls
               "connect-src 'self' ws: wss: https://www.google-analytics.com https://stats.g.doubleclick.net",
-              "frame-src 'self' https://www.google.com https://maps.google.com",
+              "worker-src 'self'",
+              "manifest-src 'self'",
+              "frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com https://www.youtube-nocookie.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -68,6 +70,18 @@ const nextConfig = {
       },
       {
         source: '/uploads/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/brochures/(.*)',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        source: '/icons/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],

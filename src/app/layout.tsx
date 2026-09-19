@@ -1,18 +1,24 @@
-import type { Metadata } from 'next';
-import { Inter, Hind_Siliguri } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { IBM_Plex_Sans, Barlow_Condensed, Hind_Siliguri } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import SiteShell from '@/components/SiteShell';
 import Analytics from '@/components/Analytics';
 
-// Optimized system fonts — no layout shift, no external CDN requests at runtime
-const inter = Inter({
+const ibmPlex = IBM_Plex_Sans({
   subsets: ['latin'],
-  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm',
   display: 'swap',
 });
 
-// Hind Siliguri for crisp Bengali text rendering
+const barlow = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
 const hindSiliguri = Hind_Siliguri({
   subsets: ['bengali', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
@@ -21,6 +27,13 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://autopacbd.com';
+
+export const viewport: Viewport = {
+  themeColor: '#6D1A2D',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -79,6 +92,18 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  appleWebApp: {
+    capable: true,
+    title: 'Auto Pac',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+  },
 };
 
 const jsonLd = {
@@ -116,8 +141,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`scroll-smooth ${inter.variable} ${hindSiliguri.variable}`}>
-      <body className="min-h-screen flex flex-col antialiased bg-industrial-light text-industrial-charcoal dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 font-sans">
+    <html lang="en" suppressHydrationWarning className={`scroll-smooth ${ibmPlex.variable} ${barlow.variable} ${hindSiliguri.variable}`}>
+      <body className="min-h-screen flex flex-col antialiased bg-brand-paper text-stone-800 dark:bg-stone-950 dark:text-stone-100 font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

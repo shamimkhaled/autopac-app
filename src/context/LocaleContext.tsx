@@ -13,6 +13,7 @@ const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en');
+  const [overrides, setOverrides] = useState<Record<string, { en: string; bn: string }>>({});
 
   // Restore persisted language on first mount
   useEffect(() => {
@@ -25,6 +26,17 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // localStorage may be blocked in some environments — fail silently
     }
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/translations')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data === 'object' && !Array.isArray(data) && !data.error) {
+          setOverrides(data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const setLocale = useCallback((l: Locale) => {
@@ -41,6 +53,11 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback(
     (key: string): string => {
+      const override = overrides[key];
+      if (override) {
+        const picked = locale === 'bn' ? override.bn : override.en;
+        if (picked) return picked;
+      }
       const keys = key.split('.');
       let value: unknown = translations[locale];
       for (const k of keys) {
@@ -48,7 +65,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       }
       return typeof value === 'string' ? value : key;
     },
-    [locale]
+    [locale, overrides]
   );
 
   return (

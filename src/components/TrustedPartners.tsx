@@ -17,7 +17,7 @@ function PartnerLogo({ name, logoUrl }: { name: string; logoUrl?: string | null 
   const canLoad = logoUrl && isLoadableUrl(logoUrl) && !imgFailed;
 
   return (
-    <div className="w-36 sm:w-40 h-20 sm:h-24 relative flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-500 opacity-60 hover:opacity-100 flex items-center justify-center p-4 bg-gray-50/50 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-gray-200/50">
+    <div className="w-36 sm:w-40 h-20 sm:h-24 relative flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100 flex items-center justify-center p-4 bg-stone-50 dark:bg-stone-900 rounded-md border border-stone-100 dark:border-stone-800">
       {canLoad ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
@@ -29,7 +29,7 @@ function PartnerLogo({ name, logoUrl }: { name: string; logoUrl?: string | null 
           onError={() => setImgFailed(true)}
         />
       ) : (
-        <span className="text-xs font-black text-gray-400 uppercase tracking-wider text-center leading-tight">
+        <span className="text-xs font-semibold text-stone-400 uppercase tracking-wider text-center leading-tight">
           {name}
         </span>
       )}
@@ -60,18 +60,16 @@ export default function TrustedPartners() {
 
   if (loaded && partners.length === 0) return null;
 
-  const title = locale === 'bn' ? 'শিল্প নেতাদের বিশ্বাস' : 'Trusted by Industry Leaders';
-
   return (
-    <section className="py-8 sm:py-12 bg-white dark:bg-slate-950 border-y border-gray-100 dark:border-slate-800 overflow-hidden">
+    <section className="py-8 sm:py-12 bg-white dark:bg-stone-950 border-y border-stone-200 dark:border-stone-800 overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-black text-industrial-dark dark:text-white uppercase tracking-tight">
-            {locale === 'bn'
-              ? title
-              : <>Trusted by <span className="text-action-orange">Industry Leaders</span></>}
+          <p className="section-kicker mb-2">
+            {locale === 'bn' ? 'অংশীদার' : 'Partners'}
+          </p>
+          <h2 className="page-title text-2xl sm:text-3xl">
+            {locale === 'bn' ? 'বাংলাদেশের কারখানার আস্থা' : 'Trusted on factory floors'}
           </h2>
-          <div className="w-10 h-1 bg-action-orange mx-auto mt-2 rounded-full" aria-hidden="true" />
         </div>
 
         <div className="relative">
@@ -96,8 +94,8 @@ export default function TrustedPartners() {
           </div>
 
           {/* Fade edges */}
-          <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white dark:from-slate-950 to-transparent z-10 pointer-events-none" aria-hidden="true" />
-          <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white dark:from-slate-950 to-transparent z-10 pointer-events-none" aria-hidden="true" />
+          <div className="absolute inset-y-0 left-0 w-16 sm:w-32 bg-gradient-to-r from-white dark:from-stone-950 to-transparent z-10 pointer-events-none" aria-hidden="true" />
+          <div className="absolute inset-y-0 right-0 w-16 sm:w-32 bg-gradient-to-l from-white dark:from-stone-950 to-transparent z-10 pointer-events-none" aria-hidden="true" />
         </div>
       </div>
 

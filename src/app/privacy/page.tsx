@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import PageHero from '@/components/PageHero';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — Auto Pac',
@@ -9,18 +10,15 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-950 transition-colors">
-      <div className="bg-industrial-dark py-16 sm:py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
-            Privacy <span className="text-action-orange">Policy</span>
-          </h1>
-          <p className="text-white/50 mt-4 text-sm font-medium">Last updated: January 2025</p>
-        </div>
-      </div>
+    <main className="page-shell">
+      <PageHero
+        kicker="Legal"
+        title="Privacy Policy"
+        description="Last updated: January 2025"
+      />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 max-w-3xl">
-        <div className="prose prose-sm sm:prose dark:prose-invert max-w-none">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-3xl">
+        <div className="prose prose-stone dark:prose-invert max-w-none">
           <h2>1. Information We Collect</h2>
           <p>
             When you submit a quotation request or subscribe to our newsletter, we collect your name, phone number,
@@ -79,11 +77,8 @@ export default function PrivacyPage() {
           </p>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-100 dark:border-slate-800">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-action-orange font-bold text-sm hover:underline"
-          >
+        <div className="mt-10 pt-6 border-t border-stone-200 dark:border-stone-800">
+          <Link href="/" className="btn-ghost px-0">
             ← Back to Home
           </Link>
         </div>

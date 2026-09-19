@@ -5,53 +5,56 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLocale } from '@/context/LocaleContext';
 import ProductCard from '@/components/ProductCard';
-import { useProducts, useCategories } from '@/hooks/useSiteData';
+import { useProducts, useCategories, useCatalogMap, packableItems } from '@/hooks/useSiteData';
 import type { Product } from '@/lib/api';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BROCHURE_LINES, productSlugsForLine } from '@/data/brochure';
+import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import PageHero from '@/components/PageHero';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const categorySlug = searchParams.get('category');
+  const lineParam = searchParams.get('line');
+  const qParam = searchParams.get('q') || '';
   const pageParam = searchParams.get('page');
-  
+
   const { t, locale } = useLocale();
   const [products] = useProducts();
   const [categories] = useCategories();
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  
-  // Search and Pagination State
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  
+  const [catalogMap] = useCatalogMap();
+  const [searchTerm, setSearchTerm] = useState(qParam);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(qParam);
+  const [mobileFilters, setMobileFilters] = useState(false);
+
   const ITEMS_PER_PAGE = 12;
   const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
+  const isBn = locale === 'bn';
 
-  // Debounce search term
+  useEffect(() => {
+    setSearchTerm(qParam);
+    setDebouncedSearchTerm(qParam);
+  }, [qParam]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      if (searchTerm) {
-        handlePageChange(1); // Reset to page 1 on new search
-      }
-    }, 400);
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', newPage.toString());
-    router.push(`/products?${params.toString()}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCategoryChange = (slug: string | null) => {
+  const pushParams = (next: { category?: string | null; line?: string | null; q?: string | null; page?: number }) => {
     const params = new URLSearchParams();
-    if (slug) params.set('category', slug);
-    params.set('page', '1');
-    router.push(`/products?${params.toString()}`);
-    setMobileFilterOpen(false);
+    const category = next.category === undefined ? categorySlug : next.category;
+    const line = next.line === undefined ? lineParam : next.line;
+    const q = next.q === undefined ? searchTerm : next.q;
+    const page = next.page ?? 1;
+    if (category) params.set('category', category);
+    if (line) params.set('line', line);
+    if (q?.trim()) params.set('q', q.trim());
+    if (page > 1) params.set('page', String(page));
+    const qs = params.toString();
+    router.push(qs ? `/products?${qs}` : '/products');
   };
 
   const filteredProducts = useMemo(() => {
@@ -59,252 +62,309 @@ function ProductsContent() {
 
     if (categorySlug) {
       filtered = filtered.filter((p: Product) => {
-        const cat = p.category || categories.find((c: { id: string }) => c.id === p.categoryId);
-        return cat && (cat as { slug?: string }).slug === categorySlug;
+        const cat = p.category || categories.find((c) => c.id === p.categoryId);
+        return cat && cat.slug === categorySlug;
       });
     }
 
+    if (lineParam) {
+      const slugs = productSlugsForLine(lineParam, catalogMap);
+      filtered = filtered.filter((p) => slugs.includes(p.slug));
+    }
+
     if (debouncedSearchTerm) {
-      const lowerQuery = debouncedSearchTerm.toLowerCase();
+      const q = debouncedSearchTerm.toLowerCase();
       filtered = filtered.filter((p: Product) => {
-        return (p.nameEn?.toLowerCase().includes(lowerQuery)) || 
-               (p.nameBn?.toLowerCase().includes(lowerQuery)) ||
-               (p.shortDescEn?.toLowerCase().includes(lowerQuery)) ||
-               (p.shortDescBn?.toLowerCase().includes(lowerQuery));
+        const rawIds = Array.isArray(p.packableIds)
+          ? p.packableIds
+          : typeof p.packableIds === 'string'
+            ? (() => {
+                try {
+                  return JSON.parse(p.packableIds as unknown as string);
+                } catch {
+                  return [];
+                }
+              })()
+            : [];
+        const packableHit = rawIds.some((id: string) => {
+          const item = packableItems.find((x) => x.id === id);
+          return (
+            id.toLowerCase().includes(q) ||
+            item?.nameEn.toLowerCase().includes(q) ||
+            item?.nameBn.includes(q)
+          );
+        });
+        return (
+          p.nameEn?.toLowerCase().includes(q) ||
+          p.nameBn?.toLowerCase().includes(q) ||
+          p.shortDescEn?.toLowerCase().includes(q) ||
+          p.shortDescBn?.toLowerCase().includes(q) ||
+          packableHit
+        );
       });
     }
 
     return filtered;
-  }, [categorySlug, products, categories, debouncedSearchTerm]);
+  }, [categorySlug, lineParam, products, categories, debouncedSearchTerm, catalogMap]);
 
-  const currentCategory = categorySlug ? categories.find((c: { slug: string }) => c.slug === categorySlug) : null;
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const suggestions = useMemo(() => {
+    if (searchTerm.trim().length < 2) return [];
+    const q = searchTerm.toLowerCase();
+    return products
+      .filter(
+        (p) =>
+          p.nameEn.toLowerCase().includes(q) ||
+          p.nameBn.toLowerCase().includes(q)
+      )
+      .slice(0, 6);
+  }, [searchTerm, products]);
+
+  const currentCategory = categorySlug
+    ? categories.find((c) => c.slug === categorySlug)
+    : null;
+  const currentLine = lineParam
+    ? BROCHURE_LINES.find((l) => l.id === lineParam)
+    : null;
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const page = Math.min(currentPage, totalPages);
   const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {/* Page header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 pt-10 pb-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-industrial-dark dark:text-white"
+  const filterPanel = (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-stone-900 dark:text-white mb-3">
+          {t('products.categories') || 'Categories'}
+        </h3>
+        <div className="space-y-1">
+          <button
+            type="button"
+            onClick={() => pushParams({ category: null, page: 1 })}
+            className={`w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer ${
+              !categorySlug
+                ? 'bg-brand-maroon text-white'
+                : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'
+            }`}
           >
-            {t('products.title') || 'Our Machinery Portfolio'}
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mt-4 text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto"
-          >
-            {currentCategory 
-              ? (locale === 'bn' ? currentCategory.nameBn : currentCategory.nameEn)
-              : 'Explore our wide range of industrial processing and packaging equipment.'}
-          </motion.p>
+            {t('products.allProducts') || 'All machinery'}
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => pushParams({ category: cat.slug, page: 1 })}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm cursor-pointer ${
+                categorySlug === cat.slug
+                  ? 'bg-brand-maroon text-white'
+                  : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'
+              }`}
+            >
+              {isBn ? cat.nameBn : cat.nameEn}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 -mt-8">
+      <div>
+        <h3 className="text-sm font-semibold text-stone-900 dark:text-white mb-3">
+          {isBn ? 'প্রোডাক্ট লাইন' : 'Product lines'}
+        </h3>
+        <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+          {BROCHURE_LINES.map((line) => (
+            <button
+              key={line.id}
+              type="button"
+              onClick={() =>
+                pushParams({ line: lineParam === line.id ? null : line.id, page: 1 })
+              }
+              className={`w-full text-left px-3 py-2 rounded-md text-[13px] leading-snug cursor-pointer ${
+                lineParam === line.id
+                  ? 'bg-brand-maroon text-white'
+                  : 'text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800'
+              }`}
+            >
+              <span className="opacity-70 mr-1">{line.number}</span>
+              {isBn ? line.shortBn : line.shortEn}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="page-shell">
+      <PageHero
+        kicker={isBn ? 'মেশিনারি' : 'Machinery'}
+        title={
+          currentLine
+            ? isBn
+              ? currentLine.titleBn
+              : currentLine.titleEn
+            : currentCategory
+              ? isBn
+                ? currentCategory.nameBn
+                : currentCategory.nameEn
+              : t('products.title') || 'Packaging and processing machines'
+        }
+        description={
+          isBn
+            ? 'নাম, ক্যাটাগরি বা প্যাকযোগ্য পণ্য দিয়ে খুঁজুন। ক্যাটালগ পৃষ্ঠা থেকেও মেশিনে আসা যায়।'
+            : 'Search by machine name, category, or the product it packs. Catalog pages also lead here.'
+        }
+        actions={
+          <Link href="/brochure" className="btn-secondary">
+            {isBn ? 'অফিসিয়াল ক্যাটালগ' : 'Open official catalog'}
+          </Link>
+        }
+      />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* Sidebar - Categories & Filters */}
           <aside className="lg:w-72 flex-shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-6">
-              
-              {/* Search Box */}
-              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 relative z-10">
-                <h3 className="font-bold text-industrial-dark dark:text-white mb-4 text-lg">Search</h3>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    placeholder="Search by name or keyword..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-action-orange focus:border-transparent transition-all text-industrial-dark dark:text-white"
-                  />
-                  <Search className="w-5 h-5 text-gray-400 absolute left-4 top-3.5" />
-                  {searchTerm && (
-                    <button 
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Category Filter */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden relative z-10">
-                <button
-                  onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-                  className="lg:hidden w-full flex items-center justify-between p-5 font-bold text-lg text-industrial-dark dark:text-white"
-                >
-                  <span className="flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-action-orange" />
-                    {t('products.categories') || 'Categories'}
-                  </span>
-                  <ChevronRight className={`w-5 h-5 transition-transform ${mobileFilterOpen ? 'rotate-90' : ''}`} />
-                </button>
-                
-                <div className={`${mobileFilterOpen ? 'block' : 'hidden'} lg:block p-5 lg:pt-5 border-t lg:border-t-0 border-gray-100 dark:border-gray-700`}>
-                  <h3 className="font-bold text-industrial-dark dark:text-white mb-4 text-lg hidden lg:flex items-center gap-2">
-                    <Filter className="w-5 h-5 text-action-orange" />
-                    {t('products.categories') || 'Categories'}
-                  </h3>
-                  <div className="space-y-1.5">
-                    <button
-                      onClick={() => handleCategoryChange(null)}
-                      className={`w-full text-left py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-between ${
-                        !categorySlug 
-                          ? 'bg-action-orange text-white shadow-md shadow-orange-500/20' 
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                      }`}
-                    >
-                      {t('products.allProducts') || 'All Categories'}
-                      {!categorySlug && <ChevronRight className="w-4 h-4" />}
-                    </button>
-                    {categories.map((cat: { id: string; slug: string; nameEn: string; nameBn: string }) => {
-                      const isActive = categorySlug === cat.slug;
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => handleCategoryChange(cat.slug)}
-                          className={`w-full text-left py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-between ${
-                            isActive 
-                              ? 'bg-action-orange text-white shadow-md shadow-orange-500/20' 
-                              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                          }`}
+            <div className="lg:sticky lg:top-24 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') pushParams({ q: searchTerm, page: 1 });
+                  }}
+                  placeholder={t('products.searchPlaceholder') || 'Search machines or packed products'}
+                  className="w-full h-11 pl-9 pr-9 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-maroon/30 focus:border-brand-maroon"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      pushParams({ q: '', page: 1 });
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                {suggestions.length > 0 && searchTerm !== debouncedSearchTerm && (
+                  <ul className="absolute z-20 mt-1 w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md overflow-hidden">
+                    {suggestions.map((p) => (
+                      <li key={p.id}>
+                        <Link
+                          href={`/products/${p.slug}`}
+                          className="block px-3 py-2 text-sm hover:bg-stone-50 dark:hover:bg-stone-800"
                         >
-                          {locale === 'bn' ? cat.nameBn : cat.nameEn}
-                          {isActive && <ChevronRight className="w-4 h-4" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                          {isBn ? p.nameBn : p.nameEn}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
+              <button
+                type="button"
+                className="lg:hidden w-full btn-secondary"
+                onClick={() => setMobileFilters((v) => !v)}
+              >
+                {isBn ? 'ফিল্টার' : 'Filters'}
+              </button>
+              <div className={`${mobileFilters ? 'block' : 'hidden'} lg:block bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4`}>
+                {filterPanel}
+              </div>
             </div>
           </aside>
 
-          {/* Product grid */}
-          <div className="flex-1 min-w-0 flex flex-col">
-            {/* Active Filters Bar */}
-            {(categorySlug || searchTerm) && (
-              <div className="mb-6 flex flex-wrap items-center gap-3">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Filters:</span>
-                {categorySlug && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium text-industrial-dark dark:text-white shadow-sm">
-                    {currentCategory ? (locale === 'bn' ? currentCategory.nameBn : currentCategory.nameEn) : categorySlug}
-                    <button onClick={() => handleCategoryChange(null)} className="hover:text-action-orange ml-1"><X className="w-3.5 h-3.5" /></button>
-                  </span>
+          <div className="flex-1 min-w-0">
+            {(categorySlug || lineParam || searchTerm) && (
+              <div className="mb-5 flex flex-wrap items-center gap-2">
+                {categorySlug && currentCategory && (
+                  <button
+                    type="button"
+                    onClick={() => pushParams({ category: null, page: 1 })}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full text-sm"
+                  >
+                    {isBn ? currentCategory.nameBn : currentCategory.nameEn}
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {currentLine && (
+                  <button
+                    type="button"
+                    onClick={() => pushParams({ line: null, page: 1 })}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full text-sm"
+                  >
+                    {isBn ? currentLine.titleBn : currentLine.titleEn}
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 )}
                 {searchTerm && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium text-industrial-dark dark:text-white shadow-sm">
-                    Search: "{searchTerm}"
-                    <button onClick={() => setSearchTerm('')} className="hover:text-action-orange ml-1"><X className="w-3.5 h-3.5" /></button>
+                  <span className="text-sm text-stone-500">
+                    “{searchTerm}”
                   </span>
                 )}
               </div>
             )}
 
             {paginatedProducts.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 p-12 lg:p-20 text-center flex flex-col items-center justify-center flex-grow">
-                <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-6">
-                  <Search className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-bold text-industrial-dark dark:text-white mb-2">No products found</h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">
-                  We couldn't find any products matching your current filters. Try adjusting your search or category selection.
+              <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-12 text-center">
+                <h3 className="text-lg font-semibold text-stone-900 dark:text-white">
+                  {t('products.noProducts') || 'No machines found'}
+                </h3>
+                <p className="mt-2 text-sm text-stone-500 max-w-md mx-auto">
+                  {t('products.noProductsDesc') ||
+                    'Try another keyword, or browse the official catalog for the full machinery range.'}
                 </p>
-                <button 
-                  onClick={() => {
-                    handleCategoryChange(null);
-                    setSearchTerm('');
-                  }}
-                  className="px-6 py-3 bg-action-orange text-white font-medium rounded-full hover:bg-orange-600 transition-colors shadow-md"
-                >
-                  Clear All Filters
-                </button>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchTerm('');
+                      router.push('/products');
+                    }}
+                    className="btn-primary"
+                  >
+                    {t('products.clearFilters') || 'Clear filters'}
+                  </button>
+                  <Link href="/brochure" className="btn-secondary">
+                    {isBn ? 'ক্যাটালগ দেখুন' : 'Browse catalog'}
+                  </Link>
+                </div>
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-center mb-6">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Showing <span className="font-bold text-industrial-dark dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</span> of <span className="font-bold text-industrial-dark dark:text-white">{filteredProducts.length}</span> products
-                  </p>
+                <p className="text-sm text-stone-500 mb-5">
+                  {filteredProducts.length}{' '}
+                  {isBn ? 'টি মেশিন' : filteredProducts.length === 1 ? 'machine' : 'machines'}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {paginatedProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 flex-grow">
-                  <AnimatePresence mode="popLayout">
-                    {paginatedProducts.map((product: Product, index: number) => (
-                      <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        layout
-                      >
-                        <ProductCard product={product} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-
-                {/* Modern Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center items-center gap-2 overflow-x-auto pb-2">
+                  <div className="mt-10 flex justify-center items-center gap-2">
                     <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+                      type="button"
+                      onClick={() => pushParams({ page: page - 1 })}
+                      disabled={page === 1}
+                      className="w-10 h-10 flex items-center justify-center rounded-md border border-stone-200 dark:border-stone-700 disabled:opacity-40"
                       aria-label="Previous page"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    
-                    <div className="flex items-center gap-1.5 px-2 flex-wrap justify-center">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                        // Show first, last, current, and adjacent pages
-                        if (
-                          pageNum === 1 || 
-                          pageNum === totalPages || 
-                          (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
-                        ) {
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => handlePageChange(pageNum)}
-                              className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all ${
-                                currentPage === pageNum
-                                  ? 'bg-action-orange text-white shadow-md shadow-orange-500/20'
-                                  : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        } else if (
-                          pageNum === currentPage - 2 || 
-                          pageNum === currentPage + 2
-                        ) {
-                          return <span key={pageNum} className="text-gray-400">...</span>;
-                        }
-                        return null;
-                      })}
-                    </div>
-
+                    <span className="text-sm text-stone-600 px-2">
+                      {page} / {totalPages}
+                    </span>
                     <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+                      type="button"
+                      onClick={() => pushParams({ page: page + 1 })}
+                      disabled={page === totalPages}
+                      className="w-10 h-10 flex items-center justify-center rounded-md border border-stone-200 dark:border-stone-700 disabled:opacity-40"
                       aria-label="Next page"
                     >
                       <ChevronRight className="w-5 h-5" />
@@ -322,11 +382,13 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="w-12 h-12 border-4 border-action-orange border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-brand-paper">
+          <div className="w-10 h-10 border-2 border-brand-maroon border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <ProductsContent />
     </Suspense>
   );

@@ -135,3 +135,16 @@ export interface Industry {
   descriptionEn?: string;
   descriptionBn?: string;
 }
+
+export interface Testimonial {
+  id: string;
+  nameEn: string;
+  nameBn: string;
+  company?: string | null;
+  designation?: string | null;
+  messageEn: string;
+  messageBn: string;
+  rating: number;
+  imageUrl?: string | null;
+  isActive: boolean;
+}

@@ -25,6 +25,7 @@ export default function AdminCompanyPage() {
     facebookUrl: '',
     youtubeUrl: '',
     linkedinUrl: '',
+    mapEmbedUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -177,6 +178,36 @@ export default function AdminCompanyPage() {
                     <Mail className="w-3 h-3" /> Email
                   </label>
                   <input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">WhatsApp (country code, no +)</label>
+                  <input value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="8801818496642" className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Website</label>
+                  <input value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1">
+                    <Clock className="w-3 h-3" /> Office hours
+                  </label>
+                  <input value={form.officeHours} onChange={(e) => setForm((f) => ({ ...f, officeHours: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Facebook URL</label>
+                  <input value={form.facebookUrl} onChange={(e) => setForm((f) => ({ ...f, facebookUrl: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">YouTube URL</label>
+                  <input value={form.youtubeUrl} onChange={(e) => setForm((f) => ({ ...f, youtubeUrl: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">LinkedIn URL</label>
+                  <input value={form.linkedinUrl} onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Google Maps embed URL</label>
+                  <textarea value={form.mapEmbedUrl} onChange={(e) => setForm((f) => ({ ...f, mapEmbedUrl: e.target.value }))} placeholder="https://www.google.com/maps/embed?..." className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium min-h-[80px] text-xs" />
                 </div>
               </div>
             </div>

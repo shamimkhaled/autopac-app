@@ -1,16 +1,37 @@
 'use client';
 
-interface StickyCTAProps {
-  productName?: string;
-  productSlug?: string;
-  pathname?: string | null;
-}
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useCompany } from '@/hooks/useSiteData';
+import { useLocale } from '@/context/LocaleContext';
 
-/**
- * StickyCTA (Request Quote + Inquire via WhatsApp) removed — buttons disrupted
- * layout on desktop, tablet, and mobile across all pages.
- * Users can still access Contact via header/nav and WhatsApp via the floating icon.
- */
-export default function StickyCTA(_props: StickyCTAProps) {
-  return null;
+export default function StickyCTA() {
+  const pathname = usePathname();
+  const [company] = useCompany();
+  const { locale } = useLocale();
+  const whatsapp = company?.whatsapp || '8801818496642';
+
+  const show =
+    pathname?.startsWith('/products') || pathname?.startsWith('/brochure');
+  if (!show) return null;
+
+  const isBn = locale === 'bn';
+
+  return (
+    <div className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-stone-200 bg-white dark:bg-stone-950 dark:border-stone-800 safe-area-pb">
+      <div className="grid grid-cols-2 gap-2 px-3 py-2">
+        <Link href="/contact" className="btn-primary text-[13px]">
+          {isBn ? 'কোটেশন চান' : 'Request quote'}
+        </Link>
+        <a
+          href={`https://wa.me/${whatsapp}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary text-[13px]"
+        >
+          WhatsApp
+        </a>
+      </div>
+    </div>
+  );
 }

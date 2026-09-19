@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { setProductCatalogLink } from '@/lib/catalogMap';
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { categoryId, nameEn, nameBn, shortDescEn, shortDescBn, fullDescEn, fullDescBn, images, specs, packableIds, videoUrl, featured } = body;
+    const { categoryId, nameEn, nameBn, shortDescEn, shortDescBn, fullDescEn, fullDescBn, images, specs, packableIds, videoUrl, featured, brochureLineId, brochurePage } = body;
     const slug = body.slug || nameEn.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const product = await prisma.product.create({
       data: {
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
         featured: !!featured,
       },
     });
+    await setProductCatalogLink(slug, brochureLineId, brochurePage);
     return NextResponse.json(product);
   } catch (e) {
     console.error(e);

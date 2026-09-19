@@ -7,9 +7,11 @@ import { useLocale } from '@/context/LocaleContext';
 import { useProducts, useCategories } from '@/hooks/useSiteData';
 import {
   ArrowRight, Camera, ChevronLeft, ChevronRight,
-  MessageSquare, ZoomIn, Phone, CheckCircle,
+  MessageSquare, ZoomIn, Phone,
 } from 'lucide-react';
 import type { Product, Category } from '@/lib/api';
+import PageHero from '@/components/PageHero';
+import QuoteBand from '@/components/QuoteBand';
 import AdSense from '@/components/News/AdSense';
 
 // 16 per page → two natural batches of 8, with an ad in between
@@ -88,7 +90,7 @@ function LightboxModal({
       </button>
 
       <div
-        className="relative max-w-5xl w-full mx-10 sm:mx-16 rounded-2xl sm:rounded-3xl overflow-hidden bg-zinc-950 shadow-2xl"
+        className="relative max-w-5xl w-full mx-10 sm:mx-16 overflow-hidden bg-stone-950 border border-stone-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="aspect-[4/3] relative">
@@ -102,17 +104,17 @@ function LightboxModal({
         {/* Info + CTA bar */}
         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 sm:p-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[10px] text-action-orange font-black uppercase tracking-widest mb-1">
+            <p className="text-[10px] text-white/70 font-semibold uppercase tracking-[0.16em] mb-1">
               {item.categoryNameEn}
             </p>
-            <h3 className="text-white font-black text-base sm:text-xl leading-tight line-clamp-2">
+            <h3 className="text-white font-semibold text-base sm:text-xl leading-tight line-clamp-2">
               {item.nameEn}
             </h3>
           </div>
           <div className="flex gap-2 flex-shrink-0">
             <Link
               href={`/contact?product=${encodeURIComponent(item.nameEn)}`}
-              className="flex items-center gap-2 px-5 sm:px-7 py-3 bg-action-orange text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl hover:bg-orange-600 transition-colors whitespace-nowrap shadow-xl shadow-action-orange/30"
+              className="flex items-center gap-2 px-5 py-3 bg-brand-maroon text-white text-sm font-semibold rounded-md hover:bg-brand-maroon-hover whitespace-nowrap"
               onClick={onClose}
             >
               <MessageSquare className="w-3.5 h-3.5" />
@@ -148,7 +150,7 @@ function GalleryCard({
 
   return (
     <div
-      className={`group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gray-100 dark:bg-slate-800 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-black/20 dark:hover:shadow-black/50 transition-all duration-500 hover:-translate-y-1 ${
+      className={`group relative rounded-md overflow-hidden bg-stone-100 dark:bg-stone-800 cursor-pointer border border-stone-200 dark:border-stone-800 ${
         featured ? 'aspect-[4/3]' : 'aspect-square'
       }`}
       onClick={onClick}
@@ -165,24 +167,23 @@ function GalleryCard({
         decoding="async"
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         onError={(e) => {
-          (e.currentTarget as HTMLImageElement).src =
-            'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=60&w=400';
+          (e.currentTarget as HTMLImageElement).src = '/images/slider1.png';
         }}
       />
 
       {/* Gradient overlay — visible on mobile, triggered by hover on desktop */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-4">
-        <p className="text-[9px] sm:text-[10px] text-action-orange font-black uppercase tracking-widest leading-none mb-1">
+        <p className="text-[10px] text-white/80 font-medium uppercase tracking-[0.14em] leading-none mb-1">
           {catName}
         </p>
-        <h3 className="text-white font-black text-xs sm:text-sm leading-tight line-clamp-2 mb-2 sm:mb-3">
+        <h3 className="text-white font-semibold text-xs sm:text-sm leading-tight line-clamp-2 mb-2 sm:mb-3">
           {name}
         </h3>
         <div className="flex gap-2">
           <Link
             href={`/contact?product=${encodeURIComponent(item.nameEn)}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 flex items-center justify-center gap-1 py-2.5 sm:py-3 bg-action-orange text-white font-black text-[10px] sm:text-xs uppercase tracking-wide rounded-lg hover:bg-orange-600 transition-colors active:scale-95 touch-manipulation"
+            className="flex-1 flex items-center justify-center gap-1 py-2.5 bg-brand-maroon text-white text-[12px] font-semibold rounded-md"
           >
             <MessageSquare className="w-3 h-3" />
             {locale === 'bn' ? 'কোট' : 'Quote'}
@@ -212,33 +213,24 @@ function AdSlot({ slot, label = 'Advertisement' }: { slot: string; label?: strin
 /** Mid-page inline CTA strip — high conversion, breaks ad from gallery */
 function InlineCTAStrip({ locale }: { locale: string }) {
   return (
-    <div className="my-8 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-action-orange to-orange-600 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5 shadow-xl shadow-action-orange/20">
+    <div className="my-8 bg-brand-maroon text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-5">
       <div className="text-center sm:text-left">
-        <p className="text-white/80 text-[10px] font-black uppercase tracking-[0.3em] mb-1">
-          {locale === 'bn' ? 'বিশেষজ্ঞ পরামর্শ' : 'Free Expert Consultation'}
+        <p className="text-white/70 text-[11px] font-semibold uppercase tracking-[0.16em] mb-1">
+          {locale === 'bn' ? 'কোটেশন' : 'Request a quote'}
         </p>
-        <h3 className="text-white font-black text-xl sm:text-2xl uppercase tracking-tight leading-tight">
-          {locale === 'bn' ? 'আজই কোটেশন নিন' : 'Get Your Custom Quote Today'}
+        <h3 className="font-display text-2xl font-semibold tracking-tight">
+          {locale === 'bn' ? 'আগ্রহের মেশিনটি কোট করুন' : 'Quote the machine you just viewed'}
         </h3>
-        <p className="text-white/70 text-xs sm:text-sm mt-1 font-medium">
-          {locale === 'bn'
-            ? '২৪ ঘণ্টার মধ্যে আমাদের ইঞ্জিনিয়ার আপনার সাথে যোগাযোগ করবে।'
-            : 'Our engineers respond within 24 hours with a tailored proposal.'}
-        </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-        <Link
-          href="/contact"
-          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-action-orange font-black text-[10px] uppercase tracking-wider rounded-xl hover:bg-orange-50 transition-all shadow-lg active:scale-95 touch-manipulation"
-        >
-          <MessageSquare className="w-4 h-4" />
-          {locale === 'bn' ? 'ফর্ম পূরণ করুন' : 'Request Quotation'}
+        <Link href="/contact" className="btn-primary bg-white text-brand-maroon hover:bg-stone-100">
+          {locale === 'bn' ? 'কোটেশন ফর্ম' : 'Request quotation'}
         </Link>
         <a
           href="https://wa.me/8801818496642"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/20 text-white font-black text-[10px] uppercase tracking-wider rounded-xl hover:bg-white/30 transition-all border border-white/30 active:scale-95 touch-manipulation"
+          className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 border border-white/40 text-white text-sm font-semibold rounded-md"
         >
           <Phone className="w-4 h-4" />
           WhatsApp
@@ -307,9 +299,7 @@ export default function GalleryPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 transition-colors">
-
-      {/* Load AdSense script only when publisher ID is configured */}
+    <div className="page-shell">
       {process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID && (
         <Script
           id="adsense-gallery"
@@ -319,71 +309,26 @@ export default function GalleryPage() {
         />
       )}
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative py-16 sm:py-24 lg:py-28 bg-industrial-dark overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-10 grayscale bg-cover bg-center pointer-events-none"
-          style={{ backgroundImage: "url('/images/slider1.png')" }}
-          aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-industrial-dark/60 to-industrial-dark pointer-events-none" aria-hidden="true" />
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          {/* Badge */}
-          <div className="flex items-center justify-center gap-4 mb-5">
-            <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
-            <span className="text-action-orange font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
-              {locale === 'bn' ? 'মেশিনারি গ্যালারি' : 'Machinery Gallery'}
-            </span>
-            <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-tight leading-tight mb-5">
-            {locale === 'bn' ? 'আমাদের মেশিন' : 'Industrial'}{' '}
-            <span className="text-action-orange">
-              {locale === 'bn' ? 'গ্যালারি' : 'Machine Gallery'}
-            </span>
-          </h1>
-
-          <p className="text-white/60 text-base sm:text-lg font-medium max-w-2xl mx-auto mb-8">
-            {locale === 'bn'
-              ? 'বিশ্বমানের মেশিনারির ছবি দেখুন এবং আগ্রহের মেশিনে সরাসরি কোটেশন চান।'
-              : 'Explore our complete range of food processing, packaging, and industrial machinery. Click any image to request a quotation.'}
-          </p>
-
-          {/* Hero CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center gap-2 px-7 py-4 bg-action-orange text-white font-black text-xs uppercase tracking-wider rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-action-orange/30 active:scale-95"
-            >
-              <MessageSquare className="w-4 h-4" />
-              {locale === 'bn' ? 'কোটেশন চান' : 'Request a Quotation'}
+      <PageHero
+        kicker={locale === 'bn' ? 'মেশিনারি গ্যালারি' : 'Machinery gallery'}
+        title={locale === 'bn' ? 'ফ্যাক্টরি মেশিনের ছবি' : 'See the machines as installed'}
+        description={
+          locale === 'bn'
+            ? 'ছবি খুলে প্রিভিউ করুন, তারপর সেই মেশিনের জন্য কোটেশন চান।'
+            : 'Open any image for a closer look, then request a quote for that machine.'
+        }
+        actions={
+          <>
+            <Link href="/products" className="btn-primary">
+              {locale === 'bn' ? 'মেশিনারি দেখুন' : 'Browse machinery'}
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </Link>
-            <Link
-              href="/products"
-              className="inline-flex items-center justify-center gap-2 px-7 py-4 bg-white/10 text-white font-black text-xs uppercase tracking-wider rounded-2xl hover:bg-white/20 transition-all border border-white/20 active:scale-95"
-            >
-              {locale === 'bn' ? 'সব পণ্য দেখুন' : 'View All Products'}
-              <ArrowRight className="w-4 h-4" />
+            <Link href="/contact" className="btn-secondary">
+              {locale === 'bn' ? 'কোটেশন চান' : 'Request a quote'}
             </Link>
-          </div>
-
-          {/* Trust signals */}
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
-            {[
-              locale === 'bn' ? '৫০০+ মেশিন সরবরাহ' : '500+ Machines Delivered',
-              locale === 'bn' ? '২৪ ঘণ্টায় সাড়া' : '24-Hour Response',
-              locale === 'bn' ? 'বিনামূল্যে পরামর্শ' : 'Free Consultation',
-            ].map((s) => (
-              <span key={s} className="flex items-center gap-1.5 text-white/50 text-xs font-bold">
-                <CheckCircle className="w-3.5 h-3.5 text-action-orange flex-shrink-0" />
-                {s}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -400,10 +345,8 @@ export default function GalleryPage() {
               role="tab"
               aria-selected={activeCat === cat.id}
               onClick={() => handleCatChange(cat.id)}
-              className={`flex-shrink-0 px-4 sm:px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all touch-manipulation ${
-                activeCat === cat.id
-                  ? 'bg-action-orange text-white shadow-lg shadow-action-orange/30'
-                  : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+              className={`filter-chip ${
+                activeCat === cat.id ? 'filter-chip-active' : ''
               }`}
             >
               {locale === 'bn' ? cat.labelBn : cat.labelEn}
@@ -414,12 +357,12 @@ export default function GalleryPage() {
         {/* Stats bar */}
         {isLoaded && (
           <div className="flex items-center justify-between mb-4 mt-4">
-            <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+            <p className="text-xs font-medium text-stone-500 uppercase tracking-wider">
               <Camera className="w-3.5 h-3.5 inline mr-1.5 mb-0.5" aria-hidden="true" />
               {filtered.length} {locale === 'bn' ? 'টি ছবি' : 'images'}
             </p>
             {totalPages > 1 && (
-              <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+              <p className="text-xs font-medium text-stone-500 uppercase tracking-wider">
                 {locale === 'bn' ? 'পৃষ্ঠা' : 'Page'} {safePage} / {totalPages}
               </p>
             )}
@@ -436,7 +379,7 @@ export default function GalleryPage() {
             {Array.from({ length: PAGE_SIZE }).map((_, i) => (
               <div
                 key={i}
-                className={`bg-gray-100 dark:bg-slate-800 rounded-2xl sm:rounded-3xl animate-pulse ${
+                className={`bg-stone-100 dark:bg-stone-800 rounded-md animate-pulse ${
                   i === 0 ? 'aspect-[4/3]' : 'aspect-square'
                 }`}
               />
@@ -444,9 +387,9 @@ export default function GalleryPage() {
           </div>
         ) : pageItems.length === 0 ? (
           /* Empty state */
-          <div className="text-center py-24 bg-gray-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-700">
-            <Camera className="w-12 h-12 text-gray-300 dark:text-slate-700 mx-auto mb-4" aria-hidden="true" />
-            <p className="font-black text-gray-400 dark:text-slate-600 uppercase tracking-widest text-sm">
+          <div className="text-center py-20 bg-white dark:bg-stone-900 rounded-md border border-dashed border-stone-300 dark:border-stone-700">
+            <Camera className="w-10 h-10 text-stone-300 dark:text-stone-600 mx-auto mb-4" aria-hidden="true" />
+            <p className="font-medium text-stone-500 text-sm">
               {locale === 'bn' ? 'কোন ছবি পাওয়া যায়নি' : 'No images found'}
             </p>
           </div>
@@ -504,7 +447,7 @@ export default function GalleryPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage === 1}
-              className="flex items-center gap-1.5 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all touch-manipulation"
+              className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
               {locale === 'bn' ? 'আগে' : 'Prev'}
@@ -526,10 +469,10 @@ export default function GalleryPage() {
                       key={pg}
                       onClick={() => setPage(pg as number)}
                       aria-current={safePage === pg ? 'page' : undefined}
-                      className={`w-10 h-10 rounded-xl font-black text-xs transition-all touch-manipulation ${
+                      className={`w-10 h-10 rounded-md text-sm font-semibold ${
                         safePage === pg
-                          ? 'bg-action-orange text-white shadow-lg shadow-action-orange/30'
-                          : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                          ? 'bg-brand-maroon text-white'
+                          : 'bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:border-brand-maroon'
                       }`}
                     >
                       {pg}
@@ -541,7 +484,7 @@ export default function GalleryPage() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
-              className="flex items-center gap-1.5 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 font-bold text-xs rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all touch-manipulation"
+              className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {locale === 'bn' ? 'পরে' : 'Next'}
               <ChevronRight className="w-4 h-4" />
@@ -551,48 +494,16 @@ export default function GalleryPage() {
 
         {/* ── BOTTOM AD SLOT ───────────────────────────────────────────── */}
         <AdSlot slot="gallery-bottom-banner" label="Bottom advertisement" />
-
-        {/* ── Final CTA banner ─────────────────────────────────────────── */}
-        <div className="mt-4 mb-8 bg-industrial-dark rounded-3xl sm:rounded-[40px] p-8 sm:p-12 lg:p-16 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-action-orange/10 to-transparent pointer-events-none" aria-hidden="true" />
-          <div className="absolute -top-16 -right-16 w-64 h-64 bg-action-orange/5 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
-
-          <div className="relative z-10">
-            <p className="text-action-orange font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs mb-4">
-              {locale === 'bn' ? 'বিনামূল্যে কাস্টম কোটেশন' : 'Free Custom Quotation'}
-            </p>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white uppercase tracking-tight mb-4">
-              {locale === 'bn' ? 'সঠিক মেশিনটি খুঁজে পাচ্ছেন না?' : 'Found the Right'}{' '}
-              <span className="text-action-orange">
-                {locale === 'bn' ? 'আমাদের সাথে কথা বলুন' : 'Machine?'}
-              </span>
-            </h2>
-            <p className="text-white/60 font-medium max-w-xl mx-auto mb-8 text-sm sm:text-base">
-              {locale === 'bn'
-                ? 'আমাদের ইঞ্জিনিয়ারিং টিম আপনাকে সঠিক মেশিন বেছে নিতে এবং কাস্টম কোটেশন তৈরি করতে সাহায্য করবে।'
-                : 'Our engineering team will prepare a custom proposal and pricing within 24 hours — no obligation.'}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-action-orange text-white font-black text-xs uppercase tracking-wider rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-action-orange/30 active:scale-95"
-              >
-                <MessageSquare className="w-4 h-4" />
-                {locale === 'bn' ? 'কোটেশন চান' : 'Request a Quotation'}
-              </Link>
-              <a
-                href="https://wa.me/8801818496642"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-black text-xs uppercase tracking-wider rounded-2xl hover:bg-white/20 transition-all border border-white/20 active:scale-95"
-              >
-                <Phone className="w-4 h-4" />
-                {locale === 'bn' ? 'হোয়াটসঅ্যাপে কথা বলুন' : 'Chat on WhatsApp'}
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
+
+      <QuoteBand
+        title={locale === 'bn' ? 'সঠিক মেশিনটি খুঁজে পেয়েছেন?' : 'Found the right machine?'}
+        description={
+          locale === 'bn'
+            ? 'মেশিনের নাম লিখে কোটেশন চান। আমরা স্পেসিফিকেশন ও মূল্য নিয়ে যোগাযোগ করব।'
+            : 'Quote the machine you viewed. We reply with specifications and pricing.'
+        }
+      />
 
       {/* Lightbox */}
       {lightbox && (

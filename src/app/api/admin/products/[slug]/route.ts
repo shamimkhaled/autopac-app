@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { setProductCatalogLink } from '@/lib/catalogMap';
 
 export async function PUT(req: Request, { params }: { params: { slug: string } }) {
   try {
@@ -11,7 +12,7 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
     }
 
     const body = await req.json();
-    const { categoryId, nameEn, nameBn, shortDescEn, shortDescBn, fullDescEn, fullDescBn, images, specs, packableIds, videoUrl, featured } = body;
+    const { categoryId, nameEn, nameBn, shortDescEn, shortDescBn, fullDescEn, fullDescBn, images, specs, packableIds, videoUrl, featured, brochureLineId, brochurePage } = body;
     await prisma.product.update({
       where: { slug: params.slug },
       data: {
@@ -29,6 +30,9 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
         featured: !!featured,
       },
     });
+    if (brochureLineId !== undefined) {
+      await setProductCatalogLink(params.slug, brochureLineId, brochurePage);
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

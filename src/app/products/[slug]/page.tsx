@@ -6,19 +6,24 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import ProductCard from '@/components/ProductCard';
-import { packableItems } from '@/hooks/useSiteData';
+import { packableItems, useCompany, useCatalogMap } from '@/hooks/useSiteData';
 import type { Product } from '@/lib/api';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, MessageCircle, FileText, ChevronLeft, ArrowLeft, PlayCircle, Settings, ShieldCheck, Box, Package, ArrowRight, Loader2 } from 'lucide-react';
+import { brochureHrefForProduct } from '@/data/brochure';
+import { ChevronRight, ChevronLeft, X, MessageCircle, BookOpen, Loader2 } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { t, locale } = useLocale();
+  const [company] = useCompany();
+  const [catalogMap] = useCatalogMap();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [activeImage, setActiveImage] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   const [loading, setLoading] = useState(true);
+  const isBn = locale === 'bn';
+  const whatsapp = company?.whatsapp || '8801818496642';
 
   useEffect(() => {
     setLoading(true);
@@ -26,277 +31,289 @@ export default function ProductDetailPage() {
       .then((r) => r.json())
       .then((p) => {
         setProduct(p);
+        setActiveImage(0);
         if (p?.categoryId) {
           fetch('/api/products')
             .then((r) => r.json())
             .then((all: Product[]) => {
-              setRelated(all.filter((x) => x.categoryId === p.categoryId && x.id !== p.id).slice(0, 4));
+              setRelated(all.filter((x) => x.categoryId === p.categoryId && x.id !== p.id).slice(0, 3));
             });
         }
       })
       .finally(() => setLoading(false));
   }, [slug]);
 
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(false);
+      if (e.key === 'ArrowRight') setActiveImage((i) => i + 1);
+      if (e.key === 'ArrowLeft') setActiveImage((i) => i - 1);
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [lightbox]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-brand-paper">
+        <Loader2 className="w-10 h-10 text-brand-maroon animate-spin" aria-label="Loading" />
       </div>
     );
   }
 
-  if (!product) return null;
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-brand-paper px-4">
+        <h1 className="page-title text-2xl">{isBn ? 'মেশিন পাওয়া যায়নি' : 'Machine not found'}</h1>
+        <Link href="/products" className="btn-primary">
+          {isBn ? 'মেশিনারিতে ফিরুন' : 'Back to machinery'}
+        </Link>
+      </div>
+    );
+  }
 
   const category = product.category;
-  let rawPackableIds = [];
+  let rawPackableIds: string[] = [];
   try {
-    rawPackableIds = Array.isArray(product.packableIds) ? product.packableIds : JSON.parse(typeof product.packableIds === 'string' ? product.packableIds : '[]');
-  } catch (e) {
-    console.error(`Error parsing packableIds for product ${product.id}:`, e);
+    rawPackableIds = Array.isArray(product.packableIds)
+      ? product.packableIds
+      : JSON.parse(typeof product.packableIds === 'string' ? product.packableIds : '[]');
+  } catch {
+    rawPackableIds = [];
   }
-  const packables = rawPackableIds.map((id: string) => packableItems.find((p) => p.id === id) || { id, nameEn: id, nameBn: id }).filter(Boolean);
+  const packables = rawPackableIds
+    .map((id) => packableItems.find((p) => p.id === id) || { id, nameEn: id, nameBn: id });
   const name = locale === 'bn' && product.nameBn ? product.nameBn : product.nameEn;
   const fullDesc = locale === 'bn' && product.fullDescBn ? product.fullDescBn : product.fullDescEn;
-  const categoryName = category ? (locale === 'bn' && (category as any).nameBn ? (category as any).nameBn : (category as any).nameEn) : 'Machinery';
-  
+  const categoryName = category
+    ? locale === 'bn' && category.nameBn
+      ? category.nameBn
+      : category.nameEn
+    : 'Machinery';
+
   let images = ['/images/slider1.png'];
   try {
-    images = Array.isArray(product.images) ? product.images : JSON.parse(typeof product.images === 'string' ? product.images : '["/images/slider1.png"]');
-  } catch (e) {
-    console.error(`Error parsing images for product ${product.id}:`, e);
+    const parsed = Array.isArray(product.images)
+      ? product.images
+      : JSON.parse(typeof product.images === 'string' ? product.images : '[]');
+    if (parsed.length) images = parsed;
+  } catch {
+    images = ['/images/slider1.png'];
   }
 
-  let specs = [] as { keyEn: string; keyBn: string; value: string; unit?: string }[];
+  let specs: { keyEn: string; keyBn: string; value: string; unit?: string }[] = [];
   try {
-    specs = Array.isArray(product.specs) ? product.specs : JSON.parse(typeof product.specs === 'string' ? product.specs : '[]') as { keyEn: string; keyBn: string; value: string; unit?: string }[];
-  } catch (e) {
-    console.error(`Error parsing specs for product ${product.id}:`, e);
+    specs = Array.isArray(product.specs)
+      ? product.specs
+      : JSON.parse(typeof product.specs === 'string' ? product.specs : '[]');
+  } catch {
+    specs = [];
   }
 
-  const nextImage = () => setActiveImage((prev) => (prev + 1) % images.length);
-  const prevImage = () => setActiveImage((prev) => (prev - 1 + images.length) % images.length);
+  const imgIndex = ((activeImage % images.length) + images.length) % images.length;
+  const quoteHref = `/contact?product=${encodeURIComponent(name)}`;
+  const catalogHref = brochureHrefForProduct(product.slug, catalogMap);
 
   return (
-    <div className="min-h-screen bg-white pb-32">
-      {/* Breadcrumbs & Modern Header */}
-      <div className="bg-gray-50 border-b border-gray-100 py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-gray-400">
-            <Link href="/" className="hover:text-action-orange transition-colors">Home</Link>
-            <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <Link href="/products" className="hover:text-action-orange transition-colors">Catalog</Link>
-            <ChevronRight className="w-3 h-3 flex-shrink-0" />
-            <span className="text-industrial-dark truncate max-w-xs">{name}</span>
+    <div className="page-shell pb-16">
+      <div className="brand-rule" aria-hidden="true" />
+      <div className="border-b border-stone-200 dark:border-stone-800">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <nav className="flex items-center gap-2 text-sm text-stone-500 mb-5" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-brand-maroon">
+              {isBn ? 'হোম' : 'Home'}
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <Link href="/products" className="hover:text-brand-maroon">
+              {isBn ? 'মেশিনারি' : 'Machinery'}
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-stone-900 dark:text-stone-200 truncate">{name}</span>
           </nav>
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="max-w-4xl">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-0.5 bg-action-orange rounded-full" />
-                <span className="text-action-orange font-black uppercase tracking-[0.2em] text-[10px]">
-                  {categoryName}
-                </span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-black text-industrial-dark uppercase tracking-tight leading-tight">
-                {name}
-              </h1>
-            </div>
-            <div className="flex gap-4">
-              <Link 
-                href={`/contact?product=${product.slug}`}
-                className="px-8 py-4 bg-action-orange text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-action-orange/20 hover:bg-orange-600 transition-all"
-              >
-                Request Quote
+          <p className="section-kicker mb-2">{categoryName}</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <h1 className="page-title max-w-3xl">{name}</h1>
+            <div className="flex flex-wrap gap-2">
+              <Link href={quoteHref} className="btn-primary">
+                {t('products.requestQuote') || 'Request a quote'}
               </Link>
+              {catalogHref && (
+                <Link href={catalogHref} className="btn-secondary">
+                  <BookOpen className="w-4 h-4" />
+                  {isBn ? 'ক্যাটালগে দেখুন' : 'View in catalog'}
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid lg:grid-cols-12 gap-20">
-          
-          {/* Left: Image Gallery (7 columns) */}
-          <div className="lg:col-span-7 space-y-8">
-            <div className="relative aspect-[4/3] rounded-[60px] overflow-hidden bg-gray-50 border border-gray-100 shadow-2xl group">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeImage}
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0"
-                >
-                  <Image 
-                    src={images[activeImage]} 
-                    alt={name} 
-                    fill 
-                    className="object-cover" 
-                    priority 
-                  />
-                </motion.div>
-              </AnimatePresence>
-              
-              {images.length > 1 && (
-                <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
-                  <button onClick={prevImage} className="pointer-events-auto w-14 h-14 bg-white/10 backdrop-blur-xl hover:bg-white text-white hover:text-industrial-dark rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 border border-white/20">
-                    <ChevronLeft className="w-6 h-6" />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-7 space-y-4">
+            <button
+              type="button"
+              onClick={() => setLightbox(true)}
+              className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-white border border-stone-200 dark:border-stone-800 cursor-zoom-in"
+              aria-label={isBn ? 'ছবি বড় করে দেখুন' : 'Enlarge image'}
+            >
+              <Image src={images[imgIndex]} alt={name} fill className="object-contain bg-stone-50 dark:bg-stone-900" priority />
+            </button>
+            {images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveImage(i)}
+                    className={`relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden border ${
+                      imgIndex === i ? 'border-brand-maroon' : 'border-stone-200 dark:border-stone-700 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <Image src={img} alt="" fill className="object-cover" />
                   </button>
-                  <button onClick={nextImage} className="pointer-events-auto w-14 h-14 bg-white/10 backdrop-blur-xl hover:bg-white text-white hover:text-industrial-dark rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 border border-white/20">
-                    <ChevronRight className="w-6 h-6" />
-                  </button>
-                </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="lg:col-span-5 space-y-8">
+            <p className="text-stone-600 dark:text-stone-400 leading-relaxed whitespace-pre-line">{fullDesc}</p>
+
+            <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden">
+              <h2 className="px-5 py-3 text-sm font-semibold border-b border-stone-200 dark:border-stone-800">
+                {t('products.specifications') || 'Specifications'}
+              </h2>
+              {specs.length === 0 ? (
+                <p className="px-5 py-4 text-sm text-stone-500">
+                  {isBn ? 'বিস্তারিত স্পেকসের জন্য কোটেশন চান।' : 'Ask for a quotation for detailed specifications.'}
+                </p>
+              ) : (
+                <dl>
+                  {specs.map((spec, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between gap-4 px-5 py-3 text-sm border-b border-stone-100 dark:border-stone-800 last:border-0"
+                    >
+                      <dt className="text-stone-500">{isBn ? spec.keyBn : spec.keyEn}</dt>
+                      <dd className="font-medium text-stone-900 dark:text-white text-right">
+                        {spec.value}
+                        {spec.unit ? ` ${spec.unit}` : ''}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
               )}
             </div>
 
-            {/* Thumbnails */}
-            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide px-2">
-              {images.map((img: string, i: number) => (
-                <button 
-                  key={i} 
-                  onClick={() => setActiveImage(i)}
-                  className={`relative w-24 h-24 flex-shrink-0 rounded-3xl overflow-hidden transition-all duration-500 ${
-                    activeImage === i 
-                      ? 'ring-4 ring-action-orange ring-offset-4 scale-110 shadow-xl' 
-                      : 'border-2 border-gray-100 opacity-40 hover:opacity-100'
-                  }`}
-                >
-                  <Image src={img} alt="Thumbnail" fill className="object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: Technical Details (5 columns) */}
-          <div className="lg:col-span-5 space-y-12">
-            <div className="space-y-8">
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-6 h-6 text-green-500" />
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Industrial Certified Model</span>
-              </div>
-              
-              <div className="prose prose-lg text-gray-500 font-medium leading-relaxed max-w-none">
-                <p className="whitespace-pre-line">{fullDesc}</p>
-              </div>
-            </div>
-
-            {/* Specs Grid */}
-            <div className="space-y-8 bg-gray-50 rounded-[40px] p-10 border border-gray-100">
-              <h3 className="text-xl font-black text-industrial-dark uppercase tracking-tight flex items-center gap-4">
-                <Settings className="w-6 h-6 text-action-orange" />
-                Technical Specs
-              </h3>
-              <div className="grid grid-cols-1 gap-6">
-                {specs.map((spec, i) => (
-                  <div key={i} className="flex justify-between items-center border-b border-gray-200 pb-4 last:border-0">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      {locale === 'bn' ? spec.keyBn : spec.keyEn}
-                    </span>
-                    <span className="text-industrial-dark font-black">
-                      {spec.value} <span className="text-gray-400 font-medium ml-1">{spec.unit}</span>
-                    </span>
-                  </div>
-                ))}
-                {specs.length === 0 && <p className="text-gray-400 italic text-sm">Consult our engineers for detailed specs.</p>}
-              </div>
-            </div>
-
-            {/* Packables */}
             {packables.length > 0 && (
-              <div className="space-y-8">
-                <h3 className="text-xl font-black text-industrial-dark uppercase tracking-tight flex items-center gap-4">
-                  <Box className="w-6 h-6 text-action-orange" />
-                  Compatible Materials
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {packables.map((p: any) => (
-                    <span key={p.id} className="inline-flex items-center gap-3 px-6 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-sm font-bold text-gray-600">
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      {locale === 'bn' ? p.nameBn : p.nameEn}
-                    </span>
+              <div>
+                <h2 className="text-sm font-semibold text-stone-900 dark:text-white mb-3">
+                  {t('products.whatItPacks') || 'What this machine packs'}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {packables.map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/products?q=${encodeURIComponent(isBn ? p.nameBn : p.nameEn)}`}
+                      className="px-3 py-1.5 text-sm border border-stone-200 dark:border-stone-700 rounded-md hover:border-brand-maroon hover:text-brand-maroon"
+                    >
+                      {isBn ? p.nameBn : p.nameEn}
+                    </Link>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Inquire Action */}
-            <div className="pt-8">
-              <a 
-                href={`https://wa.me/8801818496642?text=${encodeURIComponent(`Hi, I am interested in ${name}.`)}`}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href={quoteHref} className="btn-primary flex-1">
+                {t('products.requestQuote') || 'Request a quote'}
+              </Link>
+              <a
+                href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Hi, I am interested in ${name}.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full group flex items-center justify-between p-8 bg-industrial-dark text-white rounded-[40px] hover:bg-black transition-all shadow-2xl relative overflow-hidden"
+                className="btn-secondary flex-1"
               >
-                <div className="relative z-10">
-                  <p className="text-[10px] font-black text-action-orange uppercase tracking-[0.2em] mb-2">Live Support</p>
-                  <h4 className="text-2xl font-black uppercase tracking-tight">Deploy Inquiry</h4>
-                </div>
-                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-action-orange transition-all relative z-10">
-                  <MessageCircle className="w-8 h-8" />
-                </div>
-                <div className="absolute top-0 right-0 w-32 h-full bg-white/5 skew-x-12 translate-x-8" />
+                <MessageCircle className="w-4 h-4" />
+                WhatsApp
               </a>
             </div>
           </div>
         </div>
 
-        {/* Video Section */}
         {product.videoUrl && (
-          <section className="mt-40 py-32 bg-gray-50 rounded-[80px] px-8 md:px-20 border border-gray-100">
-            <div className="grid lg:grid-cols-2 gap-20 items-center">
-              <div className="space-y-10">
-                <div className="space-y-6">
-                  <h2 className="text-4xl md:text-5xl font-black text-industrial-dark uppercase tracking-tight leading-tight">
-                    Performance <span className="text-gray-300">Showcase</span>
-                  </h2>
-                  <div className="w-20 h-2 bg-action-orange rounded-full" />
-                </div>
-                <p className="text-gray-500 font-medium text-lg leading-relaxed">
-                  Witness the high-speed precision and automated workflow of the {name} in a real-world production environment.
-                </p>
-                <div className="flex items-center gap-6">
-                  <div className="flex -space-x-4">
-                    {[1,2,3].map(i => <div key={i} className="w-12 h-12 rounded-full border-4 border-white bg-gray-200" />)}
-                  </div>
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Trusted by 200+ Manufacturers</p>
-                </div>
-              </div>
-              <div className="relative aspect-video rounded-[40px] overflow-hidden shadow-2xl border-[12px] border-white bg-black">
-                <iframe 
-                  src={product.videoUrl.includes('watch?v=') ? product.videoUrl.replace('watch?v=', 'embed/') : product.videoUrl} 
-                  title="Showcase"
-                  className="w-full h-full" 
-                  allowFullScreen 
-                />
-              </div>
+          <section className="mt-16">
+            <h2 className="page-title text-2xl mb-5">{isBn ? 'ভিডিও' : 'Machine in operation'}</h2>
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-stone-200">
+              <iframe
+                src={product.videoUrl.includes('watch?v=') ? product.videoUrl.replace('watch?v=', 'embed/') : product.videoUrl}
+                title={name}
+                className="w-full h-full"
+                allowFullScreen
+              />
             </div>
           </section>
         )}
 
-        {/* Related Products */}
         {related.length > 0 && (
-          <section className="mt-40">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-              <div>
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-0.5 bg-action-orange rounded-full" />
-                  <span className="text-action-orange font-black uppercase tracking-[0.2em] text-[10px]">Similar Systems</span>
-                </div>
-                <h2 className="text-4xl font-black text-industrial-dark uppercase tracking-tight">Recommended Solutions</h2>
-              </div>
-              <Link href="/products" className="group flex items-center gap-3 font-black text-xs uppercase tracking-widest text-gray-400 hover:text-industrial-dark transition-colors">
-                View Full Catalog <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+          <section className="mt-16">
+            <div className="flex items-end justify-between gap-4 mb-6">
+              <h2 className="page-title text-2xl">{isBn ? 'সম্পর্কিত মেশিন' : 'Related machines'}</h2>
+              <Link href="/products" className="btn-ghost text-sm">
+                {isBn ? 'সব দেখুন' : 'All machinery'}
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-              {related.map((p, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {related.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
           </section>
         )}
       </div>
+
+      {lightbox && (
+        <div className="fixed inset-0 z-[200] bg-black/92 flex flex-col" role="dialog" aria-modal="true" aria-label={name}>
+          <div className="flex items-center justify-between px-4 py-3 text-white">
+            <p className="text-sm truncate pr-4">
+              {name} · {imgIndex + 1}/{images.length}
+            </p>
+            <button type="button" onClick={() => setLightbox(false)} className="p-3" aria-label="Close">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 relative flex items-center justify-center p-4">
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setActiveImage((i) => i - 1)}
+                className="absolute left-3 p-3 text-white/80 hover:text-white"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-7 h-7" />
+              </button>
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={images[imgIndex]} alt={name} className="max-h-full max-w-full object-contain" />
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setActiveImage((i) => i + 1)}
+                className="absolute right-3 p-3 text-white/80 hover:text-white"
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-7 h-7" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
