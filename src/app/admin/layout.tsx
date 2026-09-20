@@ -25,10 +25,18 @@ import {
   Layers,
   Languages,
   Quote,
+  LayoutTemplate,
+  Palette,
+  Search,
+  LineChart,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/website', label: 'Website content', icon: LayoutTemplate },
+  { href: '/admin/branding', label: 'Brand & colors', icon: Palette },
+  { href: '/admin/seo', label: 'SEO & marketing', icon: Search },
+  { href: '/admin/analytics', label: 'Analytics', icon: LineChart },
   { href: '/admin/products', label: 'Machinery', icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: Layers },
   { href: '/admin/catalog', label: 'Catalog map', icon: BookOpen },

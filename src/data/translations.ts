@@ -127,7 +127,7 @@ export const translations = {
   bn: {
     nav: {
       home: 'হোম',
-      products: 'পণ্য',
+      products: 'মেশিনারি',
       about: 'আমাদের সম্পর্কে',
       contact: 'যোগাযোগ',
       gallery: 'গ্যালারি',

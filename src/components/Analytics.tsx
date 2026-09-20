@@ -1,18 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
 
 export default function Analytics() {
-  const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
-  const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
+  const [gaId, setGaId] = useState(process.env.NEXT_PUBLIC_GA_ID || '');
+  const [fbId, setFbId] = useState(process.env.NEXT_PUBLIC_FB_PIXEL_ID || '');
+
+  useEffect(() => {
+    fetch('/api/appearance')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.seo?.googleAnalyticsId) setGaId(d.seo.googleAnalyticsId);
+        if (d?.seo?.facebookPixelId) setFbId(d.seo.facebookPixelId);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <>
-      {/* Google Analytics */}
-      {GA_MEASUREMENT_ID && (
+      {gaId && (
         <>
           <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
             strategy="afterInteractive"
           />
           <Script id="google-analytics" strategy="afterInteractive">
@@ -20,15 +30,13 @@ export default function Analytics() {
               window.dataLayer = window.dataLayer || [];
               function gtag(){window.dataLayer.push(arguments);}
               gtag('js', new Date());
-
-              gtag('config', '${GA_MEASUREMENT_ID}');
+              gtag('config', '${gaId}');
             `}
           </Script>
         </>
       )}
 
-      {/* Facebook Pixel */}
-      {FB_PIXEL_ID && (
+      {fbId && (
         <Script id="fb-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
@@ -39,7 +47,7 @@ export default function Analytics() {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '${FB_PIXEL_ID}');
+            fbq('init', '${fbId}');
             fbq('track', 'PageView');
           `}
         </Script>

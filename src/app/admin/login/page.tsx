@@ -15,7 +15,7 @@ export default function AdminLogin() {
     e.preventDefault();
     setErr('');
     setLoading(true);
-    
+
     try {
       const res = await signIn('credentials', {
         redirect: false,
@@ -23,14 +23,18 @@ export default function AdminLogin() {
         password,
       });
 
-      if (res?.error) {
-        setErr('Invalid credentials');
-      } else {
+      if (res?.status === 429) {
+        setErr('Too many login attempts. Wait 15 minutes and try again.');
+      } else if (res?.error) {
+        setErr('Invalid email or password.');
+      } else if (res?.ok) {
         router.push('/admin');
         router.refresh();
+      } else {
+        setErr('Sign-in failed. Try again.');
       }
-    } catch (error) {
-      setErr('An error occurred');
+    } catch {
+      setErr('Too many requests or network error. Try again later.');
     } finally {
       setLoading(false);
     }
@@ -43,7 +47,7 @@ export default function AdminLogin() {
           <h1 className="text-2xl font-bold text-industrial-dark">Admin Login</h1>
           <p className="text-industrial-silver text-sm mt-2">AutoPac Content Management</p>
         </div>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -52,11 +56,12 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@autopacbd.com"
+              autoComplete="username"
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-action-orange focus:outline-none"
               required
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
@@ -64,6 +69,7 @@ export default function AdminLogin() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              autoComplete="current-password"
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-action-orange focus:outline-none"
               required
             />
@@ -71,9 +77,9 @@ export default function AdminLogin() {
         </div>
 
         {err && <p className="text-red-600 text-sm mt-4 text-center">{err}</p>}
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           disabled={loading}
           className="w-full mt-6 py-3 bg-action-orange text-white font-bold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
         >

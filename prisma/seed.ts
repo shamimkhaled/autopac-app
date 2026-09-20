@@ -25,24 +25,25 @@ const partners = [
 ];
 
 async function main() {
-  // Create default admin user
-  const adminEmail = 'admin@autopacbd.com';
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail }
+  // Admin login — password from ADMIN_PASSWORD env (default autopac123)
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@autopacbd.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'autopac123';
+  const hashedPassword = await hash(adminPassword, 10);
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      password: hashedPassword,
+      name: 'AutoPac Admin',
+      role: 'SUPER_ADMIN',
+    },
+    create: {
+      email: adminEmail,
+      password: hashedPassword,
+      name: 'AutoPac Admin',
+      role: 'SUPER_ADMIN',
+    },
   });
-
-  if (!existingAdmin) {
-    const hashedPassword = await hash('autopac123', 10);
-    await prisma.user.create({
-      data: {
-        email: adminEmail,
-        password: hashedPassword,
-        name: 'AutoPac Admin',
-        role: 'SUPER_ADMIN',
-      }
-    });
-    console.log(`Created default admin: ${adminEmail}`);
-  }
+  console.log(`Admin ready: ${adminEmail} (password from ADMIN_PASSWORD / default)`);
 
   for (let i = 0; i < categories.length; i++) {
     await prisma.category.upsert({

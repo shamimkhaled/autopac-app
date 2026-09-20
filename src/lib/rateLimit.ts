@@ -6,13 +6,11 @@ interface RateLimitRecord {
 // In-memory store (resets on server restart; fine for single-instance deployments)
 const store = new Map<string, RateLimitRecord>();
 
-// Periodically clean up expired entries to prevent memory leaks
-setInterval(() => {
-  const now = Date.now();
+function pruneExpired(now: number) {
   store.forEach((record, key) => {
     if (now > record.resetTime) store.delete(key);
   });
-}, 60_000);
+}
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -21,9 +19,7 @@ export interface RateLimitResult {
 
 /**
  * Check if a request from `identifier` (e.g. IP address) is within the allowed rate.
- * @param identifier  Unique key per client (IP or user id)
- * @param maxRequests Max requests allowed within the window
- * @param windowMs    Time window in milliseconds (default: 60s)
+ * Safe for Edge middleware (lazy prune, no setInterval).
  */
 export function checkRateLimit(
   identifier: string,
@@ -31,6 +27,8 @@ export function checkRateLimit(
   windowMs = 60_000
 ): RateLimitResult {
   const now = Date.now();
+  if (store.size > 5_000) pruneExpired(now);
+
   const record = store.get(identifier);
 
   if (!record || now > record.resetTime) {
@@ -50,11 +48,26 @@ export function checkRateLimit(
 }
 
 /**
- * Extract the client IP from a Next.js Request object.
- * Falls back to a generic identifier if no IP is available.
+ * Extract the client IP from a Next.js Request / NextRequest.
  */
 export function getClientIp(req: Request): string {
   const forwarded = req.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
   return req.headers.get('x-real-ip') ?? 'unknown';
+}
+
+export function rateLimitResponse(retryAfter = 60): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Too many requests. Please try again later.',
+    }),
+    {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfter),
+        'Cache-Control': 'no-store',
+      },
+    }
+  );
 }

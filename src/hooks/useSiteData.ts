@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { Product, Category, HeroSlide, TrustedPartner, CompanyProfile, OwnerProfile, Industry, Testimonial } from '@/lib/api';
 import { resolveApiBase } from '@/lib/api';
 import { products as staticProducts, categories as staticCategories, packableItems } from '@/data/products';
+import { DEFAULT_WEBSITE_CONTENT, type WebsiteContent } from '@/lib/siteContent';
 import type { ProductBrochureMap } from '@/data/brochure';
 import { PRODUCT_BROCHURE } from '@/data/brochure';
 
@@ -146,6 +147,31 @@ export function useIndustries() {
 export function useTestimonials() {
   const [api, loaded] = useFetch<Testimonial[] | null>('/api/testimonials', null);
   return [Array.isArray(api) ? api : [], loaded] as const;
+}
+
+export function useWebsiteContent() {
+  const [api, loaded] = useFetch<WebsiteContent | null>('/api/site-content', null);
+  return [api || DEFAULT_WEBSITE_CONTENT, loaded] as const;
+}
+
+export interface SiteStatRow {
+  id: string;
+  labelEn: string;
+  labelBn: string;
+  value: string;
+  icon?: string;
+  sortOrder?: number;
+}
+
+export function useSiteStats() {
+  const [api, loaded] = useFetch<SiteStatRow[] | null>('/api/stats', null);
+  const fallback: SiteStatRow[] = [
+    { id: '1', labelEn: 'Years in Dhaka', labelBn: 'বছর ঢাকায়', value: '35+' },
+    { id: '2', labelEn: 'Machines delivered', labelBn: 'মেশিন সরবরাহ', value: '500+' },
+    { id: '3', labelEn: 'Factory clients', labelBn: 'কারখানা', value: '300+' },
+    { id: '4', labelEn: 'Product lines', labelBn: 'পণ্য লাইন', value: '16' },
+  ];
+  return [Array.isArray(api) && api.length ? api : fallback, loaded] as const;
 }
 
 export { packableItems };

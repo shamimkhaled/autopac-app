@@ -4,10 +4,17 @@
 
 @layer base {
   :root {
+    --brand-maroon: #6d1a2d;
+    --brand-maroon-hover: #551624;
+    --brand-maroon-mid: #8b2e2e;
+    --brand-paper: #f7f4ef;
+    --brand-purple: #6b21a8;
+    --brand-button-text: #ffffff;
     --background: #f7f4ef;
     --foreground: #1c1917;
     --surface: #ffffff;
     --border: #e7e5e4;
+    --text-muted: #57534e;
   }
 
   .dark {
@@ -15,6 +22,7 @@
     --foreground: #fafaf9;
     --surface: #292524;
     --border: #44403c;
+    --text-muted: #a8a29e;
   }
 
   html {
@@ -81,9 +89,10 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5
-      bg-brand-maroon text-white text-sm font-semibold rounded-md
+      bg-brand-maroon text-sm font-semibold rounded-md
       hover:bg-brand-maroon-hover transition-colors duration-200
       cursor-pointer touch-manipulation;
+    color: var(--brand-button-text);
   }
 
   .btn-secondary {
@@ -140,7 +149,11 @@
   .input-field {
     @apply w-full h-11 px-3.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700
       rounded-md text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400
-      focus:outline-none focus:ring-2 focus:ring-brand-maroon/25 focus:border-brand-maroon;
+      focus:outline-none focus:border-brand-maroon;
+  }
+
+  .input-field:focus {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-maroon) 25%, transparent);
   }
 
   .brand-rule {

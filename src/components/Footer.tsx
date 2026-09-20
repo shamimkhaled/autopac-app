@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useLocale } from '@/context/LocaleContext';
-import { useCompany } from '@/hooks/useSiteData';
+import { useCompany, useWebsiteContent } from '@/hooks/useSiteData';
 import { MapPin, Phone, Mail, Facebook, Youtube, Linkedin } from 'lucide-react';
 import Image from 'next/image';
 
 export default function Footer() {
   const { t, locale } = useLocale();
   const [company] = useCompany();
+  const [content] = useWebsiteContent();
   const isBn = locale === 'bn';
 
   const logoUrl = company?.logoUrl || '/images/logo.png';
@@ -36,9 +37,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm leading-relaxed text-stone-400">
-              {isBn
-                ? 'বিশ্বমানের খাদ্য প্রক্রিয়াকরণ ও প্যাকেজিং মেশিনারি সরবরাহকারী প্রতিষ্ঠান। আমরা সেরা মানের মেশিন এবং বিক্রয়োত্তর সেবা প্রদান করি।'
-                : 'Importer, manufacturer, and supplier of food processing and packaging machinery since 1990.'}
+              {isBn ? content.footer.blurbBn : content.footer.blurbEn}
             </p>
             {(company?.facebookUrl || company?.youtubeUrl || company?.linkedinUrl) && (
               <div className="flex items-center gap-2">

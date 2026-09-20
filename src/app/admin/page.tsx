@@ -129,20 +129,25 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70 mb-2">
-              Auto Pac CMS
+              Auto Pac CMS — A2Z
             </p>
             <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">
-              Machinery control desk
+              Website control desk
             </h2>
             <p className="text-white/80 mt-2 text-sm max-w-md">
-              <span className="font-semibold text-white">{stats.quotes}</span> quotation
-              {stats.quotes === 1 ? '' : 's'} waiting. Keep machines, catalog map, and company copy current.
+              Edit the live site from header to footer. Then manage machines, catalog map, and quotations.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/admin/products/new"
+              href="/admin/website"
               className="btn-primary bg-white text-brand-maroon hover:bg-stone-100"
+            >
+              Website content
+            </Link>
+            <Link
+              href="/admin/products/new"
+              className="inline-flex items-center justify-center min-h-[44px] px-4 border border-white/40 text-white text-sm font-semibold rounded-md hover:bg-white/10"
             >
               Add machine
             </Link>
@@ -154,6 +159,40 @@ export default function AdminDashboard() {
               <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
+        </div>
+      </div>
+
+      <div className="surface-card p-5 sm:p-6">
+        <h3 className="font-display text-lg font-semibold text-stone-900 mb-1">Website A2Z map</h3>
+        <p className="text-sm text-stone-500 mb-4">
+          Every public surface has an admin screen. Start with Website content for hero → footer copy.
+        </p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {[
+            { href: '/admin/website', label: 'Hero, home, catalog band, footer' },
+            { href: '/admin/branding', label: 'Brand colors & appearance' },
+            { href: '/admin/seo', label: 'SEO, GA4, Open Graph' },
+            { href: '/admin/analytics', label: 'Traffic & business analytics' },
+            { href: '/admin/hero', label: 'Hero images' },
+            { href: '/admin/stats', label: 'Hero counters' },
+            { href: '/admin/company', label: 'Logo, phones, WhatsApp, social' },
+            { href: '/admin/products', label: 'Machinery catalog' },
+            { href: '/admin/catalog', label: 'Brochure page links' },
+            { href: '/admin/partners', label: 'Trusted partners' },
+            { href: '/admin/testimonials', label: 'Client quotes (About)' },
+            { href: '/admin/owner', label: 'Owner / leadership' },
+            { href: '/admin/blog', label: 'News articles' },
+            { href: '/admin/translations', label: 'Nav & UI EN/BN strings' },
+            { href: '/admin/quotes', label: 'Inbound quotations' },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="px-3 py-2.5 rounded-md border border-stone-200 text-sm text-stone-700 hover:border-brand-maroon hover:text-brand-maroon transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -292,10 +331,10 @@ export default function AdminDashboard() {
             <h3 className="font-display text-base font-semibold text-stone-900 mb-4">Quick actions</h3>
             <div className="grid grid-cols-1 gap-2">
               {[
+                { href: '/admin/website', label: 'Edit website copy', icon: Settings },
                 { href: '/admin/products/new', label: 'Add machine', icon: Package },
                 { href: '/admin/media', label: 'Upload media', icon: ImageIcon },
                 { href: '/admin/catalog', label: 'Catalog map', icon: BarChart3 },
-                { href: '/admin/company', label: 'Company settings', icon: Settings },
               ].map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}

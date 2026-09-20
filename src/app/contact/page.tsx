@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { queueQuote } from '@/lib/quoteQueue';
+import PageHero from '@/components/PageHero';
 
 const quoteSchema = z.object({
   name: z.string().min(2),

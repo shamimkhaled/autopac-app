@@ -1,13 +1,42 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Loader2, Save, Languages } from 'lucide-react';
+import { Plus, Trash2, Loader2, Save, Languages, Download } from 'lucide-react';
+import { translations } from '@/data/translations';
 
 interface Row {
   id: string;
   key: string;
   valueEn: string;
   valueBn: string;
+}
+
+function flattenDict(
+  obj: Record<string, unknown>,
+  prefix = ''
+): Array<{ key: string; valueEn: string }> {
+  const out: Array<{ key: string; valueEn: string }> = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const path = prefix ? `${prefix}.${k}` : k;
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      out.push(...flattenDict(v as Record<string, unknown>, path));
+    } else if (typeof v === 'string') {
+      out.push({ key: path, valueEn: v });
+    }
+  }
+  return out;
+}
+
+function defaultRows(): Row[] {
+  const enFlat = flattenDict(translations.en as unknown as Record<string, unknown>);
+  const bnFlat = flattenDict(translations.bn as unknown as Record<string, unknown>);
+  const bnMap = Object.fromEntries(bnFlat.map((r) => [r.key, r.valueEn]));
+  return enFlat.map((r, i) => ({
+    id: `seed-${i}-${r.key}`,
+    key: r.key,
+    valueEn: r.valueEn,
+    valueBn: bnMap[r.key] || '',
+  }));
 }
 
 export default function AdminTranslationsPage() {
@@ -31,6 +60,29 @@ export default function AdminTranslationsPage() {
     setRows([...rows, { id: `new-${Date.now()}`, key: '', valueEn: '', valueBn: '' }]);
   };
 
+  const loadDefaults = () => {
+    if (
+      rows.length > 0 &&
+      !confirm('Replace the current list with built-in EN/BN defaults? Unsaved edits will be lost.')
+    ) {
+      return;
+    }
+    const existingByKey = Object.fromEntries(rows.map((r) => [r.key, r]));
+    const seeded = defaultRows().map((d) => {
+      const existing = existingByKey[d.key];
+      if (existing && !String(existing.id).startsWith('seed-') && !String(existing.id).startsWith('new-')) {
+        return existing;
+      }
+      return existing
+        ? { ...d, id: existing.id.startsWith('new-') || existing.id.startsWith('seed-') ? d.id : existing.id }
+        : d;
+    });
+    // Keep custom keys that aren't in defaults
+    const defaultKeys = new Set(seeded.map((r) => r.key));
+    const custom = rows.filter((r) => r.key && !defaultKeys.has(r.key));
+    setRows([...seeded, ...custom]);
+  };
+
   const remove = (id: string) => setRows(rows.filter((r) => r.id !== id));
 
   const save = async () => {
@@ -41,8 +93,11 @@ export default function AdminTranslationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rows),
       });
-      if (res.ok) alert('Site copy updated. Refresh the public site to see EN/BN changes.');
-      else alert('Could not save translations.');
+      if (res.ok) {
+        const refreshed = await fetch('/api/admin/translations').then((r) => r.json());
+        if (Array.isArray(refreshed)) setRows(refreshed);
+        alert('Site copy updated. Refresh the public site to see EN/BN changes.');
+      } else alert('Could not save translations.');
     } catch {
       alert('Could not save translations.');
     }
@@ -52,66 +107,84 @@ export default function AdminTranslationsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
+        <Loader2 className="w-10 h-10 text-brand-maroon animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">Site copy (EN / BN)</h1>
-          <p className="text-gray-500 font-medium">
-            Override public strings. Keys match the dictionary, e.g. <code>products.searchPlaceholder</code>.
+          <h1 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+            Site copy (EN / BN)
+          </h1>
+          <p className="text-sm text-stone-500 mt-1">
+            Override nav, product UI, contact form labels, and footer strings. Keys like{' '}
+            <code className="text-xs">nav.products</code>.
           </p>
         </div>
-        <div className="flex gap-3">
-          <button type="button" onClick={add} className="flex items-center gap-2 px-6 py-3 bg-industrial-dark text-white font-bold rounded-2xl">
-            <Plus className="w-5 h-5" />
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={loadDefaults} className="btn-secondary">
+            <Download className="w-4 h-4" />
+            Load defaults
+          </button>
+          <button type="button" onClick={add} className="btn-secondary">
+            <Plus className="w-4 h-4" />
             Add string
           </button>
-          <button type="button" onClick={save} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-action-orange text-white font-bold rounded-2xl">
-            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+          <button type="button" onClick={save} disabled={saving} className="btn-primary">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden">
-        <div className="grid grid-cols-[minmax(8rem,1fr)_1fr_1fr_auto] gap-3 px-4 py-3 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400">
+      <div className="surface-card overflow-hidden">
+        <div className="grid grid-cols-[minmax(8rem,1fr)_1fr_1fr_auto] gap-3 px-4 py-3 bg-brand-paper text-[10px] font-semibold uppercase tracking-widest text-stone-500">
           <span>Key</span>
           <span>English</span>
           <span>Bengali</span>
           <span />
         </div>
         {rows.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">
+          <div className="p-10 text-center text-stone-500">
             <Languages className="w-10 h-10 mx-auto mb-3 opacity-40" />
-            <p>No overrides yet. Built-in EN/BN copy still ships. Add a key to replace a string on the website.</p>
+            <p className="text-sm">No overrides yet. Load defaults, then edit and save.</p>
+            <button type="button" onClick={loadDefaults} className="btn-primary mt-4">
+              Load defaults
+            </button>
           </div>
         ) : (
           rows.map((row) => (
-            <div key={row.id} className="grid grid-cols-[minmax(8rem,1fr)_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-gray-100">
+            <div
+              key={row.id}
+              className="grid grid-cols-[minmax(8rem,1fr)_1fr_1fr_auto] gap-3 px-4 py-3 border-t border-stone-100"
+            >
               <input
                 value={row.key}
                 onChange={(e) => update(row.id, 'key', e.target.value)}
                 placeholder="nav.products"
-                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-mono text-xs"
+                className="input-field font-mono text-xs h-9"
               />
               <input
                 value={row.valueEn}
                 onChange={(e) => update(row.id, 'valueEn', e.target.value)}
                 placeholder="English"
-                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                className="input-field text-sm h-9"
               />
               <input
                 value={row.valueBn}
                 onChange={(e) => update(row.id, 'valueBn', e.target.value)}
                 placeholder="বাংলা"
-                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm"
+                className="input-field text-sm h-9"
               />
-              <button type="button" onClick={() => remove(row.id)} className="text-gray-300 hover:text-red-500 p-2">
+              <button
+                type="button"
+                onClick={() => remove(row.id)}
+                className="text-stone-300 hover:text-red-600 p-2 cursor-pointer"
+                aria-label="Delete"
+              >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

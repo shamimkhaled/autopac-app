@@ -74,6 +74,10 @@ All sales content must be editable without code deploys. Admin nav (keep complet
 | Area | Route | Drives |
 |------|-------|--------|
 | Dashboard | `/admin` | live counts + shortcuts |
+| Website content | `/admin/website` | Hero→footer EN/BN marketing copy |
+| Brand & colors | `/admin/branding` | Primary, paper, text, button colors |
+| SEO & marketing | `/admin/seo` | Titles, OG, GA4, Pixel, Search Console |
+| Analytics | `/admin/analytics` | Live traffic + quote business metrics |
 | Machinery | `/admin/products` + `[slug]` | Product CMS |
 | Categories | `/admin/categories` | Category |
 | Catalog map | `/admin/catalog` | PRODUCT_BROCHURE / catalog-map API |

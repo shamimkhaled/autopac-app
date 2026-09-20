@@ -49,7 +49,7 @@ export default function Header() {
 
   const navLinks = [
     { href: '/', label: t('nav.home') || 'Home' },
-    { href: '/products', label: locale === 'bn' ? 'মেশিনারি' : 'Machinery' },
+    { href: '/products', label: t('nav.products') || (locale === 'bn' ? 'মেশিনারি' : 'Machinery') },
     { href: '/brochure', label: t('nav.catalog') || 'Catalog' },
     { href: '/gallery', label: t('nav.gallery') || 'Gallery' },
     { href: '/news', label: t('nav.news') || 'News' },
