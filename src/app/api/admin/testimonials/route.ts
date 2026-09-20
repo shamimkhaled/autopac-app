@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { revalidatePublicSite } from '@/lib/cmsApi';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -69,6 +70,7 @@ export async function PUT(req: Request) {
       }
     }
 
+    revalidatePublicSite();
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

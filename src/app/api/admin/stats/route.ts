@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { revalidatePublicSite } from '@/lib/cmsApi';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -58,6 +59,7 @@ export async function PUT(req: Request) {
     )
   );
 
+  revalidatePublicSite();
   return NextResponse.json({ ok: true });
 }
 
@@ -66,5 +68,6 @@ export async function DELETE(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await req.json();
   await prisma.siteStat.delete({ where: { id } });
+  revalidatePublicSite();
   return NextResponse.json({ ok: true });
 }

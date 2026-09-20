@@ -1,9 +1,31 @@
-const CACHE = 'autopac-v2';
-const PRECACHE = ['/', '/products', '/brochure', '/contact', '/offline.html', '/icons/icon-192.png'];
+/* Auto Pac PWA service worker — public site only; admin/auth never cached. */
+const CACHE = 'autopac-v4';
+const PRECACHE = [
+  '/',
+  '/products',
+  '/brochure',
+  '/contact',
+  '/offline.html',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
+  '/manifest.webmanifest',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE)
+      .then((cache) =>
+        Promise.all(
+          PRECACHE.map((url) =>
+            cache.add(url).catch(() => {
+              /* ignore individual precache miss */
+            })
+          )
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -14,6 +36,12 @@ self.addEventListener('activate', (event) => {
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 function isAdminOrAuth(url) {
@@ -35,7 +63,11 @@ async function networkFirst(request) {
     return fresh;
   } catch {
     const cached = await caches.match(request);
-    return cached || caches.match('/offline.html');
+    if (cached) return cached;
+    if (request.mode === 'navigate') {
+      return (await caches.match('/offline.html')) || Response.error();
+    }
+    return caches.match('/offline.html');
   }
 }
 
@@ -62,7 +94,32 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (isAdminOrAuth(url)) return;
 
+  // Never cache the service worker or Next build chunks incorrectly via stale SW
+  if (url.pathname === '/sw.js' || url.pathname.startsWith('/_next/webpack')) {
+    return;
+  }
+
   if (url.pathname.startsWith('/api/')) {
+    const cmsPaths = [
+      '/api/company',
+      '/api/site-content',
+      '/api/appearance',
+      '/api/hero',
+      '/api/partners',
+      '/api/products',
+      '/api/categories',
+      '/api/owner',
+      '/api/industries',
+      '/api/testimonials',
+      '/api/stats',
+      '/api/translations',
+      '/api/catalog-map',
+      '/api/blog',
+    ];
+    if (cmsPaths.some((p) => url.pathname === p || url.pathname.startsWith(p + '/'))) {
+      event.respondWith(fetch(request).catch(() => caches.match('/offline.html')));
+      return;
+    }
     event.respondWith(networkFirst(request));
     return;
   }
@@ -78,4 +135,14 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(networkFirst(request));
+});
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'autopac-quote-sync') {
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => client.postMessage({ type: 'FLUSH_QUOTE_QUEUE' }));
+      })
+    );
+  }
 });

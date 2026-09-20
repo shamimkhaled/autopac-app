@@ -42,12 +42,13 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Deployment to cPanel (ExonHost)
-Since this project uses Next.js with a custom server (`server.js` specified in package.json start script), make sure you have:
-1. Node.js setup app installed on cPanel.
-2. Build the app locally or on the server: `npm run build`
-3. Set the production environment variables in the cPanel Node.js App interface.
-4. Set the startup file to `server.js` or `node_modules/next/dist/bin/next` depending on your specific cPanel PM2 configuration.
+## Deployment
+
+Full guides for **ExonHost cPanel** and **Vercel**: see **[DEPLOY.md](./DEPLOY.md)**.
+
+### Quick pointers
+- **cPanel (recommended for production):** Node 18+, startup file `server.js`, MySQL via cPanel, then `npm install` → `npx prisma db push` → `npm run db:seed` → `npm run build` → Restart app.
+- **Vercel:** Import Git repo, set env vars, use remote MySQL. Media uploads to disk do not persist on Vercel — prefer cPanel for the live CMS.
 
 ## Features
 - **Bilingual System:** Fully supports English and Bengali (বাংলা) via context based language toggle.

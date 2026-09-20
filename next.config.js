@@ -61,6 +61,14 @@ const nextConfig = {
           },
         ],
       },
+      // CMS JSON — never cache so admin edits appear on the public site
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, max-age=0' },
+          { key: 'Pragma', value: 'no-cache' },
+        ],
+      },
       // Long-term caching for static assets
       {
         source: '/images/(.*)',
@@ -71,7 +79,7 @@ const nextConfig = {
       {
         source: '/uploads/(.*)',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+          { key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' },
         ],
       },
       {
@@ -84,6 +92,20 @@ const nextConfig = {
         source: '/icons/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      // Service worker must always revalidate so clients pick up new caches
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+      {
+        source: '/offline.html',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
     ];

@@ -15,9 +15,17 @@ const promiseCache = new Map<string, Promise<unknown>>();
 async function fetchOrNull<T>(path: string): Promise<T | null> {
   try {
     const base = resolveApiBase();
-    const res = await fetch(`${base}${path}`);
+    const res = await fetch(`${base}${path}`, {
+      cache: 'no-store',
+      headers: { Pragma: 'no-cache' },
+    });
     if (!res.ok) return null;
-    return res.json();
+    const data = await res.json();
+    // Treat { error: ... } payloads as failure so fallbacks kick in
+    if (data && typeof data === 'object' && 'error' in data && Object.keys(data).length <= 2) {
+      return null;
+    }
+    return data as T;
   } catch {
     return null;
   }

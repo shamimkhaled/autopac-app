@@ -18,6 +18,20 @@ export function queueQuote(payload: Omit<QueuedQuote, 'queuedAt'>) {
   } catch {
     /* ignore */
   }
+
+  // Ask the service worker to flush when connectivity returns (Chrome/Android)
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.ready
+      .then((reg) => {
+        const syncManager = (
+          reg as ServiceWorkerRegistration & {
+            sync?: { register: (tag: string) => Promise<void> };
+          }
+        ).sync;
+        if (syncManager) return syncManager.register('autopac-quote-sync');
+      })
+      .catch(() => {});
+  }
 }
 
 export async function flushQuoteQueue() {

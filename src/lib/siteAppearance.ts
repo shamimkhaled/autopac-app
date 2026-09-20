@@ -147,14 +147,34 @@ export function saveSeoMarketing(seo: SeoMarketing) {
   return writeSetting(SEO_MARKETING_KEY, mergeSeoMarketing(seo), 'SEO, Open Graph, and marketing pixels');
 }
 
+/** Space-separated R G B for Tailwind opacity modifiers (`bg-brand-maroon/10`). */
+export function hexToRgbChannels(hex: string): string {
+  const h = hex.trim().replace('#', '');
+  const full =
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h;
+  const n = parseInt(full, 16);
+  if (Number.isNaN(n) || full.length !== 6) return '109 26 45';
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}
+
 export function brandThemeToCssVars(theme: BrandTheme): Record<string, string> {
   const t = mergeBrandTheme(theme);
   return {
     '--brand-maroon': t.primary,
+    '--brand-maroon-rgb': hexToRgbChannels(t.primary),
     '--brand-maroon-hover': t.primaryHover,
+    '--brand-maroon-hover-rgb': hexToRgbChannels(t.primaryHover),
     '--brand-maroon-mid': t.primaryMid,
+    '--brand-maroon-mid-rgb': hexToRgbChannels(t.primaryMid),
     '--brand-paper': t.paper,
+    '--brand-paper-rgb': hexToRgbChannels(t.paper),
     '--brand-purple': t.accent,
+    '--brand-purple-rgb': hexToRgbChannels(t.accent),
     '--brand-button-text': t.buttonText,
     '--background': t.paper,
     '--foreground': t.text,

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { type ProductBrochureMap } from '@/data/brochure';
 import { getCatalogMap, saveCatalogMap } from '@/lib/catalogMap';
+import { revalidatePublicSite } from '@/lib/cmsApi';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -28,6 +29,7 @@ export async function PUT(req: Request) {
     }
 
     await saveCatalogMap(cleaned);
+    revalidatePublicSite();
     return NextResponse.json({ ok: true, map: cleaned });
   } catch (e) {
     console.error(e);

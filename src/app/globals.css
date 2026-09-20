@@ -5,10 +5,15 @@
 @layer base {
   :root {
     --brand-maroon: #6d1a2d;
+    --brand-maroon-rgb: 109 26 45;
     --brand-maroon-hover: #551624;
+    --brand-maroon-hover-rgb: 85 22 36;
     --brand-maroon-mid: #8b2e2e;
+    --brand-maroon-mid-rgb: 139 46 46;
     --brand-paper: #f7f4ef;
+    --brand-paper-rgb: 247 244 239;
     --brand-purple: #6b21a8;
+    --brand-purple-rgb: 107 33 168;
     --brand-button-text: #ffffff;
     --background: #f7f4ef;
     --foreground: #1c1917;
@@ -149,11 +154,7 @@
   .input-field {
     @apply w-full h-11 px-3.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700
       rounded-md text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400
-      focus:outline-none focus:border-brand-maroon;
-  }
-
-  .input-field:focus {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-maroon) 25%, transparent);
+      focus:outline-none focus:ring-2 focus:ring-brand-maroon/25 focus:border-brand-maroon;
   }
 
   .brand-rule {

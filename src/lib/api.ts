@@ -1,11 +1,12 @@
 const API = process.env.NEXT_PUBLIC_SITE_URL || '';
 
+/**
+ * Browser always uses same-origin (`''`) so admin CMS edits on this host
+ * show up here. Never fetch a different SITE_URL from the client (that caused
+ * logo/content to stick to fallbacks when env pointed at localhost/production).
+ */
 export function resolveApiBase(): string {
-  if (typeof window === 'undefined') return API;
-  if (!API) return '';
-  if (API.startsWith('http://') && window.location.protocol === 'https:') {
-    return API.replace(/^http:\/\//, 'https://');
-  }
+  if (typeof window !== 'undefined') return '';
   return API;
 }
 

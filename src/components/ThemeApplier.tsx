@@ -11,7 +11,7 @@ export default function ThemeApplier() {
   const [theme, setTheme] = useState<BrandTheme>(DEFAULT_BRAND_THEME);
 
   useEffect(() => {
-    fetch('/api/appearance')
+    fetch('/api/appearance', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         if (d?.theme) setTheme({ ...DEFAULT_BRAND_THEME, ...d.theme });

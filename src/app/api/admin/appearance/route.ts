@@ -30,6 +30,8 @@ export async function PUT(req: Request) {
     if (body.theme) await saveBrandTheme(body.theme as BrandTheme);
     if (body.seo) await saveSeoMarketing(body.seo as SeoMarketing);
     const [theme, seo] = await Promise.all([getBrandTheme(), getSeoMarketing()]);
+    const { revalidatePublicSite } = await import('@/lib/cmsApi');
+    revalidatePublicSite();
     return NextResponse.json({ ok: true, theme, seo });
   } catch (e) {
     console.error(e);

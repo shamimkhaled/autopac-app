@@ -32,6 +32,8 @@ export async function POST(req: Request) {
       },
     });
     await setProductCatalogLink(slug, brochureLineId, brochurePage);
+    const { revalidatePublicSite } = await import('@/lib/cmsApi');
+    revalidatePublicSite();
     return NextResponse.json(product);
   } catch (e) {
     console.error(e);

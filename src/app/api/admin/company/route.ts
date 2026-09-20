@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { revalidatePublicSite } from '@/lib/cmsApi';
 
 export async function PUT(req: Request) {
   try {
@@ -20,6 +21,7 @@ export async function PUT(req: Request) {
     } else {
       await prisma.companyProfile.create({ data: body });
     }
+    revalidatePublicSite();
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

@@ -45,6 +45,8 @@ export async function POST(req: Request) {
         authorId: session.user?.id || null,
       },
     });
+    const { revalidatePublicSite } = await import('@/lib/cmsApi');
+    revalidatePublicSite();
     return NextResponse.json(post);
   } catch (e) {
     console.error(e);

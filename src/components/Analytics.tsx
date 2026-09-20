@@ -8,7 +8,7 @@ export default function Analytics() {
   const [fbId, setFbId] = useState(process.env.NEXT_PUBLIC_FB_PIXEL_ID || '');
 
   useEffect(() => {
-    fetch('/api/appearance')
+    fetch('/api/appearance', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         if (d?.seo?.googleAnalyticsId) setGaId(d.seo.googleAnalyticsId);

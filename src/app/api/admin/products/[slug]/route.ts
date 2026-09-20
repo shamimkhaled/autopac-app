@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { setProductCatalogLink } from '@/lib/catalogMap';
+import { revalidatePublicSite } from '@/lib/cmsApi';
 
 export async function PUT(req: Request, { params }: { params: { slug: string } }) {
   try {
@@ -33,6 +34,7 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
     if (brochureLineId !== undefined) {
       await setProductCatalogLink(params.slug, brochureLineId, brochurePage);
     }
+    revalidatePublicSite();
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -50,6 +52,7 @@ export async function DELETE(req: Request, { params }: { params: { slug: string 
     await prisma.product.delete({
       where: { slug: params.slug },
     });
+    revalidatePublicSite();
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

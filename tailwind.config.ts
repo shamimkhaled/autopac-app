@@ -33,11 +33,11 @@ const config: Config = {
           yellow: '#A16207',
         },
         brand: {
-          maroon: 'var(--brand-maroon)',
-          'maroon-hover': 'var(--brand-maroon-hover)',
-          'maroon-mid': 'var(--brand-maroon-mid)',
-          paper: 'var(--brand-paper)',
-          purple: 'var(--brand-purple)',
+          maroon: 'rgb(var(--brand-maroon-rgb) / <alpha-value>)',
+          'maroon-hover': 'rgb(var(--brand-maroon-hover-rgb) / <alpha-value>)',
+          'maroon-mid': 'rgb(var(--brand-maroon-mid-rgb) / <alpha-value>)',
+          paper: 'rgb(var(--brand-paper-rgb) / <alpha-value>)',
+          purple: 'rgb(var(--brand-purple-rgb) / <alpha-value>)',
         },
       },
       fontFamily: {

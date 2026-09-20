@@ -32,6 +32,8 @@ export default function Footer() {
                 src={logoUrl}
                 alt="Auto Pac Packaging Solutions"
                 fill
+                key={logoUrl}
+                unoptimized={logoUrl.startsWith('/uploads/') || logoUrl.startsWith('http')}
                 sizes="144px"
                 className="object-contain object-left brightness-200"
               />

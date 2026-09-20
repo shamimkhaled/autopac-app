@@ -7,7 +7,6 @@ import { useLocale } from '@/context/LocaleContext';
 import {
   BROCHURE_LINES,
   BROCHURE_PAGE_COUNT,
-  BROCHURE_PDF_PATH,
   BROCHURE_SECTIONS,
   brochurePageSrc,
   brochureThumbSrc,
@@ -21,7 +20,6 @@ import { useCatalogMap } from '@/hooks/useSiteData';
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
   FileText,
   Maximize2,
   MessageSquare,
@@ -125,18 +123,9 @@ export default function BrochureViewer() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a
-                href={BROCHURE_PDF_PATH}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary bg-white text-brand-maroon hover:bg-stone-100"
-              >
-                <Download className="w-4 h-4" />
-                {isBn ? 'পিডিএফ ডাউনলোড' : 'Download PDF'}
-              </a>
               <Link
                 href={quoteHref(page, title)}
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 border border-white/40 text-white text-sm font-semibold rounded-md hover:bg-white/10"
+                className="btn-primary bg-white text-brand-maroon hover:bg-stone-100"
               >
                 <MessageSquare className="w-4 h-4" />
                 {isBn ? 'এই পৃষ্ঠার কোট' : 'Quote this page'}

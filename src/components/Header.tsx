@@ -79,6 +79,8 @@ export default function Header() {
                 src={logoUrl}
                 alt="Auto Pac Packaging Solutions"
                 fill
+                key={logoUrl}
+                unoptimized={logoUrl.startsWith('/uploads/') || logoUrl.startsWith('http')}
                 className="object-contain object-left dark:brightness-200"
                 priority
                 sizes="(max-width: 640px) 112px, 144px"

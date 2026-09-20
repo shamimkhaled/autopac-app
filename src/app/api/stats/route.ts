@@ -8,6 +8,10 @@ const DEFAULT_STATS = [
   { id: 'default-3', labelEn: 'Years Experience',   labelBn: 'বছরের অভিজ্ঞতা', value: '15+',  icon: 'shield',   sortOrder: 3 },
 ];
 
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const stats = await prisma.siteStat.findMany({
