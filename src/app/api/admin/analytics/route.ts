@@ -6,6 +6,10 @@ import { getSeoMarketing } from '@/lib/siteAppearance';
 
 const ACTIVE_WINDOW_MS = 3 * 60 * 1000;
 
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

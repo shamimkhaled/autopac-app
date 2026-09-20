@@ -15,6 +15,10 @@ interface CategoryPayload {
   sortOrder?: number;
 }
 
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -41,7 +45,8 @@ export async function PUT(req: Request) {
       },
     });
 
-    for (const [index, c] of named.entries()) {
+    for (let index = 0; index < named.length; index++) {
+      const c = named[index];
       if (!c.nameEn?.trim()) continue;
       const data = {
         slug: c.slug || c.nameEn.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),

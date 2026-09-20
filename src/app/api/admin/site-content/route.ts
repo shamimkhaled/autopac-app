@@ -4,6 +4,10 @@ import { authOptions } from '@/lib/auth';
 import { getWebsiteContent, saveWebsiteContent, type WebsiteContent } from '@/lib/siteContent';
 import { revalidatePublicSite } from '@/lib/cmsApi';
 
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
