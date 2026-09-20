@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect, useCallback } from 'react';
+import AdminSessionProvider from '@/components/AdminSessionProvider';
 import {
   LayoutDashboard,
   Package,
@@ -54,6 +55,14 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminSessionProvider>
+      <AdminLayoutInner>{children}</AdminLayoutInner>
+    </AdminSessionProvider>
+  );
+}
+
+function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();

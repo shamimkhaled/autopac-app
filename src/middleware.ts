@@ -54,11 +54,13 @@ export default function middleware(req: NextRequest) {
   }
 
   if (isLoginPage || isAuthApi) {
-    // Soft cap for page loads / CSRF / session polls
-    const result = checkRateLimit(`admin-auth-soft:${ip}`, 90, 60_000);
+    // Soft cap for CSRF / session polls (session is polled often — keep generous)
+    const result = checkRateLimit(`admin-auth-soft:${ip}`, 180, 60_000);
     if (!result.allowed) {
       return rateLimitResponse(result.retryAfter ?? 60);
     }
+    // Do not rewrite Cache-Control on next-auth JSON endpoints
+    if (isAuthApi) return NextResponse.next();
     return withAdminHeaders(NextResponse.next());
   }
 

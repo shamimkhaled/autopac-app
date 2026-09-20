@@ -80,14 +80,17 @@ export default function PWARegister() {
 
   useEffect(() => {
     const onPrompt = (e: Event) => {
-      e.preventDefault();
-      setInstallEvent(e as BeforeInstallPromptEvent);
+      const evt = e as BeforeInstallPromptEvent;
       try {
         if (localStorage.getItem('autopac_pwa_dismissed') === '1') return;
       } catch {
         /* ignore */
       }
-      if (!isStandalone()) setShowInstall(true);
+      if (isStandalone()) return;
+      // Only prevent the browser banner when we will show our own install UI
+      e.preventDefault();
+      setInstallEvent(evt);
+      setShowInstall(true);
     };
     const onInstalled = () => {
       setShowInstall(false);
