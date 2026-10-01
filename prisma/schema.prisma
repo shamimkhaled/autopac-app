@@ -60,8 +60,8 @@ model Media {
 model SiteSetting {
   id          String   @id @default(uuid())
   key         String   @unique
-  value       String   // Store JSON string or plain text depending on key
-  description String?
+  value       String   @db.LongText // JSON blobs (website copy, catalog map, theme). varchar(191) silently truncated saves.
+  description String?  @db.Text
   updatedAt   DateTime @updatedAt
 }
 

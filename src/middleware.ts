@@ -39,15 +39,14 @@ export default function middleware(req: NextRequest) {
   const isAdminApi = pathname.startsWith('/api/admin');
   const isAdminUi = pathname.startsWith('/admin') && !isLoginPage;
 
-  // Credential POSTs — hard cap to stop password spraying / bots
+  // Flood cap only; wrong-password lockout is counted in authorize() (src/lib/auth.ts)
   const isLoginAttempt =
     method === 'POST' &&
     (pathname.includes('/api/auth/callback/credentials') ||
       pathname.includes('/api/auth/signin'));
 
   if (isLoginAttempt) {
-    // 5 attempts / 15 minutes per IP
-    const result = checkRateLimit(`admin-login:${ip}`, 5, 15 * 60_000);
+    const result = checkRateLimit(`admin-login:${ip}`, 30, 15 * 60_000);
     if (!result.allowed) {
       return rateLimitResponse(result.retryAfter ?? 900);
     }

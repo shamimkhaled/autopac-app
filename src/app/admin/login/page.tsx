@@ -23,8 +23,8 @@ export default function AdminLogin() {
         password,
       });
 
-      if (res?.status === 429) {
-        setErr('Too many login attempts. Wait 15 minutes and try again.');
+      if (res?.status === 429 || res?.error === 'RATE_LIMITED') {
+        setErr('Too many wrong passwords. Wait 15 minutes and try again.');
       } else if (res?.error) {
         setErr('Invalid email or password.');
       } else if (res?.ok) {

@@ -19,15 +19,19 @@ export async function getCatalogMap(): Promise<ProductBrochureMap> {
 
 export async function saveCatalogMap(map: ProductBrochureMap) {
   const value = JSON.stringify(map);
+  const description = 'CMS product slug → brochure line and page';
   await prisma.siteSetting.upsert({
     where: { key: CATALOG_MAP_KEY },
-    update: { value, description: 'CMS product slug → brochure line and page' },
-    create: {
-      key: CATALOG_MAP_KEY,
-      value,
-      description: 'CMS product slug → brochure line and page',
-    },
+    update: { value, description },
+    create: { key: CATALOG_MAP_KEY, value, description },
   });
+  const stored = await prisma.siteSetting.findUnique({
+    where: { key: CATALOG_MAP_KEY },
+    select: { value: true },
+  });
+  if (stored?.value !== value) {
+    throw new Error('Catalog map was not stored in full');
+  }
 }
 
 export async function setProductCatalogLink(

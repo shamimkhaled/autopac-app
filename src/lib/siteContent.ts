@@ -152,16 +152,17 @@ export async function getWebsiteContent(): Promise<WebsiteContent> {
 
 export async function saveWebsiteContent(content: WebsiteContent) {
   const value = JSON.stringify(mergeContent(content));
+  const description = 'Public website copy — hero, home sections, catalog band, footer (EN/BN)';
   await prisma.siteSetting.upsert({
     where: { key: WEBSITE_CONTENT_KEY },
-    update: {
-      value,
-      description: 'Public website copy — hero, home sections, catalog band, footer (EN/BN)',
-    },
-    create: {
-      key: WEBSITE_CONTENT_KEY,
-      value,
-      description: 'Public website copy — hero, home sections, catalog band, footer (EN/BN)',
-    },
+    update: { value, description },
+    create: { key: WEBSITE_CONTENT_KEY, value, description },
   });
+  const stored = await prisma.siteSetting.findUnique({
+    where: { key: WEBSITE_CONTENT_KEY },
+    select: { value: true },
+  });
+  if (stored?.value !== value) {
+    throw new Error('Website content was not stored in full');
+  }
 }

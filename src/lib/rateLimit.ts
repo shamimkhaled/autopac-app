@@ -47,6 +47,20 @@ export function checkRateLimit(
   return { allowed: true };
 }
 
+/** True if `identifier` has already used up its window, without counting this call. */
+export function isRateLimited(identifier: string, maxRequests: number): RateLimitResult {
+  const now = Date.now();
+  const record = store.get(identifier);
+  if (!record || now > record.resetTime || record.count < maxRequests) {
+    return { allowed: true };
+  }
+  return { allowed: false, retryAfter: Math.ceil((record.resetTime - now) / 1000) };
+}
+
+export function clearRateLimit(identifier: string) {
+  store.delete(identifier);
+}
+
 /**
  * Extract the client IP from a Next.js Request / NextRequest.
  */

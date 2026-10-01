@@ -129,6 +129,10 @@ async function writeSetting(key: string, value: unknown, description: string) {
     update: { value: payload, description },
     create: { key, value: payload, description },
   });
+  const stored = await prisma.siteSetting.findUnique({ where: { key }, select: { value: true } });
+  if (stored?.value !== payload) {
+    throw new Error('Setting was not stored in full');
+  }
 }
 
 export function getBrandTheme() {
