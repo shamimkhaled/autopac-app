@@ -14,7 +14,16 @@ import QuoteBand from '@/components/QuoteBand';
 import { brochurePageSrc } from '@/data/brochure';
 import { ArrowRight, BookOpen } from 'lucide-react';
 
-const PACK_CHIPS = ['Rice', 'Atta', 'Juice', 'Soap', 'Chanachur', 'Oil', 'Biscuit', 'Honey'];
+const PACK_CHIPS = [
+  { q: 'Rice', en: 'Rice', bn: 'চাল' },
+  { q: 'Atta', en: 'Atta', bn: 'আটা' },
+  { q: 'Juice', en: 'Juice', bn: 'জুস' },
+  { q: 'Soap', en: 'Soap', bn: 'সাবান' },
+  { q: 'Chanachur', en: 'Chanachur', bn: 'চানাচুর' },
+  { q: 'Oil', en: 'Oil', bn: 'তেল' },
+  { q: 'Biscuit', en: 'Biscuit', bn: 'বিস্কুট' },
+  { q: 'Honey', en: 'Honey', bn: 'মধু' },
+] as const;
 
 export default function HomePage() {
   const { locale } = useLocale();
@@ -49,11 +58,11 @@ export default function HomePage() {
           <div className="mt-4 flex flex-wrap gap-2">
             {PACK_CHIPS.map((chip) => (
               <Link
-                key={chip}
-                href={`/products?q=${encodeURIComponent(chip)}`}
+                key={chip.q}
+                href={`/products?q=${encodeURIComponent(chip.q)}`}
                 className="filter-chip text-xs"
               >
-                {chip}
+                {isBn ? chip.bn : chip.en}
               </Link>
             ))}
           </div>

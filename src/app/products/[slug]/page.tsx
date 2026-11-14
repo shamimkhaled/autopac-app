@@ -6,9 +6,10 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import ProductCard from '@/components/ProductCard';
-import { packableItems, useCompany, useCatalogMap } from '@/hooks/useSiteData';
+import { packableItems, useCompany, useCatalogMap, useProducts } from '@/hooks/useSiteData';
 import type { Product } from '@/lib/api';
 import { brochureHrefForProduct } from '@/data/brochure';
+import { getStaticProductBySlug, isProductPayload } from '@/lib/staticProduct';
 import { ChevronRight, ChevronLeft, X, MessageCircle, BookOpen, Loader2 } from 'lucide-react';
 
 export default function ProductDetailPage() {
@@ -17,7 +18,8 @@ export default function ProductDetailPage() {
   const { t, locale } = useLocale();
   const [company] = useCompany();
   const [catalogMap] = useCatalogMap();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [allProducts] = useProducts();
+  const [product, setProduct] = useState<Product | null>(() => getStaticProductBySlug(slug));
   const [related, setRelated] = useState<Product[]>([]);
   const [activeImage, setActiveImage] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -26,22 +28,43 @@ export default function ProductDetailPage() {
   const whatsapp = company?.whatsapp || '8801818496642';
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
+    setActiveImage(0);
+
     fetch(`/api/products/${slug}`)
-      .then((r) => r.json())
-      .then((p) => {
-        setProduct(p);
-        setActiveImage(0);
-        if (p?.categoryId) {
-          fetch('/api/products')
-            .then((r) => r.json())
-            .then((all: Product[]) => {
-              setRelated(all.filter((x) => x.categoryId === p.categoryId && x.id !== p.id).slice(0, 3));
-            });
+      .then(async (r) => {
+        if (!r.ok) return null;
+        try {
+          return await r.json();
+        } catch {
+          return null;
         }
       })
-      .finally(() => setLoading(false));
-  }, [slug]);
+      .then((p) => {
+        if (cancelled) return;
+        const resolved = isProductPayload(p) ? p : getStaticProductBySlug(slug);
+        setProduct(resolved);
+        if (resolved?.categoryId) {
+          const fromList = allProducts.filter(
+            (x) => x.categoryId === resolved.categoryId && x.slug !== resolved.slug
+          );
+          setRelated(fromList.slice(0, 3));
+        } else {
+          setRelated([]);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setProduct(getStaticProductBySlug(slug));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, allProducts]);
 
   useEffect(() => {
     if (!lightbox) return;
@@ -58,7 +81,7 @@ export default function ProductDetailPage() {
     };
   }, [lightbox]);
 
-  if (loading) {
+  if (loading && !product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-paper">
         <Loader2 className="w-10 h-10 text-brand-maroon animate-spin" aria-label="Loading" />

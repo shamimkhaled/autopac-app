@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getWebsiteContent, saveWebsiteContent, type WebsiteContent } from '@/lib/siteContent';
 import { revalidatePublicSite } from '@/lib/cmsApi';
-
+import { requireAdmin } from '@/lib/requireAdmin';
+import { websiteContentWriteSchema, zodErrorResponse } from '@/lib/cmsSchemas';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   try {
     return NextResponse.json(await getWebsiteContent());
   } catch (e) {
@@ -20,11 +19,15 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   try {
-    const body = (await req.json()) as WebsiteContent;
-    await saveWebsiteContent(body);
+    const raw = await req.json();
+    const parsed = websiteContentWriteSchema.safeParse(raw);
+    if (!parsed.success) {
+      return zodErrorResponse(parsed.error) ?? NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    }
+    await saveWebsiteContent(parsed.data as unknown as WebsiteContent);
     revalidatePublicSite();
     return NextResponse.json({ ok: true, content: await getWebsiteContent() });
   } catch (e) {

@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server';
 import { processAndSaveImage } from '@/lib/media';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin, ADMIN_WRITE_ROLES } from '@/lib/requireAdmin';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin(ADMIN_WRITE_ROLES);
+    if (!auth.ok) return auth.response;
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -19,7 +16,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No file' }, { status: 400 });
     }
 
-    // Validation
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
@@ -39,8 +35,11 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const media = await prisma.media.findMany({
       orderBy: { createdAt: 'desc' },
     });

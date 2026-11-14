@@ -40,13 +40,28 @@ export default function BrochureViewer() {
   const stripRef = useRef<HTMLDivElement>(null);
   const touchX = useRef<number | null>(null);
 
-  const initialPage = clampBrochurePage(Number(searchParams.get('page') || 1));
+  const pageParam = searchParams.get('page');
   const lineParam = searchParams.get('line');
   const lineFromQuery = BROCHURE_LINES.find((l) => l.id === lineParam);
+  // Prefer explicit ?page= (e.g. machine → catalog deep-link) over line startPage
+  const resolvePageFromQuery = () => {
+    if (pageParam != null && pageParam !== '') {
+      return clampBrochurePage(Number(pageParam));
+    }
+    if (lineFromQuery) return lineFromQuery.startPage;
+    return 1;
+  };
 
-  const [page, setPage] = useState(lineFromQuery ? lineFromQuery.startPage : initialPage);
+  const [page, setPage] = useState(resolvePageFromQuery);
   const [fullscreen, setFullscreen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  useEffect(() => {
+    const next = resolvePageFromQuery();
+    setPage((current) => (current === next ? current : next));
+    setImgLoaded(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync when URL page/line changes
+  }, [pageParam, lineParam]);
 
   const title = pageTitle(page, isBn ? 'bn' : 'en');
   const activeLine = lineForPage(page);

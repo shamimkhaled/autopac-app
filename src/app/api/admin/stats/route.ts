@@ -1,23 +1,22 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePublicSite } from '@/lib/cmsApi';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   const stats = await prisma.siteStat.findMany({ orderBy: { sortOrder: 'asc' } });
   return NextResponse.json(stats);
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   const body = await req.json();
   const stat = await prisma.siteStat.create({
     data: {
@@ -33,8 +32,8 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   const stats: Array<{ id: string; labelEn: string; labelBn: string; value: string; icon?: string; sortOrder?: number; isActive?: boolean }> = await req.json();
 
@@ -68,8 +67,8 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   const { id } = await req.json();
   await prisma.siteStat.delete({ where: { id } });
   revalidatePublicSite();

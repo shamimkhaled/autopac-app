@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z, ZodError } from 'zod';
 import nodemailer from 'nodemailer';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { escapeHtml } from '@/lib/cmsSchemas';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 const quoteSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -58,6 +58,13 @@ export async function POST(req: Request) {
       },
     });
 
+    const safeName = escapeHtml(data.name);
+    const safeInterest = escapeHtml(data.productInterest);
+    const safeMessage = escapeHtml(data.message).replace(/\n/g, '<br />');
+    const safePhone = escapeHtml(data.phone);
+    const safeEmail = escapeHtml(data.email);
+    const safeCompany = escapeHtml(data.companyName || 'N/A');
+
     // Email Automation - Autoresponder to Client
     const clientMailOptions = {
       from: `"AutoPac Support" <${process.env.SMTP_FROM || 'support@autopacbd.com'}>`,
@@ -66,13 +73,13 @@ export async function POST(req: Request) {
       html: `
         <div style="font-family: Arial, sans-serif; max-w: 600px; margin: 0 auto;">
           <h2 style="color: #f97316;">AutoPac Machinery</h2>
-          <p>Dear ${data.name},</p>
-          <p>Thank you for requesting a quotation for <strong>${data.productInterest}</strong>.</p>
+          <p>Dear ${safeName},</p>
+          <p>Thank you for requesting a quotation for <strong>${safeInterest}</strong>.</p>
           <p>We have received your requirements and our technical team will review them shortly. One of our representatives will contact you within 24 hours.</p>
           <hr style="border: 1px solid #eee; margin: 20px 0;" />
           <p style="font-size: 12px; color: #666;">
             <strong>Your Message:</strong><br />
-            ${data.message}
+            ${safeMessage}
           </p>
           <br/>
           <p>Best Regards,<br/><strong>AutoPac Sales Team</strong></p>
@@ -84,16 +91,16 @@ export async function POST(req: Request) {
     const adminMailOptions = {
       from: `"System Alert" <${process.env.SMTP_FROM || 'system@autopacbd.com'}>`,
       to: process.env.ADMIN_EMAIL || 'autopacbd@gmail.com',
-      subject: `New Quotation Request from ${data.name}`,
+      subject: `New Quotation Request from ${data.name.replace(/[\r\n]/g, ' ')}`,
       html: `
         <h2>New Lead Alert</h2>
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Phone:</strong> ${data.phone}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Company:</strong> ${data.companyName || 'N/A'}</p>
-        <p><strong>Product Interest:</strong> ${data.productInterest}</p>
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Phone:</strong> ${safePhone}</p>
+        <p><strong>Email:</strong> ${safeEmail}</p>
+        <p><strong>Company:</strong> ${safeCompany}</p>
+        <p><strong>Product Interest:</strong> ${safeInterest}</p>
         <p><strong>Message:</strong></p>
-        <blockquote style="background: #f9f9f9; padding: 10px;">${data.message}</blockquote>
+        <blockquote style="background: #f9f9f9; padding: 10px;">${safeMessage}</blockquote>
       `,
     };
 
@@ -116,12 +123,10 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
     const quotes = await prisma.quotationRequest.findMany({
       orderBy: { createdAt: 'desc' },

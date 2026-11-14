@@ -1,42 +1,43 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { setProductCatalogLink } from '@/lib/catalogMap';
 import { revalidatePublicSite } from '@/lib/cmsApi';
-
+import { requireAdmin, ADMIN_WRITE_ROLES } from '@/lib/requireAdmin';
+import { productWriteSchema, zodErrorResponse } from '@/lib/cmsSchemas';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function PUT(req: Request, { params }: { params: { slug: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
     const body = await req.json();
-    const { categoryId, nameEn, nameBn, shortDescEn, shortDescBn, fullDescEn, fullDescBn, images, specs, packableIds, videoUrl, featured, brochureLineId, brochurePage } = body;
+    const parsed = productWriteSchema.safeParse(body);
+    if (!parsed.success) {
+      return zodErrorResponse(parsed.error) ?? NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    }
+    const data = parsed.data;
     await prisma.product.update({
       where: { slug: params.slug },
       data: {
-        categoryId,
-        nameEn,
-        nameBn,
-        shortDescEn,
-        shortDescBn,
-        fullDescEn,
-        fullDescBn,
-        images: JSON.stringify(images || []),
-        specs: JSON.stringify(specs || []),
-        packableIds: JSON.stringify(packableIds || []),
-        videoUrl: videoUrl || null,
-        featured: !!featured,
+        categoryId: data.categoryId,
+        nameEn: data.nameEn,
+        nameBn: data.nameBn,
+        shortDescEn: data.shortDescEn,
+        shortDescBn: data.shortDescBn,
+        fullDescEn: data.fullDescEn,
+        fullDescBn: data.fullDescBn,
+        images: JSON.stringify(data.images),
+        specs: JSON.stringify(data.specs),
+        packableIds: JSON.stringify(data.packableIds),
+        videoUrl: data.videoUrl || null,
+        featured: !!data.featured,
       },
     });
-    if (brochureLineId !== undefined) {
-      await setProductCatalogLink(params.slug, brochureLineId, brochurePage);
+    if (data.brochureLineId !== undefined) {
+      await setProductCatalogLink(params.slug, data.brochureLineId, data.brochurePage);
     }
     revalidatePublicSite();
     return NextResponse.json({ ok: true });
@@ -46,12 +47,10 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { slug: string } }) {
+export async function DELETE(_req: Request, { params }: { params: { slug: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin(ADMIN_WRITE_ROLES);
+    if (!auth.ok) return auth.response;
 
     await prisma.product.delete({
       where: { slug: params.slug },

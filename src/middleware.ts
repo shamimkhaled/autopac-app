@@ -36,7 +36,10 @@ export default function middleware(req: NextRequest) {
 
   const isLoginPage = pathname === '/admin/login';
   const isAuthApi = pathname.startsWith('/api/auth');
-  const isAdminApi = pathname.startsWith('/api/admin');
+  const isAdminApi =
+    pathname.startsWith('/api/admin') ||
+    pathname.startsWith('/api/upload') ||
+    (pathname.startsWith('/api/quote') && method !== 'POST');
   const isAdminUi = pathname.startsWith('/admin') && !isLoginPage;
 
   // Flood cap only; wrong-password lockout is counted in authorize() (src/lib/auth.ts)
@@ -86,5 +89,13 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/auth/:path*', '/api/admin/:path*'],
+  matcher: [
+    '/admin/:path*',
+    '/api/auth/:path*',
+    '/api/admin/:path*',
+    '/api/upload',
+    '/api/upload/:path*',
+    '/api/quote',
+    '/api/quote/:path*',
+  ],
 };

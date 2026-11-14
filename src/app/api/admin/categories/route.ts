@@ -1,35 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePublicSite } from '@/lib/cmsApi';
-
-interface CategoryPayload {
-  id?: string;
-  slug?: string;
-  nameEn: string;
-  nameBn: string;
-  descriptionEn?: string;
-  descriptionBn?: string;
-  imageUrl?: string;
-  sortOrder?: number;
-}
-
+import { requireAdmin } from '@/lib/requireAdmin';
+import { categoriesWriteSchema, zodErrorResponse } from '@/lib/cmsSchemas';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
-    const categories = (await req.json()) as CategoryPayload[];
-    if (!Array.isArray(categories)) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    const raw = await req.json();
+    const parsed = categoriesWriteSchema.safeParse(raw);
+    if (!parsed.success) {
+      return zodErrorResponse(parsed.error) ?? NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
-    const named = categories.filter((c) => c.nameEn?.trim());
+    const named = parsed.data.filter((c) => c.nameEn?.trim());
     if (named.length === 0) {
       return NextResponse.json({ error: 'Keep at least one category' }, { status: 400 });
     }

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePublicSite } from '@/lib/cmsApi';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 
 export const dynamic = 'force-dynamic';
@@ -10,8 +9,8 @@ export const revalidate = 0;
 
 export async function PUT(req: Request, { params }: { params: { slug: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
     const body = await req.json();
     await prisma.blogPost.update({
@@ -35,8 +34,8 @@ export async function PUT(req: Request, { params }: { params: { slug: string } }
 
 export async function DELETE(_req: Request, { params }: { params: { slug: string } }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
     await prisma.blogPost.delete({ where: { slug: params.slug } });
     revalidatePublicSite();
     return NextResponse.json({ ok: true });

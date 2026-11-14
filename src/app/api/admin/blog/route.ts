@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 function slugify(input: string) {
   return input
@@ -17,8 +16,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
   try {
     const posts = await prisma.blogPost.findMany({ orderBy: { createdAt: 'desc' } });
     return NextResponse.json(posts);
@@ -30,8 +29,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
     const body = await req.json();
     const titleEn = String(body.titleEn || '').trim();
@@ -46,7 +45,7 @@ export async function POST(req: Request) {
         contentBn: body.contentBn || '',
         imageUrl: body.imageUrl || null,
         published: body.published !== false,
-        authorId: session.user?.id || null,
+        authorId: auth.session.user?.id || null,
       },
     });
     const { revalidatePublicSite } = await import('@/lib/cmsApi');

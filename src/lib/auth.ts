@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.trim() }
+          where: { email } // already trimmed + lowercased above
         })
 
         if (!user) return recordFailure()

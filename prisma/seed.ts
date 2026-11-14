@@ -25,9 +25,14 @@ const partners = [
 ];
 
 async function main() {
-  // Admin login — password from ADMIN_PASSWORD env (default autopac123)
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@autopacbd.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'autopac123';
+  // Admin login — ADMIN_PASSWORD required (no weak default)
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@autopacbd.com').trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD?.trim();
+  if (!adminPassword || adminPassword.length < 10) {
+    throw new Error(
+      'Set ADMIN_PASSWORD in .env (min 10 characters) before seeding. See .env.example.'
+    );
+  }
   const hashedPassword = await hash(adminPassword, 10);
   await prisma.user.upsert({
     where: { email: adminEmail },
@@ -43,7 +48,7 @@ async function main() {
       role: 'SUPER_ADMIN',
     },
   });
-  console.log(`Admin ready: ${adminEmail} (password from ADMIN_PASSWORD / default)`);
+  console.log(`Admin ready: ${adminEmail} (password from ADMIN_PASSWORD)`);
 
   for (let i = 0; i < categories.length; i++) {
     await prisma.category.upsert({

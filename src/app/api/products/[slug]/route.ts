@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
+import { getStaticProductBySlug } from '@/lib/staticProduct';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,7 +14,12 @@ export async function GET(
       where: { slug: params.slug },
       include: { category: true },
     });
-    if (!p) return NextResponse.json(null);
+    if (!p) {
+      const fallback = getStaticProductBySlug(params.slug);
+      return fallback
+        ? NextResponse.json(fallback)
+        : NextResponse.json(null, { status: 404 });
+    }
     let images = [];
     let specs = [];
     let packableIds = [];
@@ -45,6 +50,8 @@ export async function GET(
     });
   } catch (e) {
     console.error(e);
+    const fallback = getStaticProductBySlug(params.slug);
+    if (fallback) return NextResponse.json(fallback);
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
   }
 }

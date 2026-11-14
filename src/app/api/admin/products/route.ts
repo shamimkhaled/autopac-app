@@ -1,42 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { setProductCatalogLink } from '@/lib/catalogMap';
-
+import { requireAdmin } from '@/lib/requireAdmin';
+import { productWriteSchema, zodErrorResponse } from '@/lib/cmsSchemas';
+import { revalidatePublicSite } from '@/lib/cmsApi';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
     const body = await req.json();
-    const { categoryId, nameEn, nameBn, shortDescEn, shortDescBn, fullDescEn, fullDescBn, images, specs, packableIds, videoUrl, featured, brochureLineId, brochurePage } = body;
-    const slug = body.slug || nameEn.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const parsed = productWriteSchema.safeParse(body);
+    if (!parsed.success) {
+      return zodErrorResponse(parsed.error) ?? NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    }
+    const data = parsed.data;
+    const slug =
+      data.slug ||
+      data.nameEn.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const product = await prisma.product.create({
       data: {
         slug,
-        categoryId,
-        nameEn,
-        nameBn,
-        shortDescEn: shortDescEn || '',
-        shortDescBn: shortDescBn || '',
-        fullDescEn: fullDescEn || '',
-        fullDescBn: fullDescBn || '',
-        images: JSON.stringify(images || []),
-        specs: JSON.stringify(specs || []),
-        packableIds: JSON.stringify(packableIds || []),
-        videoUrl: videoUrl || null,
-        featured: !!featured,
+        categoryId: data.categoryId,
+        nameEn: data.nameEn,
+        nameBn: data.nameBn,
+        shortDescEn: data.shortDescEn,
+        shortDescBn: data.shortDescBn,
+        fullDescEn: data.fullDescEn,
+        fullDescBn: data.fullDescBn,
+        images: JSON.stringify(data.images),
+        specs: JSON.stringify(data.specs),
+        packableIds: JSON.stringify(data.packableIds),
+        videoUrl: data.videoUrl || null,
+        featured: !!data.featured,
       },
     });
-    await setProductCatalogLink(slug, brochureLineId, brochurePage);
-    const { revalidatePublicSite } = await import('@/lib/cmsApi');
+    if (data.brochureLineId !== undefined) {
+      await setProductCatalogLink(slug, data.brochureLineId, data.brochurePage);
+    }
     revalidatePublicSite();
     return NextResponse.json(product);
   } catch (e) {

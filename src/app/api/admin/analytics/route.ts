@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getSeoMarketing } from '@/lib/siteAppearance';
+import { requireAdmin } from '@/lib/requireAdmin';
 
 const ACTIVE_WINDOW_MS = 3 * 60 * 1000;
 
@@ -11,8 +10,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireAdmin();
+  if (!auth.ok) return auth.response;
 
   try {
     const since = new Date(Date.now() - ACTIVE_WINDOW_MS);

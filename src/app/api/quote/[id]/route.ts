@@ -1,25 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAdmin, ADMIN_WRITE_ROLES } from '@/lib/requireAdmin';
+import { quoteStatusSchema, zodErrorResponse } from '@/lib/cmsSchemas';
 
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin(ADMIN_WRITE_ROLES);
+    if (!auth.ok) return auth.response;
 
     const { id } = params;
     const body = await req.json();
-    const { status } = body;
+    const parsed = quoteStatusSchema.safeParse(body);
+    if (!parsed.success) {
+      return zodErrorResponse(parsed.error) ?? NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    }
 
     const quote = await prisma.quotationRequest.update({
       where: { id },
-      data: { status },
+      data: { status: parsed.data.status },
     });
 
     return NextResponse.json(quote);
@@ -30,14 +31,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !['ADMIN', 'SUPER_ADMIN'].includes(session.user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const auth = await requireAdmin(ADMIN_WRITE_ROLES);
+    if (!auth.ok) return auth.response;
 
     const { id } = params;
     await prisma.quotationRequest.delete({ where: { id } });

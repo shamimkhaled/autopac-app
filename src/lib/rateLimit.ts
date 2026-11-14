@@ -3,7 +3,11 @@ interface RateLimitRecord {
   resetTime: number;
 }
 
-// In-memory store (resets on server restart; fine for single-instance deployments)
+/**
+ * In-memory store — resets on process restart and is per-Node-process.
+ * Correct for Auto Pac’s single-process cPanel `server.js` deploy.
+ * Multi-instance / serverless needs a shared store (Redis) before relying on these caps.
+ */
 const store = new Map<string, RateLimitRecord>();
 
 function pruneExpired(now: number) {
