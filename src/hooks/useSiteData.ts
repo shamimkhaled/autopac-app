@@ -55,7 +55,7 @@ function useFetch<T>(path: string, fallback: T): [T, boolean] {
 export function useProducts() {
   const [api, loaded] = useFetch<Product[] | null>('/api/products', null);
   const catMap = Object.fromEntries(staticCategories.map((c) => [c.id, c]));
-  if (api && Array.isArray(api)) {
+  if (api && Array.isArray(api) && api.length > 0) {
     const withCats = api.map((p) => ({
       ...p,
       category: p.category || (catMap[p.categoryId] as Category | undefined),

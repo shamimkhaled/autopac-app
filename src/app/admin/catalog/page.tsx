@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Loader2, Save } from 'lucide-react';
+import { BookOpen, Loader2, Save, Check } from 'lucide-react';
 import { BROCHURE_LINES, BROCHURE_PAGE_COUNT, type ProductBrochureMap } from '@/data/brochure';
 
 interface ProductRow {
@@ -15,6 +15,7 @@ export default function AdminCatalogPage() {
   const [map, setMap] = useState<ProductBrochureMap>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     Promise.all([fetch('/api/products').then((r) => r.json()), fetch('/api/catalog-map').then((r) => r.json())])
@@ -47,61 +48,82 @@ export default function AdminCatalogPage() {
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/catalog-map', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(map),
       });
-      if (res.ok) alert('Catalog links updated. Machine pages will jump to the matching brochure sheet.');
-      else alert('Could not save catalog map.');
+      if (res.ok) {
+        setStatus({ type: 'ok', text: 'Catalog links saved. Machine pages now deep-link to matching brochure sheets.' });
+      } else {
+        setStatus({ type: 'err', text: 'Could not save catalog map.' });
+      }
     } catch {
-      alert('Could not save catalog map.');
+      setStatus({ type: 'err', text: 'Network error while saving catalog map.' });
     }
     setSaving(false);
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading catalog map…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">Official catalog map</h1>
-          <p className="text-gray-500 font-medium">
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+            Official catalog map
+          </h2>
+          <p className="text-sm text-stone-500 mt-1">
             Tie each CMS machine to a numbered product line and a page in the 122-page brochure.
           </p>
         </div>
-        <button type="button" onClick={save} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-action-orange text-white font-bold rounded-2xl">
-          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-          Save map
+        <button type="button" onClick={save} disabled={saving} className="btn-primary whitespace-nowrap">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saving ? 'Saving...' : 'Save map'}
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 overflow-x-auto">
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm flex items-center gap-2 ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.type === 'ok' && <Check className="w-4 h-4" />}
+          {status.text}
+        </div>
+      )}
+
+      <div className="surface-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-stone-500 border-b border-stone-200">
               <th className="px-4 py-3">Machine</th>
               <th className="px-4 py-3">Product line</th>
               <th className="px-4 py-3">Catalog page</th>
               <th className="px-4 py-3">Preview</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-stone-100">
             {products.map((p) => {
               const meta = map[p.slug];
               return (
-                <tr key={p.slug} className="border-b border-gray-50">
+                <tr key={p.slug} className="hover:bg-brand-paper/40 transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-bold text-industrial-dark">{p.nameEn}</p>
-                    <p className="text-xs text-gray-400 font-mono">{p.slug}</p>
+                    <p className="font-semibold text-stone-900">{p.nameEn}</p>
+                    <p className="text-xs text-stone-400 font-mono">{p.slug}</p>
                   </td>
                   <td className="px-4 py-3">
                     <select
@@ -110,7 +132,7 @@ export default function AdminCatalogPage() {
                         if (!e.target.value) clearMeta(p.slug);
                         else setMeta(p.slug, 'lineId', e.target.value);
                       }}
-                      className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl min-w-[12rem]"
+                      className="input-field h-9 min-w-[12rem] text-xs cursor-pointer"
                     >
                       <option value="">Not in catalog</option>
                       {BROCHURE_LINES.map((line) => (
@@ -128,7 +150,7 @@ export default function AdminCatalogPage() {
                       disabled={!meta}
                       value={meta?.page || ''}
                       onChange={(e) => setMeta(p.slug, 'page', e.target.value)}
-                      className="w-24 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl disabled:opacity-40"
+                      className="input-field h-9 w-24 text-xs tabular-nums disabled:opacity-40"
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -136,13 +158,13 @@ export default function AdminCatalogPage() {
                       <Link
                         href={`/brochure?line=${meta.lineId}&page=${meta.page}`}
                         target="_blank"
-                        className="inline-flex items-center gap-1 text-action-orange font-bold"
+                        className="inline-flex items-center gap-1.5 text-brand-maroon font-medium text-xs hover:underline tabular-nums"
                       >
                         <BookOpen className="w-4 h-4" />
                         Page {meta.page}
                       </Link>
                     ) : (
-                      <span className="text-gray-300">—</span>
+                      <span className="text-stone-300">—</span>
                     )}
                   </td>
                 </tr>

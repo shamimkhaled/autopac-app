@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Globe, MapPin, Search, Newspaper, Loader2, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { api, type NewsItem } from '@/lib/api';
+import { useLocale } from '@/context/LocaleContext';
 import NewsCard from '@/components/News/NewsCard';
 import AdSense from '@/components/News/AdSense';
 import PageHero from '@/components/PageHero';
@@ -27,11 +28,15 @@ export default function NewsPage() {
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [newsletterMessage, setNewsletterMessage] = useState('');
   const newsletterRef = useRef<HTMLInputElement>(null);
+  const { locale } = useLocale();
+  const isBn = locale === 'bn';
+
   const [cmsPosts, setCmsPosts] = useState<Array<{
     slug: string;
     titleEn: string;
     titleBn: string;
     contentEn: string;
+    contentBn?: string;
     imageUrl?: string | null;
     createdAt: string;
   }>>([]);
@@ -64,8 +69,12 @@ export default function NewsPage() {
     async function loadNews() {
       try {
         setLoading(true);
-        const data = await api.news();
+        const [data, blogRes] = await Promise.all([
+          api.news(),
+          fetch('/api/blog').then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        ]);
         setNews(data);
+        if (Array.isArray(blogRes)) setCmsPosts(blogRes);
         setError(null);
       } catch (err) {
         console.error('Failed to load news:', err);
@@ -158,6 +167,32 @@ export default function NewsPage() {
                 </div>
               </div>
 
+              {cmsPosts.length > 0 && activeTab === 'all' && !searchQuery.trim() && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-2">
+                    <p className="section-kicker">{isBn ? 'অটো প্যাক আপডেট' : 'Auto Pac dispatches'}</p>
+                    <span className="text-xs font-medium text-stone-500 tabular-nums">{cmsPosts.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {cmsPosts.slice(0, 4).map((post) => (
+                      <article key={post.slug} className="surface-card p-5 flex flex-col justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-maroon tabular-nums">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </p>
+                          <h3 className="mt-1.5 font-display text-xl font-semibold text-stone-900 dark:text-white leading-snug">
+                            {isBn && post.titleBn ? post.titleBn : post.titleEn}
+                          </h3>
+                          <p className="mt-2 text-sm text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed">
+                            {isBn && post.contentBn ? post.contentBn : post.contentEn}
+                          </p>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* News Grid */}
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-4">
@@ -171,7 +206,7 @@ export default function NewsPage() {
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-xl font-semibold text-stone-900 dark:text-white">Unable to load news</h3>
-                    <p className="text-gray-500 max-w-sm">{error}</p>
+                    <p className="text-stone-500 max-w-sm">{error}</p>
                   </div>
                   <button 
                     onClick={() => window.location.reload()}
@@ -220,7 +255,7 @@ export default function NewsPage() {
                               <button
                                 key={page}
                                 onClick={() => goToPage(page)}
-                                className={`w-10 h-10 rounded-md text-sm font-semibold ${
+                                className={`w-10 h-10 rounded-md text-sm font-semibold tabular-nums ${
                                   currentPage === page
                                     ? 'bg-brand-maroon text-white'
                                     : 'bg-white dark:bg-stone-900 text-stone-500 border border-stone-200 dark:border-stone-700'
@@ -233,7 +268,7 @@ export default function NewsPage() {
                             page === currentPage - 2 ||
                             page === currentPage + 2
                           ) {
-                            return <span key={page} className="text-gray-300">...</span>;
+                            return <span key={page} className="text-stone-400">...</span>;
                           }
                           return null;
                         })}

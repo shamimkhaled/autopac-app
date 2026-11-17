@@ -228,7 +228,7 @@ export default function BrochureViewer() {
 
               <div className="relative bg-slate-200 aspect-[612/792]">
                 {!imgLoaded && (
-                  <div className="absolute inset-0 animate-pulse bg-slate-200" aria-hidden="true" />
+                  <div className="absolute inset-0 bg-stone-100" aria-hidden="true" />
                 )}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img

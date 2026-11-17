@@ -9,8 +9,9 @@ import ProductCard from '@/components/ProductCard';
 import { packableItems, useCompany, useCatalogMap, useProducts } from '@/hooks/useSiteData';
 import type { Product } from '@/lib/api';
 import { brochureHrefForProduct } from '@/data/brochure';
+import { toYoutubeEmbedUrl } from '@/data/videos';
 import { getStaticProductBySlug, isProductPayload } from '@/lib/staticProduct';
-import { ChevronRight, ChevronLeft, X, MessageCircle, BookOpen, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, X, MessageCircle, BookOpen, Loader2, ShieldCheck, Wrench } from 'lucide-react';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -141,6 +142,7 @@ export default function ProductDetailPage() {
   const imgIndex = ((activeImage % images.length) + images.length) % images.length;
   const quoteHref = `/contact?product=${encodeURIComponent(name)}`;
   const catalogHref = brochureHrefForProduct(product.slug, catalogMap);
+  const youtubeEmbed = toYoutubeEmbedUrl(product.videoUrl);
 
   return (
     <div className="page-shell pb-16">
@@ -253,6 +255,17 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            <div className="grid grid-cols-2 gap-3 text-xs text-stone-600 dark:text-stone-400 pt-1">
+              <div className="surface-card p-3 flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-brand-maroon shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{isBn ? '৩০৪-গ্রেড স্টেইনলেস ও বিএসটিআই/আইএসও স্ট্যান্ডার্ড' : '304-SS food contact & BSTI plant compliance'}</span>
+              </div>
+              <div className="surface-card p-3 flex items-start gap-2.5">
+                <Wrench className="w-4 h-4 text-brand-maroon shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{isBn ? 'ঢাকা থেকে ইন্সটলেশন ও স্পেয়ার পার্টস' : 'Installation & Dhaka spare-parts support'}</span>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href={quoteHref} className="btn-primary flex-1">
                 {t('products.requestQuote') || 'Request a quote'}
@@ -270,17 +283,35 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {product.videoUrl && (
+        {product.videoUrl ? (
           <section className="mt-16">
             <h2 className="page-title text-2xl mb-5">{isBn ? 'ভিডিও' : 'Machine in operation'}</h2>
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-stone-200">
+            <div className="relative aspect-video rounded-md overflow-hidden bg-stone-950 border border-stone-200 dark:border-stone-800">
               <iframe
-                src={product.videoUrl.includes('watch?v=') ? product.videoUrl.replace('watch?v=', 'embed/') : product.videoUrl}
+                src={youtubeEmbed || product.videoUrl}
                 title={name}
                 className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             </div>
+          </section>
+        ) : (
+          <section className="mt-16 surface-card p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <p className="section-kicker">{isBn ? 'অপারেশন ভিডিও শোকেস' : 'Operation walkthrough'}</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold text-stone-900 dark:text-white">
+                {isBn ? 'মেশিন চালানোর ধাপ ও ভিডিও ডেমো দেখুন' : 'Watch how this machinery line operates'}
+              </h2>
+              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                {isBn
+                  ? 'ফিডিং থেকে সিলিং পর্যন্ত সম্পূর্ণ প্রসেস এবং অটো প্যাকের চ্যানেল ভিডিও দেখুন।'
+                  : 'Explore the 4-stage visual operation reel and Auto Pac demonstration library.'}
+              </p>
+            </div>
+            <Link href="/gallery?tab=videos" className="btn-primary whitespace-nowrap shrink-0">
+              {isBn ? 'ভিডিও শোকেস দেখুন' : 'Open video showcase'}
+            </Link>
           </section>
         )}
 

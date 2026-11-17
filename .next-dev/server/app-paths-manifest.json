@@ -1,0 +1,8 @@
+{
+  "/page": "app/page.js",
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/api/appearance/route": "app/api/appearance/route.js",
+  "/api/site-content/route": "app/api/site-content/route.js",
+  "/api/tracker/route": "app/api/tracker/route.js",
+  "/admin/login/page": "app/admin/login/page.js"
+}

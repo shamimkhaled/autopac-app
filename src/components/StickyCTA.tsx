@@ -12,7 +12,9 @@ export default function StickyCTA() {
   const whatsapp = company?.whatsapp || '8801818496642';
 
   const show =
-    pathname?.startsWith('/products') || pathname?.startsWith('/brochure');
+    pathname?.startsWith('/products') ||
+    pathname?.startsWith('/brochure') ||
+    pathname?.startsWith('/gallery');
   if (!show) return null;
 
   const isBn = locale === 'bn';

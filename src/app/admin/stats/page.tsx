@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Save, Loader2, BarChart3, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Save, Loader2, BarChart3, GripVertical, Check } from 'lucide-react';
 
 interface Stat {
   id: string;
@@ -15,24 +15,24 @@ interface Stat {
 
 const ICONS = ['zap', 'award', 'users', 'shield', 'target', 'star', 'trending', 'package'];
 
-const inputCls = 'w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-action-orange/20 focus:border-action-orange outline-none transition-all';
-
 export default function AdminStatsPage() {
   const [stats, setStats] = useState<Stat[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/stats')
       .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d)) setStats(d); })
+      .then((d) => {
+        if (Array.isArray(d)) setStats(d);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
   const update = (id: string, field: keyof Stat, value: string | number | boolean) => {
-    setStats((prev) => prev.map((s) => s.id === id ? { ...s, [field]: value } : s));
+    setStats((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
   };
 
   const add = () => {
@@ -53,28 +53,35 @@ export default function AdminStatsPage() {
       setStats((prev) => prev.filter((s) => s.id !== id));
       return;
     }
-    if (!confirm('Delete this counter?')) return;
-    await fetch('/api/admin/stats', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-    setStats((prev) => prev.filter((s) => s.id !== id));
+    try {
+      await fetch('/api/admin/stats', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      setStats((prev) => prev.filter((s) => s.id !== id));
+      setStatus({ type: 'ok', text: 'Counter deleted.' });
+    } catch {
+      setStatus({ type: 'err', text: 'Failed to delete counter.' });
+    }
   };
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       await fetch('/api/admin/stats', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(stats),
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-      // Refresh to get server-assigned IDs for new items
+      setStatus({ type: 'ok', text: 'Legacy counters saved.' });
       const res = await fetch('/api/admin/stats');
       const updated = await res.json();
       if (Array.isArray(updated)) setStats(updated);
     } catch (e) {
       console.error(e);
-      alert('Failed to save');
+      setStatus({ type: 'err', text: 'Failed to save counters.' });
     } finally {
       setSaving(false);
     }
@@ -82,82 +89,96 @@ export default function AdminStatsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 gap-4">
-        <Loader2 className="w-10 h-10 text-action-orange animate-spin" />
-        <p className="text-gray-500 font-medium">Loading counters...</p>
+      <div className="flex items-center justify-center py-24 gap-3">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading counters…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 max-w-3xl">
-      {/* Header */}
+    <div className="space-y-6 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-industrial-dark uppercase tracking-tight flex items-center gap-3">
-            <BarChart3 className="w-7 h-7 text-action-orange" /> Legacy Counters
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">Edit the animated statistics shown in the "Our Legacy" section on the homepage.</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight flex items-center gap-2.5">
+            <BarChart3 className="w-6 h-6 text-brand-maroon" /> Legacy counters
+          </h2>
+          <p className="text-sm text-stone-500 mt-1">
+            Edit the milestone figures displayed on the Auto Pac homepage and About page.
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={add}
-            className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 text-gray-500 hover:border-action-orange hover:text-action-orange rounded-2xl text-xs font-black uppercase tracking-wider transition-all"
-          >
-            <Plus className="w-4 h-4" /> Add Counter
+        <div className="flex gap-2">
+          <button type="button" onClick={add} className="btn-secondary">
+            <Plus className="w-4 h-4" /> Add counter
           </button>
-          <button
-            onClick={save}
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-action-orange text-white font-black rounded-2xl shadow-lg shadow-action-orange/30 hover:bg-orange-600 transition-all disabled:opacity-70 text-xs uppercase tracking-wider active:scale-95"
-          >
+          <button type="button" onClick={save} disabled={saving} className="btn-primary">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saved ? 'Saved!' : saving ? 'Saving...' : 'Save Changes'}
+            {saving ? 'Saving...' : 'Save changes'}
           </button>
         </div>
       </div>
+
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm flex items-center gap-2 ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.type === 'ok' && <Check className="w-4 h-4" />}
+          {status.text}
+        </div>
+      )}
 
       {/* Preview Banner */}
-      <div className="bg-industrial-dark rounded-3xl p-5 sm:p-8">
-        <p className="text-[10px] font-black text-action-orange uppercase tracking-widest mb-4">Preview — Our Legacy Section</p>
+      <div className="bg-brand-maroon rounded-md p-5 sm:p-6 text-white">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75 mb-4">
+          Live Preview · Milestone Strip
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {stats.filter((s) => s.isActive).map((s) => (
-            <div key={s.id} className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
-              <div className="text-2xl font-black text-white">{s.value}</div>
-              <div className="text-[9px] text-white/40 font-black uppercase tracking-wider mt-0.5 truncate">{s.labelEn}</div>
-            </div>
-          ))}
+          {stats
+            .filter((s) => s.isActive)
+            .map((s) => (
+              <div key={s.id} className="bg-white/10 rounded-md p-3.5 border border-white/15 text-center">
+                <div className="font-display text-2xl font-semibold tabular-nums">{s.value}</div>
+                <div className="text-[11px] text-white/80 mt-0.5 truncate">{s.labelEn || 'Label'}</div>
+              </div>
+            ))}
         </div>
       </div>
 
-      {/* Counter Cards */}
       <div className="space-y-4">
         {stats.length === 0 && (
-          <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold text-sm">No counters yet. Click "Add Counter" to create one.</p>
+          <div className="text-center py-12 surface-card border-dashed text-sm text-stone-500">
+            No counters yet. Click &ldquo;Add counter&rdquo; to create one.
           </div>
         )}
         {stats.map((s, idx) => (
-          <div key={s.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <GripVertical className="w-4 h-4 text-gray-300" />
-                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Counter #{idx + 1}</span>
+          <div key={s.id} className="surface-card p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-4 h-4 text-stone-300" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-stone-500 tabular-nums">
+                  Counter #{idx + 1}
+                </span>
               </div>
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-stone-700">
                   <input
                     type="checkbox"
                     checked={s.isActive}
                     onChange={(e) => update(s.id, 'isActive', e.target.checked)}
-                    className="w-4 h-4 accent-orange-500 rounded"
+                    className="w-4 h-4 accent-[#6D1A2D]"
                   />
-                  <span className="text-xs font-bold text-gray-500">Active</span>
+                  Active
                 </label>
                 <button
+                  type="button"
                   onClick={() => remove(s.id)}
-                  className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-colors"
-                  aria-label="Delete"
+                  className="p-1.5 text-stone-400 hover:text-red-600 rounded-md hover:bg-red-50"
+                  aria-label="Delete counter"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -166,21 +187,44 @@ export default function AdminStatsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Label (English)</label>
-                <input value={s.labelEn} onChange={(e) => update(s.id, 'labelEn', e.target.value)} placeholder="Machines Delivered" className={inputCls} />
+                <label className="field-label">Label (English)</label>
+                <input
+                  value={s.labelEn}
+                  onChange={(e) => update(s.id, 'labelEn', e.target.value)}
+                  placeholder="Machines Delivered"
+                  className="input-field"
+                />
               </div>
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Label (Bengali)</label>
-                <input value={s.labelBn} onChange={(e) => update(s.id, 'labelBn', e.target.value)} placeholder="মেশিন সরবরাহ" className={inputCls} />
+                <label className="field-label">Label (Bengali)</label>
+                <input
+                  value={s.labelBn}
+                  onChange={(e) => update(s.id, 'labelBn', e.target.value)}
+                  placeholder="মেশিন সরবরাহ"
+                  className="input-field"
+                />
               </div>
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Value (e.g. 500+ or 15+)</label>
-                <input value={s.value} onChange={(e) => update(s.id, 'value', e.target.value)} placeholder="500+" className={inputCls} />
+                <label className="field-label">Value (e.g. 500+)</label>
+                <input
+                  value={s.value}
+                  onChange={(e) => update(s.id, 'value', e.target.value)}
+                  placeholder="500+"
+                  className="input-field tabular-nums"
+                />
               </div>
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Icon</label>
-                <select value={s.icon} onChange={(e) => update(s.id, 'icon', e.target.value)} className={inputCls}>
-                  {ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                <label className="field-label">Icon</label>
+                <select
+                  value={s.icon}
+                  onChange={(e) => update(s.id, 'icon', e.target.value)}
+                  className="input-field cursor-pointer"
+                >
+                  {ICONS.map((ic) => (
+                    <option key={ic} value={ic}>
+                      {ic}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

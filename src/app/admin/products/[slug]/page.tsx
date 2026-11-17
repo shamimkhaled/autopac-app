@@ -2,25 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Package, 
-  Trash2, 
-  Plus, 
-  Image as ImageIcon, 
-  Video, 
-  List, 
-  Settings, 
-  Check, 
+import {
+  Package,
+  Trash2,
+  Plus,
+  Image as ImageIcon,
+  Video,
+  List,
+  Settings,
+  Check,
   ArrowLeft,
   Loader2,
   Type,
-  FileText
+  FileText,
 } from 'lucide-react';
 import MediaPicker from '@/components/Admin/MediaPicker';
 import Image from 'next/image';
 import Link from 'next/link';
 import { packableItems } from '@/data/products';
 import { BROCHURE_LINES, BROCHURE_PAGE_COUNT } from '@/data/brochure';
+import { toYoutubeEmbedUrl } from '@/data/videos';
 
 export default function AdminProductEdit({ params }: { params: { slug: string } }) {
   const isNew = params.slug === 'new';
@@ -29,8 +30,13 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
   const [categories, setCategories] = useState<{ id: string; nameEn: string }[]>([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
-  const [showMediaPicker, setShowMediaPicker] = useState<{ active: boolean; index: number | null }>({ active: false, index: null });
-  
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showMediaPicker, setShowMediaPicker] = useState<{ active: boolean; index: number | null }>({
+    active: false,
+    index: null,
+  });
+
   const [form, setForm] = useState({
     categoryId: '',
     nameEn: '',
@@ -51,8 +57,8 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
 
   useEffect(() => {
     fetch('/api/categories')
-      .then(r => r.json())
-      .then(data => setCategories(Array.isArray(data) ? data : []))
+      .then((r) => r.json())
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
       .catch(console.error);
 
     if (!isNew) {
@@ -62,21 +68,39 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
       ])
         .then(([d, catalog]) => {
           if (d && !d.error) {
-            let images = [];
-            let specs = [];
-            let packableIds = [];
-            
+            let images: string[] = [];
+            let specs: { keyEn: string; keyBn: string; value: string; unit?: string }[] = [];
+            let packableIds: string[] = [];
+
             try {
-              images = Array.isArray(d.images) ? d.images : (typeof d.images === 'string' ? JSON.parse(d.images || '[]') : []);
-            } catch (e) { console.error('Error parsing images', e); }
-            
+              images = Array.isArray(d.images)
+                ? d.images
+                : typeof d.images === 'string'
+                ? JSON.parse(d.images || '[]')
+                : [];
+            } catch {
+              images = [];
+            }
+
             try {
-              specs = Array.isArray(d.specs) ? d.specs : (typeof d.specs === 'string' ? JSON.parse(d.specs || '[]') : []);
-            } catch (e) { console.error('Error parsing specs', e); }
-            
+              specs = Array.isArray(d.specs)
+                ? d.specs
+                : typeof d.specs === 'string'
+                ? JSON.parse(d.specs || '[]')
+                : [];
+            } catch {
+              specs = [];
+            }
+
             try {
-              packableIds = Array.isArray(d.packableIds) ? d.packableIds : (typeof d.packableIds === 'string' ? JSON.parse(d.packableIds || '[]') : []);
-            } catch (e) { console.error('Error parsing packableIds', e); }
+              packableIds = Array.isArray(d.packableIds)
+                ? d.packableIds
+                : typeof d.packableIds === 'string'
+                ? JSON.parse(d.packableIds || '[]')
+                : [];
+            } catch {
+              packableIds = [];
+            }
 
             const catalogMeta = catalog?.[d.slug];
             setForm({
@@ -98,7 +122,8 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+    setErrorMsg('');
+
     const url = isNew ? '/api/admin/products' : `/api/admin/products/${params.slug}`;
     const method = isNew ? 'POST' : 'PUT';
 
@@ -113,22 +138,28 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
         router.push('/admin/products');
         router.refresh();
       } else {
-        alert('Failed to save product');
+        const d = await res.json().catch(() => ({}));
+        setErrorMsg(d.error || 'Failed to save product. Check required fields.');
       }
     } catch (e) {
       console.error(e);
-      alert('Network error');
+      setErrorMsg('Network error while saving.');
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async () => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    const res = await fetch(`/api/admin/products/${params.slug}`, { method: 'DELETE' });
-    if (res.ok) {
-      router.push('/admin/products');
-      router.refresh();
+    try {
+      const res = await fetch(`/api/admin/products/${params.slug}`, { method: 'DELETE' });
+      if (res.ok) {
+        router.push('/admin/products');
+        router.refresh();
+      } else {
+        setErrorMsg('Could not delete this machine.');
+      }
+    } catch {
+      setErrorMsg('Network error deleting machine.');
     }
   };
 
@@ -142,7 +173,8 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
     setForm({ ...form, images: form.images.filter((_, i) => i !== idx) });
   };
 
-  const addSpec = () => setForm({ ...form, specs: [...form.specs, { keyEn: '', keyBn: '', value: '', unit: '' }] });
+  const addSpec = () =>
+    setForm({ ...form, specs: [...form.specs, { keyEn: '', keyBn: '', value: '', unit: '' }] });
   const updateSpec = (idx: number, field: string, val: string) => {
     const newSpecs = [...form.specs];
     newSpecs[idx] = { ...newSpecs[idx], [field]: val };
@@ -152,143 +184,180 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
     setForm({ ...form, specs: form.specs.filter((_, i) => i !== idx) });
   };
 
+  const youtubePreview = toYoutubeEmbedUrl(form.videoUrl);
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 gap-4">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
-        <p className="text-gray-500 font-bold uppercase tracking-widest">Retrieving product data...</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading machine details…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 pb-20">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link 
+    <div className="space-y-6 pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Link
             href="/admin/products"
-            className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-industrial-dark hover:border-gray-200 transition-all shadow-sm"
+            className="w-10 h-10 bg-white border border-stone-200 rounded-md flex items-center justify-center text-stone-500 hover:text-stone-900 hover:border-brand-maroon transition-colors"
+            aria-label="Back to machinery"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">
-              {isNew ? 'New Product' : 'Edit Product'}
-            </h1>
-            <p className="text-gray-500 font-medium">Configure machine details and specifications</p>
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+              {isNew ? 'Add machinery' : form.nameEn || 'Edit machinery'}
+            </h2>
+            <p className="text-sm text-stone-500">Configure machine copy, specs, images, and YouTube demo</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {!isNew && (
-            <button 
-              onClick={remove}
-              className="px-6 py-3 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all"
-            >
-              Archive Machine
-            </button>
-          )}
-          <button 
-            onClick={save}
-            disabled={saving}
-            className="flex items-center gap-3 px-10 py-4 bg-industrial-dark text-white font-black rounded-3xl shadow-xl hover:bg-black transition-all active:scale-95 disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Check className="w-6 h-6" />}
-            {saving ? 'Synchronizing...' : 'Save Product'}
+
+        <div className="flex flex-wrap items-center gap-2">
+          {!isNew &&
+            (confirmDelete ? (
+              <div className="inline-flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={remove}
+                  className="px-3.5 py-2 bg-red-600 text-white text-sm font-semibold rounded-md hover:bg-red-700"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="btn-secondary text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="btn-ghost text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            ))}
+
+          <button type="button" onClick={save} disabled={saving} className="btn-primary">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {saving ? 'Saving...' : 'Save machine'}
           </button>
         </div>
       </div>
 
-      <form onSubmit={save} className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-        {/* Left Column - Main Info */}
-        <div className="xl:col-span-2 space-y-10">
-          <div className="bg-white p-10 rounded-3xl border border-gray-100 shadow-sm space-y-10">
-            <h3 className="text-xl font-black text-industrial-dark flex items-center gap-4 border-b border-gray-100 pb-6">
-              <Type className="w-6 h-6 text-action-orange" />
+      {errorMsg && (
+        <div role="alert" className="p-3.5 rounded-md bg-red-50 border border-red-200 text-sm text-red-700">
+          {errorMsg}
+        </div>
+      )}
+
+      <form onSubmit={save} className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Main Column */}
+        <div className="xl:col-span-2 space-y-6">
+          <div className="surface-card p-5 sm:p-6 space-y-6">
+            <h3 className="font-display text-lg font-semibold text-stone-900 flex items-center gap-2.5 border-b border-stone-200 pb-3">
+              <Type className="w-4 h-4 text-brand-maroon" />
               Machine Identity
             </h3>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Machine Name (EN) *</label>
-                <input 
-                  required 
-                  value={form.nameEn} 
-                  onChange={e => setForm({...form, nameEn: e.target.value})} 
-                  className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-lg focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all"
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="field-label">Machine Name (EN) *</label>
+                <input
+                  required
+                  value={form.nameEn}
+                  onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+                  className="input-field font-medium"
                   placeholder="e.g. Granule Packing Machine"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Machine Name (BN)</label>
-                <input 
-                  value={form.nameBn} 
-                  onChange={e => setForm({...form, nameBn: e.target.value})} 
-                  className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-lg focus:ring-4 focus:ring-action-orange/10 focus:border-action-orange outline-none transition-all"
-                  placeholder="বাংলায় নাম..."
+              <div>
+                <label className="field-label">Machine Name (BN)</label>
+                <input
+                  value={form.nameBn}
+                  onChange={(e) => setForm({ ...form, nameBn: e.target.value })}
+                  className="input-field"
+                  placeholder="বাংলায় নাম..."
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category *</label>
-                <select 
-                  required 
-                  value={form.categoryId} 
-                  onChange={e => setForm({...form, categoryId: e.target.value})}
-                  className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-industrial-dark outline-none cursor-pointer"
+              <div>
+                <label className="field-label">Category *</label>
+                <select
+                  required
+                  value={form.categoryId}
+                  onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+                  className="input-field cursor-pointer"
                 >
                   <option value="">Select Category</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nameEn}
+                    </option>
+                  ))}
                 </select>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Unique Slug (URL)</label>
-                <input 
-                  value={form.slug} 
-                  onChange={e => setForm({...form, slug: e.target.value})} 
-                  className="w-full px-6 py-4 bg-gray-100 border border-gray-200 rounded-2xl font-mono text-xs text-gray-500 cursor-not-allowed" 
+              <div>
+                <label className="field-label">Slug (URL)</label>
+                <input
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  className="input-field font-mono text-xs disabled:bg-stone-100 disabled:text-stone-500"
                   disabled={!isNew}
                   placeholder="auto-generated-from-name"
                 />
               </div>
             </div>
 
-            <div className="space-y-8 bg-gray-50/50 p-8 rounded-3xl border border-gray-100">
-              <h4 className="text-sm font-black text-industrial-dark uppercase tracking-widest flex items-center gap-2">
-                <FileText className="w-4 h-4 text-action-orange" /> Machine Narrative
+            <div className="space-y-4 pt-4 border-t border-stone-200">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-500 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-brand-maroon" /> Machine Narrative
               </h4>
-              <div className="grid grid-cols-1 gap-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Short Description (Summary)</label>
-                  <textarea 
-                    value={form.shortDescEn} 
-                    onChange={e => setForm({...form, shortDescEn: e.target.value})} 
-                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[100px] outline-none"
-                    placeholder="Brief overview for cards and lists..."
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="field-label">Short Summary (EN)</label>
+                  <textarea
+                    rows={3}
+                    value={form.shortDescEn}
+                    onChange={(e) => setForm({ ...form, shortDescEn: e.target.value })}
+                    className="input-field py-2.5"
+                    placeholder="Brief overview for product cards..."
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Short Description (Bengali)</label>
-                  <textarea 
-                    value={form.shortDescBn} 
-                    onChange={e => setForm({...form, shortDescBn: e.target.value})} 
-                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[100px] outline-none"
+                <div>
+                  <label className="field-label">Short Summary (BN)</label>
+                  <textarea
+                    rows={3}
+                    value={form.shortDescBn}
+                    onChange={(e) => setForm({ ...form, shortDescBn: e.target.value })}
+                    className="input-field py-2.5"
                     placeholder="কার্ডে দেখানো সংক্ষিপ্ত বর্ণনা..."
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Technical Description</label>
-                  <textarea 
-                    value={form.fullDescEn} 
-                    onChange={e => setForm({...form, fullDescEn: e.target.value})} 
-                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[250px] outline-none"
-                    placeholder="Detailed features, benefits, and operation guide..."
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="field-label">Full Description (EN)</label>
+                  <textarea
+                    rows={6}
+                    value={form.fullDescEn}
+                    onChange={(e) => setForm({ ...form, fullDescEn: e.target.value })}
+                    className="input-field py-2.5"
+                    placeholder="Detailed features, operation guide, capacity..."
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Description (Bengali)</label>
-                  <textarea 
-                    value={form.fullDescBn} 
-                    onChange={e => setForm({...form, fullDescBn: e.target.value})} 
-                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[250px] outline-none"
+                <div>
+                  <label className="field-label">Full Description (BN)</label>
+                  <textarea
+                    rows={6}
+                    value={form.fullDescBn}
+                    onChange={(e) => setForm({ ...form, fullDescBn: e.target.value })}
+                    className="input-field py-2.5"
                     placeholder="পূর্ণ বিবরণ বাংলায়..."
                   />
                 </div>
@@ -296,116 +365,120 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
             </div>
           </div>
 
-          {/* Specifications Table */}
-          <div className="bg-white p-10 rounded-3xl border border-gray-100 shadow-sm space-y-8">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-6">
-              <h3 className="text-xl font-black text-industrial-dark flex items-center gap-4">
-                <Settings className="w-6 h-6 text-action-orange" />
-                Technical Specs
+          {/* Technical Specifications Table */}
+          <div className="surface-card p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+              <h3 className="font-display text-lg font-semibold text-stone-900 flex items-center gap-2.5">
+                <Settings className="w-4 h-4 text-brand-maroon" />
+                Technical Specifications
               </h3>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={addSpec}
-                className="flex items-center gap-2 px-5 py-2.5 bg-orange-50 text-action-orange font-bold rounded-xl hover:bg-orange-100 transition-colors"
+                className="btn-secondary text-xs min-h-[36px] px-3 py-1"
               >
-                <Plus className="w-4 h-4" /> Add Row
+                <Plus className="w-3.5 h-3.5" /> Add row
               </button>
             </div>
-            
-            <div className="space-y-4">
+
+            <div className="space-y-2.5">
               {form.specs.map((spec, i) => (
-                <div key={i} className="flex gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group relative">
-                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <input 
-                      value={spec.keyEn} 
-                      onChange={e => updateSpec(i, 'keyEn', e.target.value)} 
-                      placeholder="Property (e.g. Speed)"
-                      className="bg-white px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold"
+                <div key={i} className="flex items-center gap-2 p-3 bg-brand-paper/50 rounded-md border border-stone-200">
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <input
+                      value={spec.keyEn}
+                      onChange={(e) => updateSpec(i, 'keyEn', e.target.value)}
+                      placeholder="Property (EN)"
+                      className="input-field h-9 text-xs"
                     />
-                    <input 
-                      value={spec.keyBn} 
-                      onChange={e => updateSpec(i, 'keyBn', e.target.value)} 
+                    <input
+                      value={spec.keyBn}
+                      onChange={(e) => updateSpec(i, 'keyBn', e.target.value)}
                       placeholder="Property (BN)"
-                      className="bg-white px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold"
+                      className="input-field h-9 text-xs"
                     />
-                    <input 
-                      value={spec.value} 
-                      onChange={e => updateSpec(i, 'value', e.target.value)} 
+                    <input
+                      value={spec.value}
+                      onChange={(e) => updateSpec(i, 'value', e.target.value)}
                       placeholder="Value (e.g. 50)"
-                      className="bg-white px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium"
+                      className="input-field h-9 text-xs tabular-nums"
                     />
-                    <input 
-                      value={spec.unit || ''} 
-                      onChange={e => updateSpec(i, 'unit', e.target.value)} 
+                    <input
+                      value={spec.unit || ''}
+                      onChange={(e) => updateSpec(i, 'unit', e.target.value)}
                       placeholder="Unit (e.g. bpm)"
-                      className="bg-white px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium"
+                      className="input-field h-9 text-xs"
                     />
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => removeSpec(i)}
-                    className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                    className="p-2 text-stone-400 hover:text-red-600 rounded-md"
+                    aria-label="Remove spec row"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               ))}
               {form.specs.length === 0 && (
-                <p className="text-center py-10 text-gray-400 font-medium italic">No specifications defined for this machine.</p>
+                <p className="text-center py-6 text-sm text-stone-400">No technical rows added yet.</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column - Media & Settings */}
-        <div className="space-y-10">
+        {/* Right Sidebar */}
+        <div className="space-y-6">
           {/* Gallery */}
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <h3 className="text-lg font-black text-industrial-dark flex items-center gap-3">
-                <ImageIcon className="w-5 h-5 text-action-orange" />
-                Gallery
+          <div className="surface-card p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+              <h3 className="font-display text-base font-semibold text-stone-900 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-brand-maroon" />
+                Machine Photos
               </h3>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={addImage}
-                className="text-xs font-black text-action-orange uppercase tracking-widest hover:underline"
+                className="text-xs font-semibold text-brand-maroon hover:underline"
               >
-                + Add Slot
+                + Add slot
               </button>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-2 gap-3">
               {form.images.map((img, i) => (
-                <div key={i} className="group relative aspect-square bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden">
+                <div
+                  key={i}
+                  className="group relative aspect-square bg-white rounded-md border border-stone-200 flex items-center justify-center overflow-hidden"
+                >
                   {img ? (
                     <>
-                      <Image src={img} alt="Product" fill sizes="96px" unoptimized className="object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                        <button 
+                      <Image src={img} alt="Product" fill sizes="120px" unoptimized className="object-contain p-1.5" />
+                      <div className="absolute inset-0 bg-stone-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5">
+                        <button
                           type="button"
                           onClick={() => setShowMediaPicker({ active: true, index: i })}
-                          className="px-4 py-1.5 bg-white/20 backdrop-blur-md text-white text-[10px] font-black rounded-lg"
+                          className="px-3 py-1 bg-white text-stone-900 text-xs font-semibold rounded-md"
                         >
                           Change
                         </button>
-                        <button 
+                        <button
                           type="button"
                           onClick={() => removeImage(i)}
-                          className="px-4 py-1.5 bg-red-500/80 backdrop-blur-md text-white text-[10px] font-black rounded-lg"
+                          className="px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded-md"
                         >
                           Remove
                         </button>
                       </div>
                     </>
                   ) : (
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setShowMediaPicker({ active: true, index: i })}
-                      className="flex flex-col items-center gap-2 text-gray-400 hover:text-action-orange transition-colors"
+                      className="flex flex-col items-center gap-1.5 text-stone-400 hover:text-brand-maroon transition-colors"
                     >
-                      <Plus className="w-6 h-6" />
-                      <span className="font-bold text-[10px] uppercase">Pick Image</span>
+                      <Plus className="w-5 h-5" />
+                      <span className="text-xs font-medium">Pick image</span>
                     </button>
                   )}
                 </div>
@@ -413,54 +486,58 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
             </div>
           </div>
 
-          {/* Video & Links */}
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
-            <h3 className="text-lg font-black text-industrial-dark flex items-center gap-3 border-b border-gray-100 pb-4">
-              <Video className="w-5 h-5 text-action-orange" />
-              Machine Demo
+          {/* YouTube Video Demo */}
+          <div className="surface-card p-5 space-y-3">
+            <h3 className="font-display text-base font-semibold text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-3">
+              <Video className="w-4 h-4 text-brand-maroon" />
+              YouTube Video Demo
             </h3>
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">YouTube Video Link</label>
-              <div className="relative">
-                <Video className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
-                  value={form.videoUrl} 
-                  onChange={e => setForm({...form, videoUrl: e.target.value})} 
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="w-full pl-11 pr-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium text-sm focus:ring-2 focus:ring-action-orange/20 outline-none"
+            <div>
+              <label className="field-label">YouTube URL</label>
+              <input
+                value={form.videoUrl}
+                onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+                placeholder="https://youtube.com/watch?v=..."
+                className="input-field text-sm"
+              />
+            </div>
+            {youtubePreview && (
+              <div className="relative aspect-video rounded-md overflow-hidden bg-stone-950 border border-stone-200">
+                <iframe
+                  src={youtubePreview}
+                  title="YouTube video preview"
+                  className="w-full h-full"
+                  allowFullScreen
                 />
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Status & Options */}
-          <div className="bg-industrial-dark p-8 rounded-3xl shadow-xl space-y-8">
-            <h3 className="text-lg font-black text-white flex items-center gap-3 border-b border-white/10 pb-4">
-              <List className="w-5 h-5 text-action-orange" />
-              Visibility
+          {/* Visibility, Packables & Catalog Map */}
+          <div className="surface-card p-5 space-y-5">
+            <h3 className="font-display text-base font-semibold text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-3">
+              <List className="w-4 h-4 text-brand-maroon" />
+              Visibility & Brochure Map
             </h3>
-            
-            <label className="flex items-center gap-4 cursor-pointer p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${form.featured ? 'bg-action-orange border-action-orange' : 'border-white/20'}`}>
-                {form.featured && <Check className="w-4 h-4 text-white" />}
-              </div>
-              <input 
-                type="checkbox" 
-                className="hidden" 
-                checked={form.featured} 
-                onChange={e => setForm({...form, featured: e.target.checked})} 
+
+            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md border border-stone-200 bg-brand-paper/50 hover:border-brand-maroon transition-colors">
+              <input
+                type="checkbox"
+                checked={form.featured}
+                onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+                className="w-4 h-4 accent-[#6D1A2D]"
               />
               <div>
-                <p className="font-black text-white text-sm uppercase">Featured Machine</p>
-                <p className="text-[10px] text-white/50 font-medium">Show in homepage highlight section</p>
+                <p className="text-sm font-semibold text-stone-900">Featured Machine</p>
+                <p className="text-xs text-stone-500">Show inside homepage highlight grid</p>
               </div>
             </label>
 
-            <div className="space-y-6 pt-4">
-              <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-2">
-                <Package className="w-3 h-3" /> Packable materials
-              </h4>
-              <div className="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2">
+              <p className="field-label flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5" /> Packable materials
+              </p>
+              <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
                 {packableItems.map((item) => {
                   const on = form.packableIds.includes(item.id);
                   return (
@@ -475,8 +552,10 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
                             : [...form.packableIds, item.id],
                         })
                       }
-                      className={`text-left px-3 py-2 rounded-xl text-xs font-bold border ${
-                        on ? 'bg-action-orange border-action-orange text-white' : 'bg-white/5 border-white/10 text-white/70'
+                      className={`text-left px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                        on
+                          ? 'bg-brand-maroon border-brand-maroon text-white'
+                          : 'bg-white border-stone-200 text-stone-700 hover:border-stone-400'
                       }`}
                     >
                       {item.nameEn}
@@ -486,8 +565,8 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
               </div>
             </div>
 
-            <div className="space-y-3 pt-2">
-              <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Official catalog page</h4>
+            <div className="space-y-2.5 pt-2 border-t border-stone-200">
+              <label className="field-label">Official catalog mapping</label>
               <select
                 value={form.brochureLineId}
                 onChange={(e) => {
@@ -498,11 +577,11 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
                     brochurePage: line?.startPage || form.brochurePage,
                   });
                 }}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white"
+                className="input-field text-sm cursor-pointer"
               >
-                <option value="">Not in catalog</option>
+                <option value="">Not mapped to brochure</option>
                 {BROCHURE_LINES.map((line) => (
-                  <option key={line.id} value={line.id} className="text-industrial-dark">
+                  <option key={line.id} value={line.id}>
                     {line.number} {line.shortEn}
                   </option>
                 ))}
@@ -514,7 +593,7 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
                 disabled={!form.brochureLineId}
                 value={form.brochurePage}
                 onChange={(e) => setForm({ ...form, brochurePage: Number(e.target.value) })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white disabled:opacity-40"
+                className="input-field text-sm tabular-nums disabled:opacity-40"
                 placeholder="Catalog page"
               />
             </div>
@@ -523,7 +602,7 @@ export default function AdminProductEdit({ params }: { params: { slug: string } 
       </form>
 
       {showMediaPicker.active && (
-        <MediaPicker 
+        <MediaPicker
           onSelect={(url) => {
             if (showMediaPicker.index !== null) {
               updateImage(showMediaPicker.index, url);

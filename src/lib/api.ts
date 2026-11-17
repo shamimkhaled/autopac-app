@@ -63,6 +63,8 @@ export interface Product {
   id: string;
   slug: string;
   categoryId: string;
+  modelCode?: string;
+  brochurePage?: number;
   category?: Category;
   nameEn: string;
   nameBn: string;

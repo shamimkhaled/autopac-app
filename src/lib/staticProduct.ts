@@ -10,6 +10,8 @@ export function getStaticProductBySlug(slug: string): Product | null {
     id: p.id,
     slug: p.slug,
     categoryId: p.categoryId,
+    modelCode: p.modelCode,
+    brochurePage: p.brochurePage,
     category: category
       ? {
           id: category.id,

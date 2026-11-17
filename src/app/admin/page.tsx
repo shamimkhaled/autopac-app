@@ -9,8 +9,6 @@ import {
   ArrowRight,
   Loader2,
   Settings,
-  ShieldCheck,
-  Activity,
   ExternalLink,
   Image as ImageIcon,
   Radio,
@@ -24,11 +22,12 @@ interface DashboardStats {
   quotes: number;
   partners: number;
 }
-interface RecentLead {
+interface QuoteRow {
   id: string;
   name: string;
+  companyName?: string;
   productInterest: string;
-  status: string;
+  status: 'PENDING' | 'REVIEWED' | 'RESPONDED' | 'CLOSED' | string;
   createdAt: string;
 }
 interface VisitorData {
@@ -38,18 +37,15 @@ interface VisitorData {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({ products: 0, quotes: 0, partners: 0 });
-  const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
+  const [allQuotes, setAllQuotes] = useState<QuoteRow[]>([]);
   const [visitors, setVisitors] = useState<VisitorData>({ activeVisitors: 0, topPages: [] });
   const [loading, setLoading] = useState(true);
-  const [visitorPulse, setVisitorPulse] = useState(false);
 
   const fetchVisitors = useCallback(async () => {
     try {
       const res = await fetch('/api/tracker');
       const data = await res.json();
       setVisitors(data);
-      setVisitorPulse(true);
-      setTimeout(() => setVisitorPulse(false), 400);
     } catch {
       /* ignore */
     }
@@ -68,12 +64,13 @@ export default function AdminDashboard() {
           quotesRes.json(),
           partnersRes.json(),
         ]);
+        const quoteList = Array.isArray(quotes) ? quotes : [];
         setStats({
           products: Array.isArray(products) ? products.length : 0,
-          quotes: Array.isArray(quotes) ? quotes.length : 0,
+          quotes: quoteList.length,
           partners: Array.isArray(partners) ? partners.length : 0,
         });
-        setRecentLeads(Array.isArray(quotes) ? quotes.slice(0, 5) : []);
+        setAllQuotes(quoteList);
       } catch (e) {
         console.error('Dashboard Data Error:', e);
       } finally {
@@ -85,6 +82,16 @@ export default function AdminDashboard() {
     const interval = setInterval(fetchVisitors, 30_000);
     return () => clearInterval(interval);
   }, [fetchVisitors]);
+
+  const recentLeads = allQuotes.slice(0, 6);
+  const pipelineCounts = {
+    PENDING: allQuotes.filter((q) => q.status === 'PENDING').length,
+    REVIEWED: allQuotes.filter((q) => q.status === 'REVIEWED').length,
+    RESPONDED: allQuotes.filter((q) => q.status === 'RESPONDED').length,
+    CLOSED: allQuotes.filter((q) => q.status === 'CLOSED').length,
+  };
+  const totalQuotes = Math.max(1, allQuotes.length);
+  const maxTopViews = Math.max(1, ...visitors.topPages.map((p) => p._count.page));
 
   const statCards = [
     {
@@ -98,6 +105,7 @@ export default function AdminDashboard() {
       value: stats.quotes,
       icon: MessageSquare,
       href: '/admin/quotes',
+      note: `${pipelineCounts.PENDING} pending`,
     },
     {
       title: 'Partners',
@@ -109,7 +117,7 @@ export default function AdminDashboard() {
       title: 'Live visitors',
       value: visitors.activeVisitors,
       icon: Radio,
-      href: '#visitors',
+      href: '/admin/analytics',
       live: true,
     },
   ];
@@ -117,33 +125,33 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <Loader2 className="w-10 h-10 text-brand-maroon animate-spin" />
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
         <p className="text-sm text-stone-500">Loading dashboard…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="bg-brand-maroon text-white rounded-md p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70 mb-2">
-              Auto Pac CMS — A2Z
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75 mb-2">
+              Auto Pac CMS · Operations Desk
             </p>
             <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">
-              Website control desk
+              Website & Quotation Control Desk
             </h2>
-            <p className="text-white/80 mt-2 text-sm max-w-md">
-              Edit the live site from header to footer. Then manage machines, catalog map, and quotations.
+            <p className="text-white/85 mt-2 text-sm max-w-lg">
+              Manage public website copy, industrial machinery specs, brochure catalog links, and incoming client quotation requests.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/admin/website"
+              href="/admin/quotes"
               className="btn-primary bg-white text-brand-maroon hover:bg-stone-100"
             >
-              Website content
+              Review quotes
             </Link>
             <Link
               href="/admin/products/new"
@@ -154,45 +162,12 @@ export default function AdminDashboard() {
             <Link
               href="/"
               target="_blank"
-              className="inline-flex items-center justify-center min-h-[44px] px-4 border border-white/40 text-white text-sm font-semibold rounded-md hover:bg-white/10"
+              className="inline-flex items-center justify-center min-h-[44px] px-3.5 border border-white/40 text-white text-sm font-semibold rounded-md hover:bg-white/10"
+              title="Open live website"
             >
               <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
-        </div>
-      </div>
-
-      <div className="surface-card p-5 sm:p-6">
-        <h3 className="font-display text-lg font-semibold text-stone-900 mb-1">Website A2Z map</h3>
-        <p className="text-sm text-stone-500 mb-4">
-          Every public surface has an admin screen. Start with Website content for hero → footer copy.
-        </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {[
-            { href: '/admin/website', label: 'Hero, home, catalog band, footer' },
-            { href: '/admin/branding', label: 'Brand colors & appearance' },
-            { href: '/admin/seo', label: 'SEO, GA4, Open Graph' },
-            { href: '/admin/analytics', label: 'Traffic & business analytics' },
-            { href: '/admin/hero', label: 'Hero images' },
-            { href: '/admin/stats', label: 'Hero counters' },
-            { href: '/admin/company', label: 'Logo, phones, WhatsApp, social' },
-            { href: '/admin/products', label: 'Machinery catalog' },
-            { href: '/admin/catalog', label: 'Brochure page links' },
-            { href: '/admin/partners', label: 'Trusted partners' },
-            { href: '/admin/testimonials', label: 'Client quotes (About)' },
-            { href: '/admin/owner', label: 'Owner / leadership' },
-            { href: '/admin/blog', label: 'News articles' },
-            { href: '/admin/translations', label: 'Nav & UI EN/BN strings' },
-            { href: '/admin/quotes', label: 'Inbound quotations' },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="px-3 py-2.5 rounded-md border border-stone-200 text-sm text-stone-700 hover:border-brand-maroon hover:text-brand-maroon transition-colors"
-            >
-              {item.label}
-            </Link>
-          ))}
         </div>
       </div>
 
@@ -203,27 +178,29 @@ export default function AdminDashboard() {
             <Link
               key={stat.title}
               href={stat.href}
-              className="surface-card surface-card-hover p-5 flex flex-col gap-4 cursor-pointer"
+              className="surface-card surface-card-hover p-5 flex flex-col gap-3 cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-md bg-brand-paper border border-stone-200 flex items-center justify-center">
-                <Icon
-                  className={`w-5 h-5 text-brand-maroon ${stat.live && visitorPulse ? 'animate-pulse' : ''}`}
-                />
+              <div className="flex items-center justify-between">
+                <div className="w-9 h-9 rounded-md bg-brand-paper border border-stone-200 flex items-center justify-center">
+                  <Icon className="w-4 h-4 text-brand-maroon" />
+                </div>
+                {stat.live ? (
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                    Active
+                  </span>
+                ) : stat.note ? (
+                  <span className="text-xs font-medium text-brand-maroon tabular-nums">{stat.note}</span>
+                ) : (
+                  <TrendingUp className="w-3.5 h-3.5 text-stone-400" />
+                )}
               </div>
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                   {stat.title}
                 </p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="font-display text-3xl font-semibold text-stone-900 tabular-nums">
-                    {stat.value}
-                  </p>
-                  {stat.live ? (
-                    <span className="text-[10px] font-semibold uppercase text-emerald-700">Live</span>
-                  ) : (
-                    <TrendingUp className="w-3.5 h-3.5 text-stone-400" />
-                  )}
-                </div>
+                <p className="font-display text-3xl font-semibold text-stone-900 mt-0.5 tabular-nums">
+                  {stat.value}
+                </p>
               </div>
             </Link>
           );
@@ -231,117 +208,163 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 surface-card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-5 pb-4 border-b border-stone-100">
-            <div>
-              <h3 className="font-display text-lg font-semibold text-stone-900">Inbound quotations</h3>
-              <p className="text-sm text-stone-500 mt-0.5">Most recent quote requests</p>
+        <div className="lg:col-span-2 space-y-6">
+          {/* Quotation Status Pipeline Breakdown */}
+          <div className="surface-card p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-display text-lg font-semibold text-stone-900">Quotation pipeline</h3>
+                <p className="text-sm text-stone-500">Distribution across current lead stages</p>
+              </div>
+              <Link href="/admin/quotes" className="btn-ghost text-xs px-2">
+                Open pipeline <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <Link href="/admin/quotes" className="btn-ghost text-xs px-2">
-              View all <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { key: 'PENDING', label: 'Pending', count: pipelineCounts.PENDING, bar: 'bg-amber-500' },
+                { key: 'REVIEWED', label: 'Reviewed', count: pipelineCounts.REVIEWED, bar: 'bg-sky-600' },
+                { key: 'RESPONDED', label: 'Responded', count: pipelineCounts.RESPONDED, bar: 'bg-brand-maroon' },
+                { key: 'CLOSED', label: 'Closed', count: pipelineCounts.CLOSED, bar: 'bg-emerald-600' },
+              ].map((stage) => {
+                const pct = allQuotes.length === 0 ? 0 : Math.round((stage.count / totalQuotes) * 100);
+                return (
+                  <div key={stage.key} className="p-3 rounded-md border border-stone-200 bg-brand-paper/40">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs font-medium text-stone-600">{stage.label}</span>
+                      <span className="text-xs font-semibold text-stone-400 tabular-nums">{pct}%</span>
+                    </div>
+                    <p className="font-display text-2xl font-semibold text-stone-900 mt-1 tabular-nums">
+                      {stage.count}
+                    </p>
+                    <div className="mt-2 h-1.5 w-full bg-stone-200 rounded-sm overflow-hidden">
+                      <div className={`h-full ${stage.bar}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            {recentLeads.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-stone-200 rounded-md">
-                <p className="text-sm text-stone-500">No quotations yet</p>
+          {/* Inbound quotations table */}
+          <div className="surface-card p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-200">
+              <div>
+                <h3 className="font-display text-lg font-semibold text-stone-900">Recent quotations</h3>
+                <p className="text-sm text-stone-500">Latest factory inquiries</p>
               </div>
-            ) : (
-              recentLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className="flex items-center justify-between p-3 sm:p-4 rounded-md border border-stone-100 hover:border-brand-maroon/40 transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center font-semibold text-brand-maroon text-sm flex-shrink-0">
-                      {lead.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-stone-900 text-sm truncate">{lead.name}</p>
-                      <p className="text-xs text-stone-500 flex items-center gap-1.5 mt-0.5 truncate">
-                        <Package className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{lead.productInterest}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-3">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
-                        lead.status === 'PENDING'
-                          ? 'bg-amber-50 text-amber-800 border border-amber-100'
-                          : 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                      }`}
-                    >
-                      {lead.status}
-                    </span>
-                    <span className="text-[10px] text-stone-400">
-                      {new Date(lead.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
+              <Link href="/admin/quotes" className="btn-ghost text-xs px-2">
+                View all <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="space-y-2">
+              {recentLeads.length === 0 ? (
+                <div className="text-center py-10 border border-dashed border-stone-200 rounded-md">
+                  <p className="text-sm text-stone-500">No quotations received yet.</p>
                 </div>
-              ))
-            )}
+              ) : (
+                recentLeads.map((lead) => (
+                  <Link
+                    key={lead.id}
+                    href="/admin/quotes"
+                    className="flex items-center justify-between p-3 rounded-md border border-stone-200 hover:border-brand-maroon transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center font-semibold text-brand-maroon text-sm flex-shrink-0">
+                        {lead.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-stone-900 text-sm truncate">
+                          {lead.name}
+                          {lead.companyName ? ` · ${lead.companyName}` : ''}
+                        </p>
+                        <p className="text-xs text-stone-500 flex items-center gap-1.5 mt-0.5 truncate">
+                          <Package className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{lead.productInterest || 'General inquiry'}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0 ml-3">
+                      <span
+                        className={`text-[11px] font-semibold uppercase tracking-wider ${
+                          lead.status === 'PENDING'
+                            ? 'text-amber-700'
+                            : lead.status === 'CLOSED'
+                            ? 'text-emerald-700'
+                            : 'text-brand-maroon'
+                        }`}
+                      >
+                        {lead.status}
+                      </span>
+                      <span className="text-[11px] text-stone-400 tabular-nums">
+                        {new Date(lead.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div id="visitors" className="surface-card p-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="font-display text-base font-semibold text-stone-900 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-brand-maroon" />
-                Live traffic
+                Active traffic
               </h3>
-              <span className="text-[10px] font-semibold uppercase text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
-                Real-time
-              </span>
+              <Link href="/admin/analytics" className="text-xs font-medium text-brand-maroon hover:underline">
+                Details
+              </Link>
             </div>
-            <div className="text-center py-3">
-              <p
-                className={`font-display text-5xl font-semibold tabular-nums ${
-                  visitorPulse ? 'text-brand-maroon' : 'text-stone-900'
-                }`}
-              >
+            <div className="py-2 border-b border-stone-100">
+              <p className="font-display text-4xl font-semibold text-stone-900 tabular-nums">
                 {visitors.activeVisitors}
               </p>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-500 mt-1">
-                Active now
-              </p>
+              <p className="text-xs text-stone-500 mt-0.5">Visitors active in last 3 minutes</p>
             </div>
             {visitors.topPages.length > 0 && (
-              <div className="mt-3 space-y-2 border-t border-stone-100 pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-stone-400">
-                  Top pages
+              <div className="mt-4 space-y-2.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                  Top routes
                 </p>
-                {visitors.topPages.map(({ page, _count }, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="text-stone-600 truncate max-w-[180px]">{page || '/'}</span>
-                    <span className="font-semibold text-stone-900 ml-2">{_count.page}</span>
-                  </div>
-                ))}
+                {visitors.topPages.map(({ page, _count }, i) => {
+                  const pct = Math.max(8, Math.round((_count.page / maxTopViews) * 100));
+                  return (
+                    <div key={i} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs gap-2">
+                        <span className="text-stone-700 truncate">{page || '/'}</span>
+                        <span className="font-semibold text-stone-900 tabular-nums shrink-0">
+                          {_count.page}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-stone-100 rounded-sm overflow-hidden">
+                        <div className="h-full bg-brand-maroon" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            <p className="mt-3 flex items-center gap-1.5 text-[10px] text-stone-400">
-              <BarChart3 className="w-3 h-3" />
-              Updates every 30 seconds
-            </p>
           </div>
 
           <div className="surface-card p-5">
-            <h3 className="font-display text-base font-semibold text-stone-900 mb-4">Quick actions</h3>
+            <h3 className="font-display text-base font-semibold text-stone-900 mb-3">Quick actions</h3>
             <div className="grid grid-cols-1 gap-2">
               {[
                 { href: '/admin/website', label: 'Edit website copy', icon: Settings },
-                { href: '/admin/products/new', label: 'Add machine', icon: Package },
-                { href: '/admin/media', label: 'Upload media', icon: ImageIcon },
-                { href: '/admin/catalog', label: 'Catalog map', icon: BarChart3 },
+                { href: '/admin/products/new', label: 'Add new machine', icon: Package },
+                { href: '/admin/media', label: 'Upload media library', icon: ImageIcon },
+                { href: '/admin/catalog', label: 'Brochure catalog map', icon: BarChart3 },
               ].map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3 p-3 rounded-md border border-stone-200 hover:border-brand-maroon transition-colors cursor-pointer"
+                  className="flex items-center gap-3 p-2.5 rounded-md border border-stone-200 hover:border-brand-maroon transition-colors cursor-pointer"
                 >
-                  <div className="w-9 h-9 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center flex-shrink-0">
                     <Icon className="w-4 h-4 text-brand-maroon" />
                   </div>
                   <span className="text-sm font-medium text-stone-800">{label}</span>
@@ -350,26 +373,26 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-stone-900 text-white p-5 rounded-md space-y-4">
-            <h3 className="font-display text-base font-semibold flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-maroon-mid" /> System
-            </h3>
-            <div className="space-y-3">
+          <div className="surface-card p-5">
+            <h3 className="font-display text-base font-semibold text-stone-900 mb-3">Website A2Z pages</h3>
+            <div className="grid grid-cols-2 gap-1.5">
               {[
-                { icon: Activity, label: 'Database', status: 'Operational' },
-                { icon: Radio, label: 'Visitor track', status: 'Active' },
-                { icon: Settings, label: 'CMS', status: 'Live' },
-              ].map(({ icon: Icon, label, status }) => (
-                <div
-                  key={label}
-                  className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0 last:pb-0"
+                { href: '/admin/company', label: 'Company info' },
+                { href: '/admin/branding', label: 'Brand & colors' },
+                { href: '/admin/seo', label: 'SEO & GA4' },
+                { href: '/admin/hero', label: 'Hero slider' },
+                { href: '/admin/partners', label: 'Partners' },
+                { href: '/admin/testimonials', label: 'Testimonials' },
+                { href: '/admin/blog', label: 'News articles' },
+                { href: '/admin/translations', label: 'EN / BN copy' },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="px-2.5 py-2 rounded-md border border-stone-200 text-xs font-medium text-stone-700 hover:border-brand-maroon hover:text-brand-maroon transition-colors truncate"
                 >
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-3.5 h-3.5 text-brand-maroon-mid" />
-                    <span className="text-xs text-white/70">{label}</span>
-                  </div>
-                  <span className="text-[10px] font-semibold uppercase text-emerald-400">{status}</span>
-                </div>
+                  {item.label}
+                </Link>
               ))}
             </div>
           </div>

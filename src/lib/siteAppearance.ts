@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 
 export const BRAND_THEME_KEY = 'brandTheme';
 export const SEO_MARKETING_KEY = 'seoMarketing';
+export const PWA_CONFIG_KEY = 'pwaConfig';
 
 export interface BrandTheme {
   primary: string;
@@ -14,6 +15,10 @@ export interface BrandTheme {
   surface: string;
   accent: string;
   defaultMode: 'light' | 'dark' | 'system';
+  borderRadius: 'sharp' | 'standard' | 'soft';
+  cardStyle: 'hairline' | 'elevated' | 'flat';
+  sectionDensity: 'compact' | 'standard' | 'spacious';
+  headerSticky: boolean;
 }
 
 export interface SeoMarketing {
@@ -33,6 +38,31 @@ export interface SeoMarketing {
   schemaDescription: string;
 }
 
+export interface PwaConfig {
+  appName: string;
+  shortName: string;
+  description: string;
+  startUrl: string;
+  displayMode: 'standalone' | 'minimal-ui' | 'fullscreen' | 'browser';
+  orientation: 'any' | 'portrait' | 'landscape';
+  themeColor: string;
+  backgroundColor: string;
+  icon192Url: string;
+  icon512Url: string;
+  maskableIconUrl: string;
+  appleIconUrl: string;
+  showInstallButton: boolean;
+  showMobileStickyBar: boolean;
+  showWhatsAppButton: boolean;
+  showSupportChat: boolean;
+  shortcut1Name: string;
+  shortcut1Url: string;
+  shortcut2Name: string;
+  shortcut2Url: string;
+  shortcut3Name: string;
+  shortcut3Url: string;
+}
+
 export const DEFAULT_BRAND_THEME: BrandTheme = {
   primary: '#6D1A2D',
   primaryHover: '#551624',
@@ -44,6 +74,10 @@ export const DEFAULT_BRAND_THEME: BrandTheme = {
   surface: '#FFFFFF',
   accent: '#6B21A8',
   defaultMode: 'light',
+  borderRadius: 'standard',
+  cardStyle: 'hairline',
+  sectionDensity: 'standard',
+  headerSticky: true,
 };
 
 export const DEFAULT_SEO_MARKETING: SeoMarketing = {
@@ -67,6 +101,32 @@ export const DEFAULT_SEO_MARKETING: SeoMarketing = {
     'Auto Pac — established 1990 — is the premier importer, manufacturer, and supplier of world-class food processing and packaging machinery in Bangladesh, serving 300+ clients across 22+ machine categories.',
 };
 
+export const DEFAULT_PWA_CONFIG: PwaConfig = {
+  appName: 'Auto Pac Machinery',
+  shortName: 'Auto Pac',
+  description:
+    'Find food processing and packaging machinery, preview the official 122-page catalog, and request a quote.',
+  startUrl: '/?source=pwa',
+  displayMode: 'standalone',
+  orientation: 'any',
+  themeColor: '#6D1A2D',
+  backgroundColor: '#F7F4EF',
+  icon192Url: '/icons/icon-192.png',
+  icon512Url: '/icons/icon-512.png',
+  maskableIconUrl: '/icons/icon-512-maskable.png',
+  appleIconUrl: '/icons/apple-touch-icon.png',
+  showInstallButton: true,
+  showMobileStickyBar: true,
+  showWhatsAppButton: true,
+  showSupportChat: true,
+  shortcut1Name: 'Browse machinery',
+  shortcut1Url: '/products?source=pwa',
+  shortcut2Name: 'Official catalog',
+  shortcut2Url: '/brochure?source=pwa',
+  shortcut3Name: 'Request a quote',
+  shortcut3Url: '/contact?source=pwa',
+};
+
 function isHex(v: unknown): v is string {
   return typeof v === 'string' && /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v.trim());
 }
@@ -88,6 +148,19 @@ export function mergeBrandTheme(partial?: Partial<BrandTheme> | null): BrandThem
       partial.defaultMode === 'dark' || partial.defaultMode === 'system' || partial.defaultMode === 'light'
         ? partial.defaultMode
         : d.defaultMode,
+    borderRadius:
+      partial.borderRadius === 'sharp' || partial.borderRadius === 'soft' || partial.borderRadius === 'standard'
+        ? partial.borderRadius
+        : d.borderRadius,
+    cardStyle:
+      partial.cardStyle === 'elevated' || partial.cardStyle === 'flat' || partial.cardStyle === 'hairline'
+        ? partial.cardStyle
+        : d.cardStyle,
+    sectionDensity:
+      partial.sectionDensity === 'compact' || partial.sectionDensity === 'spacious' || partial.sectionDensity === 'standard'
+        ? partial.sectionDensity
+        : d.sectionDensity,
+    headerSticky: partial.headerSticky !== false,
   };
 }
 
@@ -109,6 +182,46 @@ export function mergeSeoMarketing(partial?: Partial<SeoMarketing> | null): SeoMa
     googleSiteVerification: (partial.googleSiteVerification || '').trim(),
     robotsIndex: partial.robotsIndex !== false,
     schemaDescription: partial.schemaDescription?.trim() || d.schemaDescription,
+  };
+}
+
+export function mergePwaConfig(partial?: Partial<PwaConfig> | null): PwaConfig {
+  const d = DEFAULT_PWA_CONFIG;
+  if (!partial) return { ...d };
+  return {
+    appName: partial.appName?.trim() || d.appName,
+    shortName: partial.shortName?.trim() || d.shortName,
+    description: partial.description?.trim() || d.description,
+    startUrl: partial.startUrl?.trim() || d.startUrl,
+    displayMode:
+      partial.displayMode === 'minimal-ui' ||
+      partial.displayMode === 'fullscreen' ||
+      partial.displayMode === 'browser' ||
+      partial.displayMode === 'standalone'
+        ? partial.displayMode
+        : d.displayMode,
+    orientation:
+      partial.orientation === 'portrait' ||
+      partial.orientation === 'landscape' ||
+      partial.orientation === 'any'
+        ? partial.orientation
+        : d.orientation,
+    themeColor: isHex(partial.themeColor) ? partial.themeColor : d.themeColor,
+    backgroundColor: isHex(partial.backgroundColor) ? partial.backgroundColor : d.backgroundColor,
+    icon192Url: partial.icon192Url?.trim() || d.icon192Url,
+    icon512Url: partial.icon512Url?.trim() || d.icon512Url,
+    maskableIconUrl: partial.maskableIconUrl?.trim() || d.maskableIconUrl,
+    appleIconUrl: partial.appleIconUrl?.trim() || d.appleIconUrl,
+    showInstallButton: partial.showInstallButton !== false,
+    showMobileStickyBar: partial.showMobileStickyBar !== false,
+    showWhatsAppButton: partial.showWhatsAppButton !== false,
+    showSupportChat: partial.showSupportChat !== false,
+    shortcut1Name: partial.shortcut1Name?.trim() || d.shortcut1Name,
+    shortcut1Url: partial.shortcut1Url?.trim() || d.shortcut1Url,
+    shortcut2Name: partial.shortcut2Name?.trim() || d.shortcut2Name,
+    shortcut2Url: partial.shortcut2Url?.trim() || d.shortcut2Url,
+    shortcut3Name: partial.shortcut3Name?.trim() || d.shortcut3Name,
+    shortcut3Url: partial.shortcut3Url?.trim() || d.shortcut3Url,
   };
 }
 
@@ -140,7 +253,7 @@ export function getBrandTheme() {
 }
 
 export function saveBrandTheme(theme: BrandTheme) {
-  return writeSetting(BRAND_THEME_KEY, mergeBrandTheme(theme), 'Public brand colors and appearance');
+  return writeSetting(BRAND_THEME_KEY, mergeBrandTheme(theme), 'Public brand colors, design tokens, and layout');
 }
 
 export function getSeoMarketing() {
@@ -149,6 +262,14 @@ export function getSeoMarketing() {
 
 export function saveSeoMarketing(seo: SeoMarketing) {
   return writeSetting(SEO_MARKETING_KEY, mergeSeoMarketing(seo), 'SEO, Open Graph, and marketing pixels');
+}
+
+export function getPwaConfig() {
+  return readSetting<PwaConfig>(PWA_CONFIG_KEY, mergePwaConfig);
+}
+
+export function savePwaConfig(pwa: PwaConfig) {
+  return writeSetting(PWA_CONFIG_KEY, mergePwaConfig(pwa), 'Dynamic PWA manifest, app icons, shortcuts, and mobile UI toggles');
 }
 
 /** Space-separated R G B for Tailwind opacity modifiers (`bg-brand-maroon/10`). */
@@ -168,6 +289,7 @@ export function hexToRgbChannels(hex: string): string {
 
 export function brandThemeToCssVars(theme: BrandTheme): Record<string, string> {
   const t = mergeBrandTheme(theme);
+  const radiusMap = { sharp: '2px', standard: '6px', soft: '12px' };
   return {
     '--brand-maroon': t.primary,
     '--brand-maroon-rgb': hexToRgbChannels(t.primary),
@@ -184,5 +306,6 @@ export function brandThemeToCssVars(theme: BrandTheme): Record<string, string> {
     '--foreground': t.text,
     '--surface': t.surface,
     '--text-muted': t.textMuted,
+    '--radius-ui': radiusMap[t.borderRadius],
   };
 }

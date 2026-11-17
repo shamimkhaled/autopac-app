@@ -1,18 +1,16 @@
 export default function GalleryLoading() {
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 animate-pulse">
-      <div className="h-56 sm:h-72 bg-gray-900 dark:bg-slate-900" />
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Filter bar skeleton */}
-        <div className="flex gap-3 mb-10 overflow-x-auto pb-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-10 w-28 bg-gray-100 dark:bg-slate-800 rounded-full flex-shrink-0" />
+    <div className="page-shell">
+      <div className="h-44 sm:h-52 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800" />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex gap-2 mb-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-10 w-36 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md" />
           ))}
         </div>
-        {/* Grid skeleton */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-gray-100 dark:bg-slate-800 rounded-3xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="surface-card aspect-[4/3] bg-stone-100 dark:bg-stone-800" />
           ))}
         </div>
       </div>

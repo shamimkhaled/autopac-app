@@ -1,9 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, Save, LayoutTemplate } from 'lucide-react';
+import { Loader2, Save, LayoutTemplate, Eye, EyeOff } from 'lucide-react';
 import MediaPicker from '@/components/Admin/MediaPicker';
-import { DEFAULT_WEBSITE_CONTENT, type WebsiteContent } from '@/lib/siteContent';
+import {
+  DEFAULT_LANDING_SECTIONS,
+  DEFAULT_WEBSITE_CONTENT,
+  type LandingSectionVisibility,
+  type WebsiteContent,
+} from '@/lib/siteContent';
+
+const SECTION_TOGGLES: { key: keyof LandingSectionVisibility; label: string; hint: string }[] = [
+  { key: 'showHeroStats', label: 'Hero 4-column track bar', hint: 'Stats bar right below the hero showcase' },
+  { key: 'showFindBar', label: 'Find a machine bar', hint: 'Quick search bar by model or pack type' },
+  { key: 'showProductLines', label: '16 Product lines explorer', hint: 'Interactive 16-line catalog explorer' },
+  { key: 'showFeaturedMachines', label: 'Featured machines', hint: 'Highlighted machinery grid' },
+  { key: 'showVideoShowcase', label: 'Video showcase', hint: 'YouTube factory demonstration reels' },
+  { key: 'showCatalogBand', label: 'Official 122-page catalog band', hint: 'Digital catalog & flipbook banner' },
+  { key: 'showStory', label: 'Since 1990 story block', hint: 'Company background & factory highlight' },
+  { key: 'showPartners', label: 'Client partners strip', hint: 'Trusted Bangladeshi factory logos' },
+  { key: 'showQuoteBand', label: 'Request a quote band', hint: 'Bottom conversion & direct contact CTA' },
+  { key: 'showIndustries', label: 'Sectors served (Industries)', hint: 'Hidden by default on landing page' },
+  { key: 'showCertifications', label: 'ISO / CE / BSTI certifications', hint: 'Hidden by default on landing (kept on About page)' },
+  { key: 'showLegacyStats', label: 'Track record since 1990 stats', hint: 'Hidden by default on landing page' },
+];
 
 function Field({
   label,
@@ -63,12 +83,25 @@ export default function AdminWebsitePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [picker, setPicker] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/site-content')
       .then((r) => r.json())
       .then((d) => {
-        if (d && !d.error) setContent({ ...DEFAULT_WEBSITE_CONTENT, ...d, hero: { ...DEFAULT_WEBSITE_CONTENT.hero, ...d.hero }, find: { ...DEFAULT_WEBSITE_CONTENT.find, ...d.find }, lines: { ...DEFAULT_WEBSITE_CONTENT.lines, ...d.lines }, featured: { ...DEFAULT_WEBSITE_CONTENT.featured, ...d.featured }, story: { ...DEFAULT_WEBSITE_CONTENT.story, ...d.story }, catalogBand: { ...DEFAULT_WEBSITE_CONTENT.catalogBand, ...d.catalogBand }, footer: { ...DEFAULT_WEBSITE_CONTENT.footer, ...d.footer } });
+        if (d && !d.error)
+          setContent({
+            ...DEFAULT_WEBSITE_CONTENT,
+            ...d,
+            hero: { ...DEFAULT_WEBSITE_CONTENT.hero, ...d.hero },
+            find: { ...DEFAULT_WEBSITE_CONTENT.find, ...d.find },
+            lines: { ...DEFAULT_WEBSITE_CONTENT.lines, ...d.lines },
+            featured: { ...DEFAULT_WEBSITE_CONTENT.featured, ...d.featured },
+            story: { ...DEFAULT_WEBSITE_CONTENT.story, ...d.story },
+            catalogBand: { ...DEFAULT_WEBSITE_CONTENT.catalogBand, ...d.catalogBand },
+            footer: { ...DEFAULT_WEBSITE_CONTENT.footer, ...d.footer },
+            sections: { ...DEFAULT_LANDING_SECTIONS, ...(d.sections || {}) },
+          });
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -76,16 +109,17 @@ export default function AdminWebsitePage() {
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/site-content', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(content),
       });
-      if (res.ok) alert('Website content saved. Refresh the public site to see changes.');
-      else alert('Could not save website content.');
+      if (res.ok) setStatus({ type: 'ok', text: 'Website content saved. Refresh the public site to see changes.' });
+      else setStatus({ type: 'err', text: 'Could not save website content.' });
     } catch {
-      alert('Could not save website content.');
+      setStatus({ type: 'err', text: 'Could not save website content.' });
     }
     setSaving(false);
   };
@@ -118,6 +152,85 @@ export default function AdminWebsitePage() {
           {saving ? 'Saving…' : 'Save website'}
         </button>
       </div>
+
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.text}
+        </div>
+      )}
+
+      <section className={section}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-stone-900">
+              Landing page sections (Show / Hide)
+            </h2>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Control which sections appear on the public home page without deleting any data.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              setContent({ ...content, sections: { ...DEFAULT_LANDING_SECTIONS } })
+            }
+            className="text-xs font-semibold text-brand-maroon hover:underline self-start sm:self-center cursor-pointer"
+          >
+            Reset defaults
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {SECTION_TOGGLES.map((item) => {
+            const sectionsState = content.sections || DEFAULT_LANDING_SECTIONS;
+            const active = Boolean(sectionsState[item.key]);
+            return (
+              <button
+                key={item.key}
+                type="button"
+                role="switch"
+                aria-checked={active}
+                onClick={() =>
+                  setContent({
+                    ...content,
+                    sections: {
+                      ...sectionsState,
+                      [item.key]: !active,
+                    },
+                  })
+                }
+                className={`text-left p-3 rounded-md border transition-colors flex items-start justify-between gap-3 cursor-pointer ${
+                  active
+                    ? 'bg-emerald-50/60 border-emerald-200 text-stone-900'
+                    : 'bg-stone-50 border-stone-200 text-stone-500'
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-stone-900 truncate">{item.label}</p>
+                  <p className="text-[11px] text-stone-500 mt-0.5 line-clamp-2">{item.hint}</p>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider shrink-0 ${
+                    active
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-stone-200 text-stone-600'
+                  }`}
+                >
+                  {active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {active ? 'Shown' : 'Hidden'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       <section className={section}>
         <h2 className="font-display text-lg font-semibold text-stone-900">Hero</h2>

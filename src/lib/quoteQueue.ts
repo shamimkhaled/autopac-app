@@ -1,10 +1,21 @@
+export type QuoteAttachmentItem = {
+  name: string;
+  url: string;
+  size?: number;
+  mimeType?: string;
+};
+
 export type QueuedQuote = {
   name: string;
   phone: string;
   email: string;
   companyName?: string;
+  factoryLocation?: string;
+  scale?: string;
+  capacityTarget?: string;
   productInterest: string;
   message: string;
+  attachments?: QuoteAttachmentItem[];
   queuedAt: number;
 };
 
@@ -19,7 +30,6 @@ export function queueQuote(payload: Omit<QueuedQuote, 'queuedAt'>) {
     /* ignore */
   }
 
-  // Ask the service worker to flush when connectivity returns (Chrome/Android)
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.ready
       .then((reg) => {

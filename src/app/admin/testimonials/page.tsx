@@ -35,6 +35,7 @@ export default function AdminTestimonialsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pickerId, setPickerId] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/testimonials')
@@ -50,6 +51,7 @@ export default function AdminTestimonialsPage() {
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/testimonials', {
         method: 'PUT',
@@ -59,12 +61,12 @@ export default function AdminTestimonialsPage() {
       if (res.ok) {
         const refreshed = await fetch('/api/admin/testimonials').then((r) => r.json());
         if (Array.isArray(refreshed)) setItems(refreshed);
-        alert('Testimonials saved. Active ones appear on the About page.');
+        setStatus({ type: 'ok', text: 'Testimonials saved. Active ones appear on the About page.' });
       } else {
-        alert('Could not save testimonials.');
+        setStatus({ type: 'err', text: 'Could not save testimonials.' });
       }
     } catch {
-      alert('Could not save testimonials.');
+      setStatus({ type: 'err', text: 'Could not save testimonials.' });
     }
     setSaving(false);
   };
@@ -95,6 +97,19 @@ export default function AdminTestimonialsPage() {
         </button>
       </div>
 
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.text}
+        </div>
+      )}
+
       <div className="space-y-4">
         {items.map((t, i) => (
           <div key={t.id} className="surface-card p-5 space-y-4">
@@ -115,9 +130,8 @@ export default function AdminTestimonialsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('Remove this testimonial?')) {
-                      setItems(items.filter((x) => x.id !== t.id));
-                    }
+                    setItems(items.filter((x) => x.id !== t.id));
+                    setStatus({ type: 'ok', text: 'Testimonial removed from draft. Click Save testimonials to commit.' });
                   }}
                   className="p-2 text-stone-400 hover:text-red-600 cursor-pointer"
                   aria-label="Delete"

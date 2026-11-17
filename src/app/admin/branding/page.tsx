@@ -46,6 +46,7 @@ export default function AdminBrandingPage() {
   const [theme, setTheme] = useState<BrandTheme>(DEFAULT_BRAND_THEME);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/appearance')
@@ -59,16 +60,17 @@ export default function AdminBrandingPage() {
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/appearance', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ theme }),
       });
-      if (res.ok) alert('Brand colors saved. Refresh the public site to see the theme.');
-      else alert('Could not save branding.');
+      if (res.ok) setStatus({ type: 'ok', text: 'Brand colors saved. Refresh the public site to see the theme.' });
+      else setStatus({ type: 'err', text: 'Could not save branding.' });
     } catch {
-      alert('Could not save branding.');
+      setStatus({ type: 'err', text: 'Could not save branding.' });
     }
     setSaving(false);
   };
@@ -108,6 +110,19 @@ export default function AdminBrandingPage() {
           </button>
         </div>
       </div>
+
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.text}
+        </div>
+      )}
 
       <div className="surface-card p-5 space-y-5">
         <h2 className="font-display text-lg font-semibold text-stone-900">Colors</h2>
@@ -185,36 +200,150 @@ export default function AdminBrandingPage() {
         </div>
       </div>
 
-      <div className="surface-card p-5">
-        <h2 className="font-display text-lg font-semibold text-stone-900 mb-4">Live preview</h2>
-        <div
-          className="rounded-md p-6 border border-stone-200"
-          style={{ background: theme.paper, color: theme.text }}
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.primary }}>
-            Machinery
+      <div className="surface-card p-5 space-y-5">
+        <div>
+          <h2 className="font-display text-lg font-semibold text-stone-900">
+            Design & layout tokens
+          </h2>
+          <p className="text-xs text-stone-500 mt-0.5">
+            Customize corner roundness, card borders/elevation, vertical spacing, and sticky navigation across the entire public site and PWA.
           </p>
-          <h3 className="font-display text-2xl font-semibold mt-2" style={{ color: theme.text }}>
-            Processing machines for your factory
-          </h3>
-          <p className="mt-2 text-sm" style={{ color: theme.textMuted }}>
-            Search by name or what you pack — Rice, Juice, Soap.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span
-              className="inline-flex items-center min-h-[44px] px-5 text-sm font-semibold rounded-md"
-              style={{ background: theme.primary, color: theme.buttonText }}
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+              Corner radius
+            </label>
+            <select
+              value={theme.borderRadius || 'standard'}
+              onChange={(e) =>
+                setTheme({
+                  ...theme,
+                  borderRadius: e.target.value as BrandTheme['borderRadius'],
+                })
+              }
+              className="input-field mt-1"
             >
-              Request a quote
-            </span>
-            <span
-              className="inline-flex items-center min-h-[44px] px-5 text-sm font-semibold rounded-md border"
-              style={{ borderColor: theme.primary, color: theme.primary, background: theme.surface }}
+              <option value="sharp">Sharp industrial (2px)</option>
+              <option value="standard">Standard corporate (6px)</option>
+              <option value="soft">Soft modern (12px)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+              Card surface style
+            </label>
+            <select
+              value={theme.cardStyle || 'hairline'}
+              onChange={(e) =>
+                setTheme({
+                  ...theme,
+                  cardStyle: e.target.value as BrandTheme['cardStyle'],
+                })
+              }
+              className="input-field mt-1"
             >
-              Open catalog
-            </span>
+              <option value="hairline">Hairline border (clean crisp)</option>
+              <option value="elevated">Elevated shadow + border</option>
+              <option value="flat">Flat minimal (borderless)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+              Section spacing density
+            </label>
+            <select
+              value={theme.sectionDensity || 'standard'}
+              onChange={(e) =>
+                setTheme({
+                  ...theme,
+                  sectionDensity: e.target.value as BrandTheme['sectionDensity'],
+                })
+              }
+              className="input-field mt-1"
+            >
+              <option value="compact">Compact (dense showcase)</option>
+              <option value="standard">Standard balanced</option>
+              <option value="spacious">Spacious editorial</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+              Top navigation bar
+            </label>
+            <select
+              value={theme.headerSticky === false ? 'static' : 'sticky'}
+              onChange={(e) =>
+                setTheme({
+                  ...theme,
+                  headerSticky: e.target.value === 'sticky',
+                })
+              }
+              className="input-field mt-1"
+            >
+              <option value="sticky">Sticky on scroll (default)</option>
+              <option value="static">Static top bar</option>
+            </select>
           </div>
         </div>
+      </div>
+
+      <div className="surface-card p-5">
+        <h2 className="font-display text-lg font-semibold text-stone-900 mb-4">Live preview</h2>
+        {(() => {
+          const radiusPx =
+            theme.borderRadius === 'sharp' ? '2px' : theme.borderRadius === 'soft' ? '12px' : '6px';
+          const boxShadow =
+            theme.cardStyle === 'elevated'
+              ? '0 10px 30px -18px rgba(28, 25, 23, 0.25)'
+              : 'none';
+          const borderColor = theme.cardStyle === 'flat' ? 'transparent' : '#e7e5e4';
+          return (
+            <div
+              className="p-6 border"
+              style={{
+                background: theme.paper,
+                color: theme.text,
+                borderRadius: radiusPx,
+                borderColor,
+                boxShadow,
+              }}
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: theme.primary }}>
+                Machinery
+              </p>
+              <h3 className="font-display text-2xl font-semibold mt-2" style={{ color: theme.text }}>
+                Processing machines for your factory
+              </h3>
+              <p className="mt-2 text-sm" style={{ color: theme.textMuted }}>
+                Search by name or what you pack — Rice, Juice, Soap.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span
+                  className="inline-flex items-center min-h-[44px] px-5 text-sm font-semibold"
+                  style={{ background: theme.primary, color: theme.buttonText, borderRadius: radiusPx }}
+                >
+                  Request a quote
+                </span>
+                <span
+                  className="inline-flex items-center min-h-[44px] px-5 text-sm font-semibold border"
+                  style={{
+                    borderColor: theme.primary,
+                    color: theme.primary,
+                    background: theme.surface,
+                    borderRadius: radiusPx,
+                  }}
+                >
+                  Open catalog
+                </span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

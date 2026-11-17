@@ -32,6 +32,8 @@ export default function AdminBlogPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [picker, setPicker] = useState(false);
 
   const active = posts.find((p) => p.id === activeId) || null;
@@ -60,6 +62,7 @@ export default function AdminBlogPage() {
   const save = async () => {
     if (!active) return;
     setSaving(true);
+    setStatus(null);
     try {
       const isNew = active.id.startsWith('new-');
       const url = isNew ? '/api/admin/blog' : `/api/admin/blog/${active.slug}`;
@@ -69,148 +72,215 @@ export default function AdminBlogPage() {
         body: JSON.stringify(active),
       });
       if (res.ok) {
+        setStatus({ type: 'ok', text: 'Article saved.' });
         setLoading(true);
         load();
-      } else alert('Could not save article.');
+      } else {
+        setStatus({ type: 'err', text: 'Could not save article. Title (EN) is required.' });
+      }
     } catch {
-      alert('Could not save article.');
+      setStatus({ type: 'err', text: 'Network error while saving article.' });
     }
     setSaving(false);
   };
 
   const remove = async () => {
-    if (!active || !confirm('Delete this article?')) return;
+    if (!active) return;
     if (active.id.startsWith('new-')) {
-      setPosts(posts.filter((p) => p.id !== active.id));
-      setActiveId(posts.find((p) => p.id !== active.id)?.id || null);
+      const remaining = posts.filter((p) => p.id !== active.id);
+      setPosts(remaining);
+      setActiveId(remaining[0]?.id || null);
+      setConfirmDelete(false);
       return;
     }
     const res = await fetch(`/api/admin/blog/${active.slug}`, { method: 'DELETE' });
     if (res.ok) {
+      setConfirmDelete(false);
+      setStatus({ type: 'ok', text: 'Article deleted.' });
       setLoading(true);
       load();
+    } else {
+      setStatus({ type: 'err', text: 'Could not delete article.' });
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading articles…</p>
       </div>
     );
   }
 
   return (
-    <div className="grid lg:grid-cols-[16rem_1fr] gap-6">
-      <aside className="bg-white rounded-3xl border border-gray-100 p-4 h-fit">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-black uppercase tracking-widest text-gray-400">Articles</h2>
-          <button
-            type="button"
-            onClick={() => {
-              const next = empty();
-              setPosts([next, ...posts]);
-              setActiveId(next.id);
-            }}
-            className="p-2 rounded-xl bg-industrial-dark text-white"
-            aria-label="New article"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-        <ul className="space-y-1">
-          {posts.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                onClick={() => setActiveId(p.id)}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm ${
-                  p.id === activeId ? 'bg-action-orange text-white' : 'hover:bg-gray-50'
-                }`}
-              >
-                <span className="block font-bold truncate">{p.titleEn || 'Untitled'}</span>
-                <span className={`text-[10px] uppercase ${p.id === activeId ? 'text-white/70' : 'text-gray-400'}`}>
-                  {p.published ? 'Published' : 'Draft'}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      {active ? (
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-black text-industrial-dark uppercase tracking-tight">
-              {active.id.startsWith('new-') ? 'New article' : 'Edit article'}
-            </h1>
-            <div className="flex gap-2">
-              <button type="button" onClick={remove} className="px-4 py-2 text-red-500 font-bold rounded-xl hover:bg-red-50">
-                <Trash2 className="w-4 h-4" />
-              </button>
-              <button type="button" onClick={save} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-action-orange text-white font-bold rounded-2xl">
-                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                Save
-              </button>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <input
-              value={active.titleEn}
-              onChange={(e) => updateActive({ titleEn: e.target.value })}
-              placeholder="Title (EN)"
-              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-bold"
-            />
-            <input
-              value={active.titleBn}
-              onChange={(e) => updateActive({ titleBn: e.target.value })}
-              placeholder="শিরোনাম (বাংলা)"
-              className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-bold"
-            />
-          </div>
-          <textarea
-            value={active.contentEn}
-            onChange={(e) => updateActive({ contentEn: e.target.value })}
-            placeholder="Article body (EN)"
-            className="w-full min-h-[160px] px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl"
-          />
-          <textarea
-            value={active.contentBn}
-            onChange={(e) => updateActive({ contentBn: e.target.value })}
-            placeholder="লেখা (বাংলা)"
-            className="w-full min-h-[160px] px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl"
-          />
-
-          <div className="flex flex-wrap items-center gap-4">
-            <button type="button" onClick={() => setPicker(true)} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl font-bold">
-              <ImageIcon className="w-4 h-4" />
-              {active.imageUrl ? 'Change image' : 'Pick image'}
-            </button>
-            {active.imageUrl && (
-              <div className="relative w-24 h-16 rounded-lg overflow-hidden border border-gray-200">
-                <Image src={active.imageUrl} alt="" fill className="object-cover" unoptimized />
-              </div>
-            )}
-            <label className="flex items-center gap-2 cursor-pointer font-bold text-sm">
-              <span className={`w-5 h-5 rounded border flex items-center justify-center ${active.published ? 'bg-action-orange border-action-orange' : 'border-gray-300'}`}>
-                {active.published && <Check className="w-3 h-3 text-white" />}
-              </span>
-              <input
-                type="checkbox"
-                className="hidden"
-                checked={active.published}
-                onChange={(e) => updateActive({ published: e.target.checked })}
-              />
-              Published on /news
-            </label>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-16 text-center text-gray-400">
-          Create an Auto Pac update. It appears at the top of the News page.
+    <div className="space-y-4">
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm flex items-center gap-2 ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.type === 'ok' && <Check className="w-4 h-4" />}
+          {status.text}
         </div>
       )}
+
+      <div className="grid lg:grid-cols-[16rem_1fr] gap-6">
+        <aside className="surface-card p-4 h-fit">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-500">Articles</h2>
+            <button
+              type="button"
+              onClick={() => {
+                const next = empty();
+                setPosts([next, ...posts]);
+                setActiveId(next.id);
+                setConfirmDelete(false);
+              }}
+              className="p-1.5 rounded-md bg-brand-maroon text-white hover:opacity-90"
+              aria-label="New article"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          <ul className="space-y-1">
+            {posts.map((p) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveId(p.id);
+                    setConfirmDelete(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                    p.id === activeId ? 'bg-brand-maroon text-white' : 'hover:bg-brand-paper text-stone-700'
+                  }`}
+                >
+                  <span className="block font-medium truncate">{p.titleEn || 'Untitled'}</span>
+                  <span className={`text-[11px] ${p.id === activeId ? 'text-white/75' : 'text-stone-400'}`}>
+                    {p.published ? 'Published' : 'Draft'}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        {active ? (
+          <div className="surface-card p-5 sm:p-6 space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-4">
+              <h1 className="font-display text-2xl font-semibold text-stone-900 tracking-tight">
+                {active.id.startsWith('new-') ? 'New article' : 'Edit article'}
+              </h1>
+              <div className="flex items-center gap-2">
+                {confirmDelete ? (
+                  <div className="inline-flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={remove}
+                      className="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-md"
+                    >
+                      Confirm delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(false)}
+                      className="btn-secondary text-xs min-h-[36px] px-3 py-1"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="p-2 text-stone-400 hover:text-red-600 rounded-md hover:bg-red-50"
+                    aria-label="Delete article"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                <button type="button" onClick={save} disabled={saving} className="btn-primary">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="field-label">Title (English) *</label>
+                <input
+                  value={active.titleEn}
+                  onChange={(e) => updateActive({ titleEn: e.target.value })}
+                  placeholder="Headline in English"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="field-label">Title (Bengali)</label>
+                <input
+                  value={active.titleBn}
+                  onChange={(e) => updateActive({ titleBn: e.target.value })}
+                  placeholder="শিরোনাম (বাংলা)"
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="field-label">Article body (English)</label>
+              <textarea
+                rows={6}
+                value={active.contentEn}
+                onChange={(e) => updateActive({ contentEn: e.target.value })}
+                placeholder="Write announcement or dispatch..."
+                className="input-field py-2.5"
+              />
+            </div>
+
+            <div>
+              <label className="field-label">Article body (Bengali)</label>
+              <textarea
+                rows={6}
+                value={active.contentBn}
+                onChange={(e) => updateActive({ contentBn: e.target.value })}
+                placeholder="লেখা (বাংলা)..."
+                className="input-field py-2.5"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-stone-200">
+              <button type="button" onClick={() => setPicker(true)} className="btn-secondary text-sm">
+                <ImageIcon className="w-4 h-4" />
+                {active.imageUrl ? 'Change cover image' : 'Pick cover image'}
+              </button>
+              {active.imageUrl && (
+                <div className="relative w-24 h-16 rounded-md overflow-hidden border border-stone-200">
+                  <Image src={active.imageUrl} alt="" fill className="object-cover" unoptimized />
+                </div>
+              )}
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-stone-700 ml-auto">
+                <input
+                  type="checkbox"
+                  checked={active.published}
+                  onChange={(e) => updateActive({ published: e.target.checked })}
+                  className="w-4 h-4 accent-[#6D1A2D]"
+                />
+                Published on /news
+              </label>
+            </div>
+          </div>
+        ) : (
+          <div className="surface-card border-dashed p-16 text-center text-sm text-stone-500">
+            Create an Auto Pac dispatch to feature announcements at the top of the News page.
+          </div>
+        )}
+      </div>
 
       {picker && (
         <MediaPicker

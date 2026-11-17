@@ -6,6 +6,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useCompany, useOwner, useCategories, useIndustries, useTestimonials } from '@/hooks/useSiteData';
 import PageHero from '@/components/PageHero';
 import QuoteBand from '@/components/QuoteBand';
+import QualityCertifications from '@/components/BusinessProfile/QualityCertifications';
 import {
   Factory, Wrench, Globe, CheckCircle, Star, Package, Eye, Target, Quote,
 } from 'lucide-react';
@@ -364,6 +365,12 @@ export default function AboutPage() {
           </div>
         </section>
       )}
+
+      <section className="section-pad bg-white dark:bg-stone-950 border-t border-stone-200 dark:border-stone-800">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <QualityCertifications />
+        </div>
+      </section>
 
       <QuoteBand />
     </div>

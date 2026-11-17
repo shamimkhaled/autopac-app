@@ -13,8 +13,14 @@ interface Stat {
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  zap: Zap, award: Award, users: Users, shield: Shield,
-  target: Target, star: Star, trending: TrendingUp, package: Package,
+  zap: Zap,
+  award: Award,
+  users: Users,
+  shield: Shield,
+  target: Target,
+  star: Star,
+  trending: TrendingUp,
+  package: Package,
 };
 
 function AnimatedCounter({ target, suffix }: { target: number; suffix: string }) {
@@ -29,8 +35,8 @@ function AnimatedCounter({ target, suffix }: { target: number; suffix: string })
       ([entry]) => {
         if (entry.isIntersecting && !animated.current) {
           animated.current = true;
-          const duration = 1800;
-          const steps = 60;
+          const duration = 1200;
+          const steps = 40;
           const step = target / steps;
           let current = 0;
           const timer = setInterval(() => {
@@ -46,18 +52,26 @@ function AnimatedCounter({ target, suffix }: { target: number; suffix: string })
     return () => observer.disconnect();
   }, [target]);
 
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+  return (
+    <span ref={ref} className="tabular-nums">
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
 }
 
 export default function OurLegacy() {
   const { locale } = useLocale();
+  const isBn = locale === 'bn';
   const [stats, setStats] = useState<Stat[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     fetch('/api/stats')
       .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d)) setStats(d); })
+      .then((d) => {
+        if (Array.isArray(d)) setStats(d);
+      })
       .catch(() => {})
       .finally(() => setLoaded(true));
   }, []);
@@ -69,43 +83,31 @@ export default function OurLegacy() {
   }
 
   return (
-    <section className="py-16 sm:py-24 lg:py-32 bg-industrial-dark relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-action-orange/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-action-orange/5 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] opacity-[0.03]" />
-      </div>
-
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-          <div className="flex items-center justify-center gap-4 mb-5">
-            <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
-            <span className="text-action-orange font-black uppercase tracking-[0.3em] text-[10px] sm:text-xs">
-              {locale === 'bn' ? 'আমাদের অর্জন' : 'Our Achievement'}
-            </span>
-            <div className="w-8 sm:w-12 h-0.5 bg-action-orange rounded-full" aria-hidden="true" />
+    <section className="section-pad bg-stone-950 text-white border-y border-stone-800">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-400 mb-2">
+              {isBn ? 'আমাদের অর্জন' : 'Track record'}
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-white">
+              {isBn ? '১৯৯০ সাল থেকে শিল্প খাতে নির্ভরতার প্রতীক' : 'Industrial reliability since 1990'}
+            </h2>
           </div>
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight leading-tight">
-            {locale === 'bn' ? 'আমাদের' : 'Our'}{' '}
-            <span className="text-action-orange">{locale === 'bn' ? 'উত্তরাধিকার' : 'Legacy'}</span>
-          </h2>
-          <p className="text-white/50 mt-4 font-medium max-w-xl mx-auto text-sm sm:text-base">
-            {locale === 'bn'
-              ? 'বছরের পর বছর ধরে শিল্প খাতে বিশ্বস্ততার সাথে সেবা প্রদান করে আসছি।'
-              : 'Decades of industrial excellence, trusted by businesses across Bangladesh and beyond.'}
+          <p className="text-stone-400 max-w-md text-sm leading-relaxed">
+            {isBn
+              ? 'সারা দেশের ছোট থেকে বৃহৎ কারখানায় অটো প্যাকের মেশিন প্রতিদিন উৎপাদন চালিয়ে যাচ্ছে।'
+              : 'Measured delivery across SME startups and enterprise factories throughout Bangladesh.'}
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {!loaded
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white/5 rounded-3xl p-6 sm:p-8 animate-pulse">
-                  <div className="w-12 h-12 bg-white/10 rounded-2xl mb-4" />
-                  <div className="h-10 bg-white/10 rounded-xl mb-2" />
-                  <div className="h-4 bg-white/5 rounded-full" />
+                <div key={i} className="bg-stone-900 border border-stone-800 rounded-md p-6">
+                  <div className="w-10 h-10 bg-stone-800 rounded-md mb-4" />
+                  <div className="h-9 bg-stone-800 rounded w-1/2 mb-2" />
+                  <div className="h-4 bg-stone-800 rounded w-2/3" />
                 </div>
               ))
             : stats.map((s) => {
@@ -114,29 +116,20 @@ export default function OurLegacy() {
                 return (
                   <div
                     key={s.id}
-                    className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-action-orange/30 rounded-3xl p-6 sm:p-8 text-center transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-action-orange/10"
+                    className="bg-stone-900 border border-stone-800 hover:border-brand-maroon rounded-md p-5 sm:p-6 transition-colors"
                   >
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-action-orange/10 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-5 group-hover:bg-action-orange/20 transition-colors">
-                      <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-action-orange" aria-hidden="true" />
+                    <div className="w-10 h-10 rounded-md bg-brand-maroon/20 border border-brand-maroon/40 flex items-center justify-center mb-4">
+                      <Icon className="w-5 h-5 text-white" aria-hidden="true" />
                     </div>
-                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-none mb-2 tabular-nums">
+                    <div className="font-display text-3xl sm:text-4xl font-semibold text-white tracking-tight">
                       <AnimatedCounter target={num} suffix={suffix} />
                     </div>
-                    <p className="text-white/50 font-bold uppercase tracking-widest text-[9px] sm:text-[10px] leading-tight mt-1">
-                      {locale === 'bn' ? s.labelBn : s.labelEn}
+                    <p className="text-xs font-medium uppercase tracking-wider text-stone-400 mt-1.5">
+                      {isBn ? s.labelBn : s.labelEn}
                     </p>
                   </div>
                 );
               })}
-        </div>
-
-        {/* Bottom quote */}
-        <div className="mt-12 sm:mt-16 text-center">
-          <p className="text-white/30 font-bold italic text-sm sm:text-base max-w-2xl mx-auto border-t border-white/10 pt-8 sm:pt-10">
-            {locale === 'bn'
-              ? '"আমাদের প্রতিটি সংখ্যার পেছনে রয়েছে একটি সন্তুষ্ট কারখানা মালিকের গল্প।"'
-              : '"Behind every number is a factory owner who trusted us to automate their success."'}
-          </p>
         </div>
       </div>
     </section>

@@ -286,7 +286,7 @@ function ProductsContent() {
                   <button
                     type="button"
                     onClick={() => pushParams({ category: null, page: 1 })}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full text-sm"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md text-sm"
                   >
                     {isBn ? currentCategory.nameBn : currentCategory.nameEn}
                     <X className="w-3.5 h-3.5" />
@@ -296,7 +296,7 @@ function ProductsContent() {
                   <button
                     type="button"
                     onClick={() => pushParams({ line: null, page: 1 })}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full text-sm"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-md text-sm"
                   >
                     {isBn ? currentLine.titleBn : currentLine.titleEn}
                     <X className="w-3.5 h-3.5" />

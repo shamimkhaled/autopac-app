@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Settings, Save, MapPin, Phone, Mail, Globe, Clock, Layout, Target, Eye, Image as ImageIcon, Check, Loader2 } from 'lucide-react';
+import {
+  Save,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Layout,
+  Target,
+  Eye,
+  Image as ImageIcon,
+  Check,
+  Loader2,
+} from 'lucide-react';
 import MediaPicker from '@/components/Admin/MediaPicker';
 import Image from 'next/image';
 
@@ -29,6 +41,7 @@ export default function AdminCompanyPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   useEffect(() => {
@@ -36,7 +49,6 @@ export default function AdminCompanyPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d && !d.error) {
-          // Coerce null/undefined DB values to empty strings to avoid controlled input warnings
           const sanitized = Object.fromEntries(
             Object.entries(d).map(([k, v]) => [k, v === null || v === undefined ? '' : v])
           );
@@ -50,244 +62,294 @@ export default function AdminCompanyPage() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setSavedMsg(null);
     try {
       const res = await fetch('/api/admin/company', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      if (res.ok) alert('Company profile updated!');
+      if (res.ok) {
+        setSavedMsg({ type: 'ok', text: 'Company profile updated across header, footer, and contact pages.' });
+      } else {
+        setSavedMsg({ type: 'err', text: 'Failed to update company profile.' });
+      }
     } catch (e) {
       console.error(e);
-      alert('Failed to update company profile.');
+      setSavedMsg({ type: 'err', text: 'Network error while updating company profile.' });
     }
     setSaving(false);
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
-        <p className="text-gray-500 font-medium">Accessing company records...</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading company profile…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-industrial-dark tracking-tight uppercase">Company Identity</h1>
-          <p className="text-gray-500 font-medium">Manage branding, vision, and contact details</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+            Company identity
+          </h2>
+          <p className="text-sm text-stone-500 mt-1">
+            Manage logo, Dhaka HQ contact lines, YouTube channel, social links, vision, and narrative.
+          </p>
         </div>
-        <button 
-          onClick={save} 
-          disabled={saving}
-          className="flex items-center gap-3 px-10 py-4 bg-action-orange text-white font-black rounded-3xl shadow-xl shadow-action-orange/30 hover:bg-orange-600 transition-all active:scale-95"
-        >
-          {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-          {saving ? 'Saving...' : 'Deploy Updates'}
+        <button type="button" onClick={save} disabled={saving} className="btn-primary">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saving ? 'Saving...' : 'Save company profile'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Left Column - Branding & Contact */}
-        <div className="lg:col-span-1 space-y-10">
-          {/* Logo & Branding */}
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
-            <h3 className="text-lg font-black text-industrial-dark flex items-center gap-3 border-b border-gray-100 pb-4">
-              <Layout className="w-5 h-5 text-action-orange" />
+      {savedMsg && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm flex items-center gap-2 ${
+            savedMsg.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {savedMsg.type === 'ok' && <Check className="w-4 h-4" />}
+          {savedMsg.text}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="surface-card p-5 space-y-5">
+            <h3 className="font-display text-lg font-semibold text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-3">
+              <Layout className="w-4 h-4 text-brand-maroon" />
               Branding
             </h3>
-            
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Corporate Logo</label>
-              <div className="relative aspect-video bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden group">
+
+            <div>
+              <label className="field-label">Corporate Logo</label>
+              <div className="relative aspect-video bg-brand-paper/50 rounded-md border border-dashed border-stone-300 flex items-center justify-center overflow-hidden group">
                 {form.logoUrl ? (
                   <>
                     <Image src={form.logoUrl} alt="Logo" fill sizes="100vw" unoptimized className="object-contain p-4" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button 
+                    <div className="absolute inset-0 bg-stone-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
                         onClick={() => setShowMediaPicker(true)}
-                        className="px-6 py-2 bg-white/20 backdrop-blur-md text-white font-bold rounded-xl"
+                        className="px-4 py-1.5 bg-white text-stone-900 text-xs font-semibold rounded-md"
                       >
-                        Update Logo
+                        Update logo
                       </button>
                     </div>
                   </>
                 ) : (
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => setShowMediaPicker(true)}
-                    className="flex flex-col items-center gap-2 text-gray-400 hover:text-action-orange transition-colors"
+                    className="flex flex-col items-center gap-2 text-stone-400 hover:text-brand-maroon transition-colors"
                   >
-                    <ImageIcon className="w-10 h-10" />
-                    <span className="font-bold text-xs">Pick Logo</span>
+                    <ImageIcon className="w-8 h-8" />
+                    <span className="text-xs font-medium">Pick logo</span>
                   </button>
                 )}
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tagline (EN)</label>
-                <input 
-                  value={form.taglineEn} 
-                  onChange={(e) => setForm((f) => ({ ...f, taglineEn: e.target.value }))} 
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium focus:ring-2 focus:ring-action-orange/20 outline-none" 
-                  placeholder="Automated packing solutions..."
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tagline (BN)</label>
-                <input 
-                  value={form.taglineBn} 
-                  onChange={(e) => setForm((f) => ({ ...f, taglineBn: e.target.value }))} 
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium focus:ring-2 focus:ring-action-orange/20 outline-none" 
-                  placeholder="অটোমেটেড প্যাকিং সমাধান..."
-                />
-              </div>
+            <div>
+              <label className="field-label">Tagline (English)</label>
+              <input
+                value={form.taglineEn}
+                onChange={(e) => setForm((f) => ({ ...f, taglineEn: e.target.value }))}
+                className="input-field"
+                placeholder="Automated packing solutions..."
+              />
+            </div>
+            <div>
+              <label className="field-label">Tagline (Bengali)</label>
+              <input
+                value={form.taglineBn}
+                onChange={(e) => setForm((f) => ({ ...f, taglineBn: e.target.value }))}
+                className="input-field"
+                placeholder="অটোমেটেড প্যাকিং সমাধান..."
+              />
             </div>
           </div>
 
-          {/* Contact Details */}
-          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
-            <h3 className="text-lg font-black text-industrial-dark flex items-center gap-3 border-b border-gray-100 pb-4">
-              <Phone className="w-5 h-5 text-action-orange" />
-              Contact
+          <div className="surface-card p-5 space-y-4">
+            <h3 className="font-display text-lg font-semibold text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-3">
+              <Phone className="w-4 h-4 text-brand-maroon" />
+              Contact & Channels
             </h3>
-            <div className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                  <MapPin className="w-3 h-3" /> HQ Address
-                </label>
-                <textarea 
-                  value={form.address} 
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} 
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium min-h-[100px]"
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                    <Phone className="w-3 h-3" /> Phone
-                  </label>
-                  <input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                    <Mail className="w-3 h-3" /> Email
-                  </label>
-                  <input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">WhatsApp (country code, no +)</label>
-                  <input value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="8801818496642" className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Website</label>
-                  <input value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2 ml-1">
-                    <Clock className="w-3 h-3" /> Office hours
-                  </label>
-                  <input value={form.officeHours} onChange={(e) => setForm((f) => ({ ...f, officeHours: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Facebook URL</label>
-                  <input value={form.facebookUrl} onChange={(e) => setForm((f) => ({ ...f, facebookUrl: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">YouTube URL</label>
-                  <input value={form.youtubeUrl} onChange={(e) => setForm((f) => ({ ...f, youtubeUrl: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">LinkedIn URL</label>
-                  <input value={form.linkedinUrl} onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))} className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Google Maps embed URL</label>
-                  <textarea value={form.mapEmbedUrl} onChange={(e) => setForm((f) => ({ ...f, mapEmbedUrl: e.target.value }))} placeholder="https://www.google.com/maps/embed?..." className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium min-h-[80px] text-xs" />
-                </div>
-              </div>
+            <div>
+              <label className="field-label flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" /> HQ Address
+              </label>
+              <textarea
+                rows={3}
+                value={form.address}
+                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                className="input-field py-2.5"
+              />
+            </div>
+            <div>
+              <label className="field-label flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" /> Phone
+              </label>
+              <input
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                className="input-field tabular-nums"
+              />
+            </div>
+            <div>
+              <label className="field-label flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" /> Email
+              </label>
+              <input
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="field-label">WhatsApp (no +)</label>
+              <input
+                value={form.whatsapp}
+                onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))}
+                placeholder="8801818496642"
+                className="input-field tabular-nums"
+              />
+            </div>
+            <div>
+              <label className="field-label">Website</label>
+              <input
+                value={form.website}
+                onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="field-label flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Office hours
+              </label>
+              <input
+                value={form.officeHours}
+                onChange={(e) => setForm((f) => ({ ...f, officeHours: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="field-label">Facebook URL</label>
+              <input
+                value={form.facebookUrl}
+                onChange={(e) => setForm((f) => ({ ...f, facebookUrl: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="field-label">YouTube URL</label>
+              <input
+                value={form.youtubeUrl}
+                onChange={(e) => setForm((f) => ({ ...f, youtubeUrl: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="field-label">LinkedIn URL</label>
+              <input
+                value={form.linkedinUrl}
+                onChange={(e) => setForm((f) => ({ ...f, linkedinUrl: e.target.value }))}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="field-label">Google Maps Embed URL</label>
+              <textarea
+                rows={3}
+                value={form.mapEmbedUrl}
+                onChange={(e) => setForm((f) => ({ ...f, mapEmbedUrl: e.target.value }))}
+                placeholder="https://www.google.com/maps/embed?..."
+                className="input-field py-2.5 font-mono text-xs"
+              />
             </div>
           </div>
         </div>
 
-        {/* Right Column - Mission, Vision, About */}
-        <div className="lg:col-span-2 space-y-10">
-          <div className="bg-white p-10 rounded-3xl border border-gray-100 shadow-sm space-y-10">
-            <h3 className="text-xl font-black text-industrial-dark flex items-center gap-4 border-b border-gray-100 pb-6">
-              <Target className="w-6 h-6 text-action-orange" />
-              Vision & Narrative
+        <div className="lg:col-span-2 space-y-6">
+          <div className="surface-card p-5 sm:p-6 space-y-6">
+            <h3 className="font-display text-lg font-semibold text-stone-900 flex items-center gap-2 border-b border-stone-200 pb-3">
+              <Target className="w-4 h-4 text-brand-maroon" />
+              Vision, Mission & About Story
             </h3>
 
-            {/* Mission & Vision Grid */}
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-4">
-                  <h4 className="flex items-center gap-2 font-black text-blue-700 text-sm uppercase tracking-wider">
-                    <Eye className="w-4 h-4" /> Company Vision
-                  </h4>
-                  <textarea 
-                    value={form.visionEn} 
-                    onChange={(e) => setForm((f) => ({ ...f, visionEn: e.target.value }))} 
-                    placeholder="English version..."
-                    className="w-full bg-white border border-blue-200 rounded-2xl p-4 text-sm font-medium h-32 outline-none"
-                  />
-                  <textarea 
-                    value={form.visionBn} 
-                    onChange={(e) => setForm((f) => ({ ...f, visionBn: e.target.value }))} 
-                    placeholder="Bengali version..."
-                    className="w-full bg-white border border-blue-200 rounded-2xl p-4 text-sm font-medium h-32 outline-none"
-                  />
-                </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-md border border-stone-200 bg-brand-paper/40 space-y-3">
+                <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-maroon">
+                  <Eye className="w-4 h-4" /> Company Vision
+                </h4>
+                <textarea
+                  rows={4}
+                  value={form.visionEn}
+                  onChange={(e) => setForm((f) => ({ ...f, visionEn: e.target.value }))}
+                  placeholder="English version..."
+                  className="input-field py-2 text-sm"
+                />
+                <textarea
+                  rows={4}
+                  value={form.visionBn}
+                  onChange={(e) => setForm((f) => ({ ...f, visionBn: e.target.value }))}
+                  placeholder="Bengali version..."
+                  className="input-field py-2 text-sm"
+                />
               </div>
-              <div className="space-y-6">
-                <div className="p-6 bg-green-50/50 rounded-3xl border border-green-100 space-y-4">
-                  <h4 className="flex items-center gap-2 font-black text-green-700 text-sm uppercase tracking-wider">
-                    <Target className="w-4 h-4" /> Company Mission
-                  </h4>
-                  <textarea 
-                    value={form.missionEn} 
-                    onChange={(e) => setForm((f) => ({ ...f, missionEn: e.target.value }))} 
-                    placeholder="English version..."
-                    className="w-full bg-white border border-green-200 rounded-2xl p-4 text-sm font-medium h-32 outline-none"
-                  />
-                  <textarea 
-                    value={form.missionBn} 
-                    onChange={(e) => setForm((f) => ({ ...f, missionBn: e.target.value }))} 
-                    placeholder="Bengali version..."
-                    className="w-full bg-white border border-green-200 rounded-2xl p-4 text-sm font-medium h-32 outline-none"
-                  />
-                </div>
+
+              <div className="p-4 rounded-md border border-stone-200 bg-brand-paper/40 space-y-3">
+                <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-maroon">
+                  <Target className="w-4 h-4" /> Company Mission
+                </h4>
+                <textarea
+                  rows={4}
+                  value={form.missionEn}
+                  onChange={(e) => setForm((f) => ({ ...f, missionEn: e.target.value }))}
+                  placeholder="English version..."
+                  className="input-field py-2 text-sm"
+                />
+                <textarea
+                  rows={4}
+                  value={form.missionBn}
+                  onChange={(e) => setForm((f) => ({ ...f, missionBn: e.target.value }))}
+                  placeholder="Bengali version..."
+                  className="input-field py-2 text-sm"
+                />
               </div>
             </div>
 
-            {/* Detailed About Us */}
-            <div className="space-y-8 bg-gray-50 p-8 rounded-3xl border border-gray-100">
-              <h4 className="text-sm font-black text-industrial-dark uppercase tracking-widest flex items-center gap-2">
-                <Layout className="w-4 h-4 text-action-orange" /> About Us (Home Page / About Page)
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                About Us Narrative (Home & About Page)
               </h4>
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Narrative (English)</label>
-                  <textarea 
-                    value={form.aboutEn} 
-                    onChange={(e) => setForm((f) => ({ ...f, aboutEn: e.target.value }))} 
-                    className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[200px] outline-none"
-                    placeholder="Describe your company history and expertise..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Narrative (Bengali)</label>
-                  <textarea 
-                    value={form.aboutBn} 
-                    onChange={(e) => setForm((f) => ({ ...f, aboutBn: e.target.value }))} 
-                    className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl font-medium min-h-[200px] outline-none"
-                    placeholder="বাংলায় কোম্পানির বর্ণনা লিখুন..."
-                  />
-                </div>
+              <div>
+                <label className="field-label">Narrative (English)</label>
+                <textarea
+                  rows={6}
+                  value={form.aboutEn}
+                  onChange={(e) => setForm((f) => ({ ...f, aboutEn: e.target.value }))}
+                  className="input-field py-2.5"
+                  placeholder="Describe company history and expertise..."
+                />
+              </div>
+              <div>
+                <label className="field-label">Narrative (Bengali)</label>
+                <textarea
+                  rows={6}
+                  value={form.aboutBn}
+                  onChange={(e) => setForm((f) => ({ ...f, aboutBn: e.target.value }))}
+                  className="input-field py-2.5"
+                  placeholder="বাংলায় কোম্পানির বর্ণনা লিখুন..."
+                />
               </div>
             </div>
           </div>
@@ -295,9 +357,9 @@ export default function AdminCompanyPage() {
       </div>
 
       {showMediaPicker && (
-        <MediaPicker 
+        <MediaPicker
           onSelect={(url) => {
-            setForm(f => ({ ...f, logoUrl: url }));
+            setForm((f) => ({ ...f, logoUrl: url }));
             setShowMediaPicker(false);
           }}
           onClose={() => setShowMediaPicker(false)}

@@ -243,6 +243,7 @@ model QuotationRequest {
   companyName     String?
   productInterest String?  // Specific product or category
   message         String   @db.Text
+  attachments     String?  @db.Text
   status          QuoteStatus @default(PENDING)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

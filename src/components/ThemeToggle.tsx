@@ -13,19 +13,27 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"></div>;
+    return (
+      <div
+        className="w-9 h-9 rounded-md border border-stone-200 dark:border-stone-700 bg-brand-paper dark:bg-stone-900 shrink-0"
+        aria-hidden="true"
+      />
+    );
   }
+
+  const isDark = theme === 'dark';
 
   return (
     <button
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-action-orange"
-      aria-label="Toggle Theme"
+      type="button"
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      className="w-9 h-9 rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 hover:border-brand-maroon text-stone-700 dark:text-stone-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {theme === 'dark' ? (
-        <Sun className="w-5 h-5 text-yellow-500" />
+      {isDark ? (
+        <Sun className="w-4 h-4 text-amber-400" aria-hidden="true" />
       ) : (
-        <Moon className="w-5 h-5 text-gray-700" />
+        <Moon className="w-4 h-4 text-stone-700" aria-hidden="true" />
       )}
     </button>
   );

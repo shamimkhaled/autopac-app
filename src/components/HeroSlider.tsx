@@ -2,12 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useLocale } from '@/context/LocaleContext';
 import { useHeroSlides, useWebsiteContent, useSiteStats } from '@/hooks/useSiteData';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, BookOpen, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 
-export default function HeroSlider() {
+export default function HeroSlider({ showStats = true }: { showStats?: boolean }) {
   const { locale } = useLocale();
   const [slides] = useHeroSlides();
   const [content] = useWebsiteContent();
@@ -23,20 +23,28 @@ export default function HeroSlider() {
       ? slides
       : [
           {
-            id: 'fallback',
+            id: '1',
             imageUrl: '/images/slider1.png',
-            titleEn: '',
-            titleBn: '',
+            titleEn: 'Food & Granule Processing Lines',
+            titleBn: 'খাদ্য ও গ্রানুল প্রক্রিয়াকরণ লাইন',
+          },
+          {
+            id: '2',
+            imageUrl: '/images/slider2.png',
+            titleEn: 'Cosmetics, Unani & Detergent Packing',
+            titleBn: 'কসমেটিক্স, ইউনানী ও ডিটারজেন্ট প্যাকিং',
+          },
+          {
+            id: '3',
+            imageUrl: '/images/slider3.png',
+            titleEn: 'Water Treatment & Filling Plants',
+            titleBn: 'ওয়াটার ট্রিটমেন্ট ও ফিলিং প্ল্যান্ট',
           },
         ];
-  const count = slidesOrFallback.length;
-  const displayStats = stats.slice(0, 4);
 
-  useEffect(() => {
-    if (count <= 1) return;
-    const timer = setInterval(() => setCurrent((c) => (c + 1) % count), 7000);
-    return () => clearInterval(timer);
-  }, [count]);
+  const count = slidesOrFallback.length;
+  const safeIdx = current % count;
+  const displayStats = stats.slice(0, 4);
 
   const goPrev = () => setCurrent((c) => (c - 1 + count) % count);
   const goNext = () => setCurrent((c) => (c + 1) % count);
@@ -59,109 +67,167 @@ export default function HeroSlider() {
 
   return (
     <section
-      className="relative min-h-[480px] h-[min(72vh,640px)] overflow-hidden bg-stone-950"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      aria-roledescription="carousel"
-      aria-label={isBn ? 'মেশিনারি হাইলাইট' : 'Machinery highlights'}
+      className="bg-brand-paper dark:bg-stone-950 border-b border-stone-200 dark:border-stone-800"
+      aria-label={isBn ? 'অটো প্যাক মেশিনারি পরিচিতি' : 'Auto Pac Machinery Hero'}
     >
-      {slidesOrFallback.map((item, i) => (
-        <div
-          key={item.id || i}
-          className={`absolute inset-0 transition-opacity duration-700 ${i === current ? 'opacity-100' : 'opacity-0'}`}
-          aria-hidden={i !== current}
-        >
-          <Image
-            src={item.imageUrl || '/images/slider1.png'}
-            alt={
-              (isBn ? item.titleBn : item.titleEn) ||
-              (isBn ? 'অটো প্যাক মেশিনারি' : 'Auto Pac packaging machinery')
-            }
-            fill
-            className="object-cover object-[70%_center]"
-            priority={i === 0}
-            sizes="100vw"
-          />
-        </div>
-      ))}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-8 sm:pt-10 sm:pb-12 space-y-6 sm:space-y-8">
+        {/* Top Editorial Proposition & Primary Conversion Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-end">
+          <div className="lg:col-span-7">
+            <p className="section-kicker">
+              {isBn ? hero.eyebrowBn : hero.eyebrowEn}
+            </p>
+            <h1 className="mt-2.5 font-display text-[2.2rem] sm:text-[3rem] lg:text-[3.5rem] font-semibold tracking-tight text-stone-900 dark:text-white leading-[1.06] [text-wrap:balance]">
+              {isBn ? hero.titleBn : hero.titleEn}
+            </h1>
+            <p className="mt-3 text-base sm:text-lg text-stone-600 dark:text-stone-300 leading-relaxed max-w-2xl">
+              {isBn ? hero.ledeBn : hero.ledeEn}
+            </p>
+          </div>
 
-      <div className="absolute inset-y-0 left-0 w-full md:w-[68%] bg-gradient-to-r from-stone-950/80 via-stone-950/45 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-stone-950/70 to-transparent" />
-
-      <div className="relative z-10 h-full flex flex-col">
-        <div className="flex-1 flex items-center pb-24 sm:pb-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl border-l-[3px] border-brand-maroon pl-5 sm:pl-7">
-              <p className="text-sm sm:text-base font-medium text-white">
-                {isBn ? hero.eyebrowBn : hero.eyebrowEn}
-              </p>
-              <h1 className="mt-3 font-display text-[1.85rem] sm:text-5xl lg:text-[3.15rem] font-semibold tracking-tight text-white leading-[1.2] [text-shadow:0_2px_18px_rgba(0,0,0,0.55)]">
-                {isBn ? hero.titleBn : hero.titleEn}
-              </h1>
-              <p className="mt-4 text-base sm:text-xl text-white leading-relaxed max-w-xl [text-shadow:0_1px_12px_rgba(0,0,0,0.5)]">
-                {isBn ? hero.ledeBn : hero.ledeEn}
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <a href="#find-machinery" className="btn-primary bg-white text-brand-maroon hover:bg-stone-100">
-                  {isBn ? hero.ctaFindBn : hero.ctaFindEn}
-                </a>
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 border-2 border-white text-white text-sm font-semibold rounded-md hover:bg-white/15 transition-colors"
-                >
-                  {isBn ? hero.ctaQuoteBn : hero.ctaQuoteEn}
-                </Link>
-              </div>
+          <div className="lg:col-span-5 flex flex-col lg:items-end justify-end gap-3.5">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full lg:w-auto lg:justify-end">
+              <Link href="/contact" className="btn-primary whitespace-nowrap shrink-0">
+                {isBn ? hero.ctaQuoteBn : hero.ctaQuoteEn}
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+              <Link href="/brochure" className="btn-secondary whitespace-nowrap shrink-0">
+                <BookOpen className="w-4 h-4" aria-hidden="true" />
+                {isBn ? '১২২-পৃষ্ঠার ক্যাটালগ' : '122-Page Catalog'}
+              </Link>
             </div>
+            <p className="inline-flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-400">
+              <ShieldCheck className="w-4 h-4 text-brand-maroon shrink-0" aria-hidden="true" />
+              <span>
+                {isBn
+                  ? 'এসএস-৩০৪ ফুড-গ্রেড · ঢাকায় ইনস্টলেশন ও স্পেয়ার পার্টস'
+                  : 'SS-304 Food-Grade · Dhaka Commissioning & Spare Parts'}
+              </span>
+            </p>
           </div>
         </div>
 
-        <div className="border-t border-white/15 bg-stone-950/55">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3.5 grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {displayStats.map((s) => (
-              <div key={s.id} className="text-white">
-                <div className="font-display text-xl sm:text-2xl font-semibold tracking-tight">{s.value}</div>
-                <div className="text-sm text-white/90 mt-0.5">{isBn ? s.labelBn : s.labelEn}</div>
+        {/* Pure Unobstructed Image Slider (Zero Text Overlaid on Images) */}
+        <div
+          className="surface-card overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          aria-roledescription="carousel"
+          aria-label={isBn ? 'মেশিনারি ছবি স্লাইডার' : 'Machinery image slideshow'}
+        >
+          {/* Clean Image Viewport — No Scrims, No Text Overlays */}
+          <div className="relative w-full aspect-[16/6] sm:aspect-[16/5] min-h-[160px] sm:min-h-[260px] lg:min-h-[340px] bg-white overflow-hidden">
+            {slidesOrFallback.map((item, i) => (
+              <div
+                key={item.id || i}
+                className={`absolute inset-0 transition-opacity duration-500 ${
+                  i === safeIdx ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                aria-hidden={i !== safeIdx}
+              >
+                <Image
+                  src={item.imageUrl || '/images/slider1.png'}
+                  alt={
+                    (isBn ? item.titleBn : item.titleEn) ||
+                    (isBn ? 'অটো প্যাক মেশিনারি' : 'Auto Pac machinery')
+                  }
+                  fill
+                  className="object-contain p-1 sm:p-2"
+                  priority={i === 0}
+                  sizes="(max-width: 1280px) 100vw, 1280px"
+                />
               </div>
             ))}
           </div>
-        </div>
-      </div>
 
-      {count > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={goPrev}
-            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 items-center justify-center rounded-md border border-white/25 bg-stone-950/40 text-white hover:bg-stone-950/70"
-            aria-label={isBn ? 'আগের স্লাইড' : 'Previous slide'}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 items-center justify-center rounded-md border border-white/25 bg-stone-950/40 text-white hover:bg-stone-950/70"
-            aria-label={isBn ? 'পরের স্লাইড' : 'Next slide'}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-          <div className="hidden sm:flex absolute bottom-[4.75rem] left-0 right-0 z-20 justify-center gap-2">
-            {slidesOrFallback.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setCurrent(i)}
-                aria-label={`${isBn ? 'স্লাইড' : 'Slide'} ${i + 1}`}
-                aria-current={i === current ? 'true' : undefined}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  i === current ? 'w-8 bg-white' : 'w-3 bg-white/40 hover:bg-white/70'
-                }`}
-              />
+          {/* User-Friendly Focus Controls Strip Below the Image */}
+          <div className="bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800 px-3 sm:px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Thumbnail Focus Tabs */}
+            <div
+              role="tablist"
+              aria-label={isBn ? 'স্লাইড নির্বাচন করুন' : 'Select hero slide'}
+              className="flex items-center gap-2 overflow-x-auto scrollbar-hide"
+            >
+              {slidesOrFallback.map((slide, idx) => {
+                const isSelected = idx === safeIdx;
+                const label =
+                  (isBn ? slide.titleBn : slide.titleEn) ||
+                  (isBn ? `স্লাইড ${idx + 1}` : `Showcase ${idx + 1}`);
+                return (
+                  <button
+                    key={slide.id || idx}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => setCurrent(idx)}
+                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border text-left transition-colors cursor-pointer shrink-0 ${
+                      isSelected
+                        ? 'bg-brand-maroon text-white border-brand-maroon'
+                        : 'bg-brand-paper/60 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-brand-maroon hover:text-brand-maroon dark:hover:text-white'
+                    }`}
+                  >
+                    <div className="relative w-12 h-7 rounded-sm overflow-hidden bg-white border border-stone-200 dark:border-stone-700 shrink-0">
+                      <Image
+                        src={slide.imageUrl || '/images/slider1.png'}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="48px"
+                      />
+                    </div>
+                    <span className="text-xs font-semibold whitespace-nowrap max-w-[170px] truncate">
+                      {String(idx + 1).padStart(2, '0')} · {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Step Prev / Counter / Next Controls */}
+            {count > 1 && (
+              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 tabular-nums mr-1">
+                  {String(safeIdx + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={goPrev}
+                    aria-label={isBn ? 'আগের স্লাইড' : 'Previous slide'}
+                    className="w-10 h-10 rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 hover:border-brand-maroon hover:text-brand-maroon flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    aria-label={isBn ? 'পরের স্লাইড' : 'Next slide'}
+                    className="w-10 h-10 rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 hover:border-brand-maroon hover:text-brand-maroon flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Verified 4-Column Track Record Bar */}
+        {showStats && (
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800">
+            {displayStats.map((s) => (
+              <div key={s.id} className="px-5 py-4">
+                <div className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-stone-900 dark:text-white tabular-nums">
+                  {s.value}
+                </div>
+                <div className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-0.5">
+                  {isBn ? s.labelBn : s.labelEn}
+                </div>
+              </div>
             ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
     </section>
   );
 }

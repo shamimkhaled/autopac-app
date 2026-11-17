@@ -20,6 +20,7 @@
     --surface: #ffffff;
     --border: #e7e5e4;
     --text-muted: #57534e;
+    --radius-ui: 6px;
   }
 
   .dark {
@@ -94,10 +95,16 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5
-      bg-brand-maroon text-sm font-semibold rounded-md
+      bg-brand-maroon text-[var(--brand-button-text)] text-sm font-semibold rounded-md
       hover:bg-brand-maroon-hover transition-colors duration-200
       cursor-pointer touch-manipulation;
-    color: var(--brand-button-text);
+  }
+
+  .btn-white {
+    @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5
+      bg-white text-brand-maroon text-sm font-semibold rounded-md
+      hover:bg-stone-100 transition-colors duration-200
+      cursor-pointer touch-manipulation;
   }
 
   .btn-secondary {
@@ -157,9 +164,59 @@
       focus:outline-none focus:ring-2 focus:ring-brand-maroon/25 focus:border-brand-maroon;
   }
 
+  .field-label {
+    @apply block text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400 mb-1.5;
+  }
+
   .brand-rule {
     @apply h-1 w-full bg-brand-maroon;
   }
+
+  .btn-primary,
+  .btn-white,
+  .btn-secondary,
+  .filter-chip,
+  .surface-card,
+  .input-field {
+    border-radius: var(--radius-ui, 6px);
+  }
+}
+
+html[data-card-style='elevated'] .surface-card {
+  box-shadow: 0 10px 30px -18px rgba(28, 25, 23, 0.18), 0 2px 8px -2px rgba(28, 25, 23, 0.06);
+}
+
+html[data-card-style='flat'] .surface-card {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html[data-density='compact'] .section-pad {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  html[data-density='compact'] .section-pad {
+    padding-top: 3.25rem;
+    padding-bottom: 3.25rem;
+  }
+}
+
+html[data-density='spacious'] .section-pad {
+  padding-top: 4.5rem;
+  padding-bottom: 4.5rem;
+}
+
+@media (min-width: 640px) {
+  html[data-density='spacious'] .section-pad {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+html[data-header-sticky='false'] header.public-site-header {
+  position: relative;
 }
 
 @keyframes partners-scroll {

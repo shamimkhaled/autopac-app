@@ -41,6 +41,7 @@ export default function AdminSeoPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [picker, setPicker] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/appearance')
@@ -54,16 +55,17 @@ export default function AdminSeoPage() {
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/appearance', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ seo }),
       });
-      if (res.ok) alert('SEO & marketing settings saved.');
-      else alert('Could not save SEO settings.');
+      if (res.ok) setStatus({ type: 'ok', text: 'SEO & marketing settings saved.' });
+      else setStatus({ type: 'err', text: 'Could not save SEO settings.' });
     } catch {
-      alert('Could not save SEO settings.');
+      setStatus({ type: 'err', text: 'Could not save SEO settings.' });
     }
     setSaving(false);
   };
@@ -95,6 +97,19 @@ export default function AdminSeoPage() {
           Save
         </button>
       </div>
+
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.text}
+        </div>
+      )}
 
       <section className={section}>
         <h2 className="font-display text-lg font-semibold text-stone-900">Search listing</h2>

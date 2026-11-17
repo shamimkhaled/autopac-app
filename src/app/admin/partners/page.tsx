@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Globe, Check, Image as ImageIcon, Loader2, Save } from 'lucide-react';
+import { Plus, Trash2, Globe, Image as ImageIcon, Loader2, Save, Check } from 'lucide-react';
 import MediaPicker from '@/components/Admin/MediaPicker';
 import Image from 'next/image';
 
@@ -17,14 +17,18 @@ export default function AdminPartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showMediaPicker, setShowMediaPicker] = useState<{ active: boolean; partnerId: string | null }>({ active: false, partnerId: null });
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState<{ active: boolean; partnerId: string | null }>({
+    active: false,
+    partnerId: null,
+  });
 
   useEffect(() => {
     fetch('/api/partners')
       .then((r) => r.json())
       .then((data) => {
         const sortedData = Array.isArray(data) ? data : [];
-        setPartners(sortedData.map((p: any, i: number) => ({ ...p, sortOrder: p.sortOrder ?? i })));
+        setPartners(sortedData.map((p: Partner, i: number) => ({ ...p, sortOrder: p.sortOrder ?? i })));
       })
       .catch(() => setPartners([]))
       .finally(() => setLoading(false));
@@ -35,118 +39,150 @@ export default function AdminPartnersPage() {
   };
 
   const addPartner = () => {
-    setPartners([...partners, { 
-      id: `new-${Date.now()}`, 
-      name: '', 
-      logoUrl: '', 
-      linkUrl: '', 
-      sortOrder: partners.length 
-    }]);
+    setPartners([
+      ...partners,
+      {
+        id: `new-${Date.now()}`,
+        name: '',
+        logoUrl: '',
+        linkUrl: '',
+        sortOrder: partners.length,
+      },
+    ]);
   };
 
   const removePartner = (id: string) => {
-    if (!confirm('Remove this partner?')) return;
-    setPartners(partners.filter(p => p.id !== id));
+    setPartners(partners.filter((p) => p.id !== id));
+    setStatus({ type: 'ok', text: 'Partner removed from draft. Click Save partners to apply.' });
   };
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/partners', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(partners),
       });
-      if (res.ok) alert('Partners list updated!');
+      if (res.ok) {
+        setStatus({ type: 'ok', text: 'Partner directory updated.' });
+      } else {
+        setStatus({ type: 'err', text: 'Failed to save partners.' });
+      }
     } catch (e) {
       console.error(e);
-      alert('Failed to save partners.');
+      setStatus({ type: 'err', text: 'Network error saving partners.' });
     }
     setSaving(false);
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
-        <p className="text-gray-500 font-medium uppercase tracking-widest">Loading partners...</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+        <p className="text-sm text-stone-500">Loading partners…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">Trusted Partners</h1>
-          <p className="text-gray-500 font-medium">Manage logos for client and partner display</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+            Trusted partners
+          </h2>
+          <p className="text-sm text-stone-500 mt-1">Manage corporate client logos displayed across the site</p>
         </div>
-        <button 
-          onClick={addPartner} 
-          className="flex items-center gap-2 px-6 py-3 bg-industrial-dark text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
-          Add New Partner
-        </button>
+        <div className="flex gap-2">
+          <button type="button" onClick={addPartner} className="btn-secondary">
+            <Plus className="w-4 h-4" />
+            Add partner
+          </button>
+          <button type="button" onClick={save} disabled={saving || partners.length === 0} className="btn-primary">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? 'Saving...' : 'Save partners'}
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm flex items-center gap-2 ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.type === 'ok' && <Check className="w-4 h-4" />}
+          {status.text}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {partners.map((p, i) => (
-          <div key={p.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6 group hover:shadow-xl transition-all duration-500">
+          <div key={p.id} className="surface-card p-5 space-y-4 group">
             <div className="flex items-center justify-between">
-              <span className="w-8 h-8 bg-gray-50 text-gray-400 font-black rounded-lg flex items-center justify-center text-xs">0{i + 1}</span>
-              <button 
+              <span className="text-xs font-semibold uppercase tracking-wider text-stone-400 tabular-nums">
+                Partner #{i + 1}
+              </span>
+              <button
+                type="button"
                 onClick={() => removePartner(p.id)}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-md"
                 title="Delete Partner"
               >
-                <Trash2 className="w-5 h-5" />
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="relative aspect-[3/2] bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="relative aspect-[3/2] bg-white rounded-md border border-dashed border-stone-300 flex items-center justify-center overflow-hidden">
               {p.logoUrl ? (
                 <>
-                  <Image src={p.logoUrl} alt={p.name} fill sizes="160px" unoptimized className="object-contain p-6" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button 
+                  <Image src={p.logoUrl} alt={p.name} fill sizes="200px" unoptimized className="object-contain p-4" />
+                  <div className="absolute inset-0 bg-stone-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      type="button"
                       onClick={() => setShowMediaPicker({ active: true, partnerId: p.id })}
-                      className="px-6 py-2 bg-white/20 backdrop-blur-md text-white font-bold rounded-xl"
+                      className="px-3.5 py-1.5 bg-white text-stone-900 text-xs font-semibold rounded-md"
                     >
-                      Update Logo
+                      Update logo
                     </button>
                   </div>
                 </>
               ) : (
-                <button 
+                <button
+                  type="button"
                   onClick={() => setShowMediaPicker({ active: true, partnerId: p.id })}
-                  className="flex flex-col items-center gap-2 text-gray-400 hover:text-action-orange transition-colors"
+                  className="flex flex-col items-center gap-1.5 text-stone-400 hover:text-brand-maroon transition-colors"
                 >
-                  <ImageIcon className="w-10 h-10" />
-                  <span className="font-bold text-xs uppercase tracking-widest">Select Logo</span>
+                  <ImageIcon className="w-8 h-8" />
+                  <span className="text-xs font-medium">Select logo</span>
                 </button>
               )}
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Partner Name</label>
-                <input 
-                  value={p.name} 
-                  onChange={(e) => update(p.id, 'name', e.target.value)} 
+            <div className="space-y-3">
+              <div>
+                <label className="field-label">Partner Name</label>
+                <input
+                  value={p.name}
+                  onChange={(e) => update(p.id, 'name', e.target.value)}
                   placeholder="Company Name..."
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-industrial-dark focus:ring-2 focus:ring-action-orange/20 outline-none" 
+                  className="input-field"
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                  <Globe className="w-3 h-3" /> Website Link (Optional)
+              <div>
+                <label className="field-label flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" /> Website URL (Optional)
                 </label>
-                <input 
-                  value={p.linkUrl || ''} 
-                  onChange={(e) => update(p.id, 'linkUrl', e.target.value)} 
+                <input
+                  value={p.linkUrl || ''}
+                  onChange={(e) => update(p.id, 'linkUrl', e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-medium text-sm text-gray-600 focus:ring-2 focus:ring-action-orange/20 outline-none" 
+                  className="input-field text-sm"
                 />
               </div>
             </div>
@@ -155,31 +191,17 @@ export default function AdminPartnersPage() {
       </div>
 
       {partners.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24 gap-6 text-gray-400 bg-white rounded-3xl border-2 border-dashed border-gray-100">
-          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
-            <ImageIcon className="w-10 h-10 opacity-20" />
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-bold opacity-50 uppercase tracking-tight">No partners listed</p>
-            <p className="mt-1 font-medium">Add your first corporate client or partner</p>
-          </div>
-          <button onClick={addPartner} className="px-8 py-3 bg-industrial-dark text-white font-bold rounded-2xl">Create Partner Entry</button>
+        <div className="flex flex-col items-center justify-center py-16 gap-3 surface-card border-dashed">
+          <ImageIcon className="w-10 h-10 text-stone-300" />
+          <p className="text-sm font-medium text-stone-600">No partners listed yet.</p>
+          <button type="button" onClick={addPartner} className="btn-secondary text-xs">
+            Create partner entry
+          </button>
         </div>
       )}
 
-      <div className="flex justify-end pt-4">
-        <button 
-          onClick={save} 
-          disabled={saving || partners.length === 0} 
-          className="flex items-center gap-3 px-10 py-4 bg-action-orange text-white font-black rounded-3xl shadow-xl shadow-action-orange/30 hover:bg-orange-600 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
-        >
-          {saving ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-          {saving ? 'Synchronizing...' : 'Save Partner Directory'}
-        </button>
-      </div>
-
       {showMediaPicker.active && (
-        <MediaPicker 
+        <MediaPicker
           onSelect={(url) => {
             if (showMediaPicker.partnerId) {
               update(showMediaPicker.partnerId, 'logoUrl', url);
@@ -187,7 +209,7 @@ export default function AdminPartnersPage() {
             setShowMediaPicker({ active: false, partnerId: null });
           }}
           onClose={() => setShowMediaPicker({ active: false, partnerId: null })}
-          selectedUrl={partners.find(p => p.id === showMediaPicker.partnerId)?.logoUrl}
+          selectedUrl={partners.find((p) => p.id === showMediaPicker.partnerId)?.logoUrl}
         />
       )}
     </div>

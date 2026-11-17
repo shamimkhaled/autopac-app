@@ -1,13 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Package, Plus, Search, Filter, ExternalLink, MoreVertical, Edit, Trash2, Eye, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import {
+  Package,
+  Plus,
+  Search,
+  ExternalLink,
+  Edit,
+  Trash2,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from 'lucide-react';
+
+interface Category {
+  id: string;
+  nameEn: string;
+}
 
 interface Product {
   id: string;
   slug: string;
+  modelCode?: string;
   nameEn: string;
   nameBn: string;
   categoryId: string;
@@ -17,185 +34,306 @@ interface Product {
   createdAt: string;
 }
 
+const PAGE_SIZE = 15;
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/products');
-      const data = await res.json();
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
-    fetchProducts();
+    Promise.all([
+      fetch('/api/products').then((r) => r.json()),
+      fetch('/api/categories').then((r) => r.json()),
+    ])
+      .then(([pData, cData]) => {
+        setProducts(Array.isArray(pData) ? pData : []);
+        setCategories(Array.isArray(cData) ? cData : []);
+      })
+      .catch((e) => {
+        console.error(e);
+        setNotice({ type: 'err', text: 'Failed to load machinery inventory.' });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const deleteProduct = async (slug: string) => {
-    if (!confirm('Are you sure you want to delete this machine?')) return;
     try {
       const res = await fetch(`/api/admin/products/${slug}`, { method: 'DELETE' });
       if (res.ok) {
-        setProducts(products.filter(p => p.slug !== slug));
+        setProducts((prev) => prev.filter((p) => p.slug !== slug));
+        setConfirmDeleteSlug(null);
+        setNotice({ type: 'ok', text: 'Machine deleted from inventory.' });
+      } else {
+        setNotice({ type: 'err', text: 'Could not delete machine.' });
       }
     } catch (e) {
       console.error(e);
+      setNotice({ type: 'err', text: 'Network error deleting machine.' });
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.nameEn.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.slug.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return products.filter((p) => {
+      if (categoryFilter !== 'all' && p.categoryId !== categoryFilter) return false;
+      if (featuredOnly && !p.featured) return false;
+      if (!q) return true;
+      return (
+        p.nameEn.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q) ||
+        (p.modelCode?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [products, categoryFilter, featuredOnly, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = filteredProducts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-industrial-dark uppercase tracking-tight">Machine Inventory</h1>
-          <p className="text-gray-500 font-medium">Manage your product catalog and technical specs</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+            Machinery inventory
+          </h2>
+          <p className="text-sm text-stone-500 mt-1 tabular-nums">
+            {products.length} machines registered across {categories.length} categories
+          </p>
         </div>
-        <Link 
-          href="/admin/products/new" 
-          className="flex items-center gap-2 px-8 py-4 bg-action-orange text-white font-black rounded-3xl shadow-xl shadow-action-orange/30 hover:bg-orange-600 transition-all active:scale-95"
-        >
-          <Plus className="w-6 h-6" />
-          Add New Machine
+        <Link href="/admin/products/new" className="btn-primary whitespace-nowrap">
+          <Plus className="w-4 h-4" />
+          Add machine
         </Link>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4 items-center mb-8 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search by name or slug..." 
-              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl font-medium text-sm focus:ring-2 focus:ring-action-orange/20 outline-none transition-all"
+      {notice && (
+        <div
+          role="status"
+          className={`flex items-center justify-between gap-3 px-4 py-2.5 rounded-md border text-sm ${
+            notice.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          <span>{notice.text}</span>
+          <button type="button" onClick={() => setNotice(null)} className="p-1" aria-label="Dismiss">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      <div className="surface-card p-4 sm:p-5 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_220px_auto] gap-3 items-center">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input
+              type="search"
+              placeholder="Search machine name, model code, or slug..."
+              className="input-field pl-9 h-10"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <div className="w-px h-8 bg-gray-200 hidden md:block" />
-            <Filter className="w-4 h-4 text-gray-400" />
-            <select className="flex-1 md:flex-none bg-transparent text-sm font-bold text-industrial-dark outline-none cursor-pointer pr-8">
-              <option>All Categories</option>
-              <option>Packing Machines</option>
-              <option>Processing Units</option>
-            </select>
-          </div>
+
+          <select
+            aria-label="Filter by category"
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
+            className="input-field h-10 cursor-pointer"
+          >
+            <option value="all">All categories ({products.length})</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.nameEn}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFeaturedOnly((v) => !v);
+              setPage(1);
+            }}
+            aria-pressed={featuredOnly}
+            className={`px-3.5 h-10 rounded-md text-xs font-medium border whitespace-nowrap transition-colors ${
+              featuredOnly
+                ? 'bg-brand-maroon text-white border-brand-maroon'
+                : 'bg-white text-stone-700 border-stone-200 hover:border-stone-400'
+            }`}
+          >
+            Featured only
+          </button>
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
-            <p className="text-gray-500 font-medium uppercase tracking-widest animate-pulse">Scanning Inventory...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+            <p className="text-sm text-stone-500">Loading machinery catalog…</p>
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-6 text-gray-400 border-2 border-dashed border-gray-100 rounded-3xl">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
-              <Package className="w-10 h-10 opacity-30" />
-            </div>
-            <div className="text-center">
-              <p className="text-xl font-black text-industrial-dark opacity-40 uppercase tracking-tight">Catalog is empty</p>
-              <p className="text-gray-400 mt-1">Start by adding your first industrial machine</p>
-            </div>
-            <Link href="/admin/products/new" className="px-8 py-3 bg-industrial-dark text-white font-bold rounded-2xl">Create Product</Link>
+        ) : pageItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 border border-dashed border-stone-200 rounded-md">
+            <Package className="w-8 h-8 text-stone-300" />
+            <p className="text-sm font-medium text-stone-600">No machines match your current filter.</p>
+            <Link href="/admin/products/new" className="btn-secondary text-xs min-h-[38px]">
+              Add new machine
+            </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Machine Info</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</th>
-                  <th className="text-left py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                  <th className="text-right py-4 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredProducts.map((p) => {
-                  let images = [];
-                  try {
-                    images = Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? JSON.parse(p.images || '[]') : []);
-                  } catch (e) {
-                    console.error(`Error parsing images for product ${p.id}:`, e);
-                  }
-                  const firstImage = images[0] || '';
-                  
-                  return (
-                    <tr key={p.id} className="group hover:bg-gray-50/50 transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-gray-100 rounded-xl overflow-hidden relative border border-gray-100">
-                            {firstImage ? (
-                              <Image src={firstImage} alt={p.nameEn} fill sizes="56px" unoptimized className="object-cover" />
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-stone-200 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                    <th className="py-3 pr-4">Machine</th>
+                    <th className="py-3 px-3">Category</th>
+                    <th className="py-3 px-3">Homepage</th>
+                    <th className="py-3 pl-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {pageItems.map((p) => {
+                    let images: string[] = [];
+                    try {
+                      images = Array.isArray(p.images)
+                        ? p.images
+                        : typeof p.images === 'string'
+                        ? JSON.parse(p.images || '[]')
+                        : [];
+                    } catch {
+                      images = [];
+                    }
+                    const firstImage = images[0] || '';
+
+                    return (
+                      <tr key={p.id} className="hover:bg-brand-paper/40 transition-colors">
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-white rounded-md overflow-hidden relative border border-stone-200 shrink-0">
+                              {firstImage ? (
+                                <Image src={firstImage} alt={p.nameEn} fill sizes="48px" unoptimized className="object-contain p-1" />
+                              ) : (
+                                <Package className="w-5 h-5 text-stone-300 absolute inset-0 m-auto" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <Link
+                                href={`/admin/products/${p.slug}`}
+                                className="font-semibold text-stone-900 hover:text-brand-maroon block truncate max-w-sm"
+                              >
+                                {p.nameEn}
+                              </Link>
+                              <p className="text-xs text-stone-400 font-mono truncate">
+                                {p.modelCode ? `${p.modelCode} · ` : ''}{p.slug}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 text-xs font-medium text-stone-600">
+                          {p.category?.nameEn || 'General'}
+                        </td>
+                        <td className="py-3 px-3">
+                          {p.featured ? (
+                            <span className="text-xs font-semibold text-brand-maroon">Featured</span>
+                          ) : (
+                            <span className="text-xs text-stone-400">Standard</span>
+                          )}
+                        </td>
+                        <td className="py-3 pl-3 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1">
+                            <Link
+                              href={`/products/${p.slug}`}
+                              target="_blank"
+                              className="p-2 text-stone-400 hover:text-stone-900 rounded-md hover:bg-stone-100"
+                              title="View live page"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              href={`/admin/products/${p.slug}`}
+                              className="p-2 text-stone-500 hover:text-brand-maroon rounded-md hover:bg-stone-100"
+                              title="Edit specifications"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                            {confirmDeleteSlug === p.slug ? (
+                              <div className="inline-flex items-center gap-1 ml-1">
+                                <button
+                                  type="button"
+                                  onClick={() => deleteProduct(p.slug)}
+                                  className="px-2 py-1 text-xs font-semibold bg-red-600 text-white rounded-md"
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteSlug(null)}
+                                  className="px-2 py-1 text-xs text-stone-600 border border-stone-200 rounded-md"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             ) : (
-                              <Package className="w-6 h-6 text-gray-300 absolute inset-0 m-auto" />
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteSlug(p.slug)}
+                                className="p-2 text-stone-400 hover:text-red-600 rounded-md hover:bg-red-50"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             )}
                           </div>
-                          <div>
-                            <p className="font-bold text-industrial-dark group-hover:text-action-orange transition-colors">{p.nameEn}</p>
-                            <p className="text-xs text-gray-400 font-mono">{p.slug}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="px-3 py-1 bg-gray-100 text-gray-500 font-bold text-[10px] uppercase rounded-lg border border-gray-200">
-                          {p.category?.nameEn || 'General'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4">
-                        {p.featured ? (
-                          <span className="flex items-center gap-1.5 text-xs font-bold text-action-orange">
-                            <span className="w-2 h-2 bg-action-orange rounded-full animate-pulse" />
-                            Featured
-                          </span>
-                        ) : (
-                          <span className="text-xs font-medium text-gray-400">Standard</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link 
-                            href={`/products/${p.slug}`} 
-                            target="_blank"
-                            className="p-2 text-gray-400 hover:text-industrial-dark hover:bg-white hover:shadow-sm rounded-lg transition-all"
-                            title="View Live"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Link>
-                          <Link 
-                            href={`/admin/products/${p.slug}`} 
-                            className="p-2 text-gray-400 hover:text-action-orange hover:bg-white hover:shadow-sm rounded-lg transition-all"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                          <button 
-                            onClick={() => deleteProduct(p.slug)}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t border-stone-200 text-xs text-stone-500">
+                <span className="tabular-nums">
+                  Showing {pageItems.length} of {filteredProducts.length} · Page {safePage}/{totalPages}
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={safePage === 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="btn-secondary text-xs min-h-[36px] px-3 py-1 disabled:opacity-40"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Prev
+                  </button>
+                  <button
+                    type="button"
+                    disabled={safePage === totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="btn-secondary text-xs min-h-[36px] px-3 py-1 disabled:opacity-40"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

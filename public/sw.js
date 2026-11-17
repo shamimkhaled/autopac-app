@@ -1,15 +1,17 @@
 /* Auto Pac PWA service worker — public site only; admin/auth never cached. */
-const CACHE = 'autopac-v4';
+const CACHE = 'autopac-v10';
 const PRECACHE = [
   '/',
   '/products',
   '/brochure',
+  '/gallery',
+  '/about',
+  '/news',
   '/contact',
   '/offline.html',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',
-  '/manifest.webmanifest',
 ];
 
 self.addEventListener('install', (event) => {
@@ -94,8 +96,12 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (isAdminOrAuth(url)) return;
 
-  // Never cache the service worker or Next build chunks incorrectly via stale SW
   if (url.pathname === '/sw.js' || url.pathname.startsWith('/_next/webpack')) {
+    return;
+  }
+
+  if (url.pathname === '/manifest.webmanifest') {
+    event.respondWith(networkFirst(request));
     return;
   }
 
@@ -125,6 +131,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (
+    url.pathname.startsWith('/machines/') ||
     url.pathname.startsWith('/brochures/') ||
     url.pathname.startsWith('/images/') ||
     url.pathname.startsWith('/uploads/') ||

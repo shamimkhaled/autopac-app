@@ -1,25 +1,38 @@
 import { ShieldCheck } from 'lucide-react';
 
 const certifications = [
-  { name: 'ISO 9001:2015', description: 'Quality Management System' },
-  { name: 'CE Marking', description: 'European Conformity Standard' },
-  { name: 'BSTI Certified', description: 'Bangladesh Standards & Testing Institution' },
+  {
+    name: 'ISO 9001:2015',
+    description: 'Quality Management System compliance for industrial food & chemical machinery.',
+  },
+  {
+    name: 'CE Marking',
+    description: 'European electrical safety & SS-304 hygienic engineering standards.',
+  },
+  {
+    name: 'BSTI Ready Specs',
+    description: 'Engineered for Bangladesh Standards & Testing Institution factory audits.',
+  },
 ];
 
 export default function QualityCertifications() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {certifications.map((cert) => (
         <div
           key={cert.name}
-          className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-800"
+          className="surface-card p-5 flex items-start gap-3.5"
         >
-          <div className="w-10 h-10 rounded-xl bg-action-orange/10 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5 text-action-orange" />
+          <div className="w-10 h-10 rounded-md bg-brand-maroon/10 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-brand-maroon" aria-hidden="true" />
           </div>
           <div>
-            <h4 className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-tight">{cert.name}</h4>
-            <p className="text-gray-500 dark:text-slate-400 text-xs mt-0.5">{cert.description}</p>
+            <h3 className="font-display text-lg font-semibold text-stone-900 dark:text-white tracking-tight">
+              {cert.name}
+            </h3>
+            <p className="text-stone-600 dark:text-stone-400 text-xs mt-1 leading-relaxed">
+              {cert.description}
+            </p>
           </div>
         </div>
       ))}

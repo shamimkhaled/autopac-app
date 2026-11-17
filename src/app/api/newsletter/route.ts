@@ -30,16 +30,18 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { email } = schema.parse(body);
 
-    // Notify admin of new subscriber
-    try {
-      await transporter.sendMail({
-        from: `"AutoPac System" <${process.env.SMTP_FROM || 'system@autopacbd.com'}>`,
-        to: process.env.ADMIN_EMAIL || 'autopacbd@gmail.com',
-        subject: 'New Newsletter Subscriber',
-        html: `<p>A new subscriber has joined the AutoPac weekly digest:</p><p><strong>${email}</strong></p>`,
-      });
-    } catch (emailErr) {
-      console.error('Newsletter notification email failed:', emailErr);
+    // Notify admin of new subscriber if SMTP is configured
+    if (process.env.SMTP_HOST) {
+      try {
+        await transporter.sendMail({
+          from: `"AutoPac System" <${process.env.SMTP_FROM || 'system@autopacbd.com'}>`,
+          to: process.env.ADMIN_EMAIL || 'autopacbd@gmail.com',
+          subject: 'New Newsletter Subscriber',
+          html: `<p>A new subscriber has joined the AutoPac weekly digest:</p><p><strong>${email}</strong></p>`,
+        });
+      } catch (emailErr) {
+        console.error('Newsletter notification email failed:', emailErr);
+      }
     }
 
     return NextResponse.json({ success: true });

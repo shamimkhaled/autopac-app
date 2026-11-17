@@ -43,6 +43,7 @@ export default function AdminTranslationsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/admin/translations')
@@ -61,12 +62,6 @@ export default function AdminTranslationsPage() {
   };
 
   const loadDefaults = () => {
-    if (
-      rows.length > 0 &&
-      !confirm('Replace the current list with built-in EN/BN defaults? Unsaved edits will be lost.')
-    ) {
-      return;
-    }
     const existingByKey = Object.fromEntries(rows.map((r) => [r.key, r]));
     const seeded = defaultRows().map((d) => {
       const existing = existingByKey[d.key];
@@ -77,16 +72,17 @@ export default function AdminTranslationsPage() {
         ? { ...d, id: existing.id.startsWith('new-') || existing.id.startsWith('seed-') ? d.id : existing.id }
         : d;
     });
-    // Keep custom keys that aren't in defaults
     const defaultKeys = new Set(seeded.map((r) => r.key));
     const custom = rows.filter((r) => r.key && !defaultKeys.has(r.key));
     setRows([...seeded, ...custom]);
+    setStatus({ type: 'ok', text: 'Default EN/BN strings loaded into editor. Click Save to apply.' });
   };
 
   const remove = (id: string) => setRows(rows.filter((r) => r.id !== id));
 
   const save = async () => {
     setSaving(true);
+    setStatus(null);
     try {
       const res = await fetch('/api/admin/translations', {
         method: 'PUT',
@@ -96,10 +92,12 @@ export default function AdminTranslationsPage() {
       if (res.ok) {
         const refreshed = await fetch('/api/admin/translations').then((r) => r.json());
         if (Array.isArray(refreshed)) setRows(refreshed);
-        alert('Site copy updated. Refresh the public site to see EN/BN changes.');
-      } else alert('Could not save translations.');
+        setStatus({ type: 'ok', text: 'Site copy updated. Refresh the public site to see EN/BN changes.' });
+      } else {
+        setStatus({ type: 'err', text: 'Could not save translations.' });
+      }
     } catch {
-      alert('Could not save translations.');
+      setStatus({ type: 'err', text: 'Could not save translations.' });
     }
     setSaving(false);
   };
@@ -139,6 +137,19 @@ export default function AdminTranslationsPage() {
           </button>
         </div>
       </div>
+
+      {status && (
+        <div
+          role="status"
+          className={`px-4 py-2.5 rounded-md border text-sm ${
+            status.type === 'ok'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          {status.text}
+        </div>
+      )}
 
       <div className="surface-card overflow-hidden">
         <div className="grid grid-cols-[minmax(8rem,1fr)_1fr_1fr_auto] gap-3 px-4 py-3 bg-brand-paper text-[10px] font-semibold uppercase tracking-widest text-stone-500">

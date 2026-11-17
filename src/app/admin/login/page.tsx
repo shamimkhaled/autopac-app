@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, Loader2, Lock } from 'lucide-react';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -41,51 +43,86 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-industrial-dark flex items-center justify-center p-4">
-      <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-xl w-full max-w-sm">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-industrial-dark">Admin Login</h1>
-          <p className="text-industrial-silver text-sm mt-2">AutoPac Content Management</p>
+    <div className="min-h-screen bg-brand-paper flex flex-col justify-center items-center px-4 py-12">
+      <div className="w-full max-w-sm space-y-5">
+        <div className="text-center">
+          <p className="section-kicker mb-1">Auto Pac Machinery</p>
+          <h1 className="font-display text-3xl font-semibold text-stone-900 tracking-tight">
+            Admin sign in
+          </h1>
+          <p className="text-sm text-stone-500 mt-1">
+            Manage catalog, quotations, and website content
+          </p>
         </div>
 
-        <div className="space-y-4">
+        <form onSubmit={submit} className="surface-card p-6 sm:p-7 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="admin-email" className="field-label">
+              Email address
+            </label>
             <input
+              id="admin-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@autopacbd.com"
               autoComplete="username"
-              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-action-orange focus:outline-none"
+              className="input-field"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label htmlFor="admin-password" className="field-label">
+              Password
+            </label>
             <input
+              id="admin-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-action-orange focus:outline-none"
+              className="input-field"
               required
             />
           </div>
+
+          {err && (
+            <p role="alert" className="text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              {err}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4" />
+                Sign in to CMS
+              </>
+            )}
+          </button>
+        </form>
+
+        <div className="text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-stone-500 hover:text-brand-maroon transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Return to Auto Pac website
+          </Link>
         </div>
-
-        {err && <p className="text-red-600 text-sm mt-4 text-center">{err}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full mt-6 py-3 bg-action-orange text-white font-bold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Signing in...' : 'Login'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }

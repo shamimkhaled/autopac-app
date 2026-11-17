@@ -1,28 +1,28 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Sans, Barlow_Condensed, Hind_Siliguri } from 'next/font/google';
+import { Barlow_Condensed, IBM_Plex_Sans, Hind_Siliguri } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import SiteShell from '@/components/SiteShell';
 import Analytics from '@/components/Analytics';
-import { getBrandTheme, getSeoMarketing } from '@/lib/siteAppearance';
+import { getBrandTheme, getSeoMarketing, getPwaConfig } from '@/lib/siteAppearance';
 
-const ibmPlex = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-ibm',
-  display: 'swap',
-});
-
-const barlow = Barlow_Condensed({
+const barlowCondensed = Barlow_Condensed({
   subsets: ['latin'],
   weight: ['500', '600', '700'],
   variable: '--font-display',
   display: 'swap',
 });
 
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm',
+  display: 'swap',
+});
+
 const hindSiliguri = Hind_Siliguri({
   subsets: ['bengali', 'latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-hind',
   display: 'swap',
 });
@@ -30,9 +30,9 @@ const hindSiliguri = Hind_Siliguri({
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://autopacbd.com';
 
 export async function generateViewport(): Promise<Viewport> {
-  const theme = await getBrandTheme();
+  const [theme, pwa] = await Promise.all([getBrandTheme(), getPwaConfig()]);
   return {
-    themeColor: theme.primary,
+    themeColor: pwa.themeColor || theme.primary,
     width: 'device-width',
     initialScale: 1,
     viewportFit: 'cover',
@@ -40,7 +40,7 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const seo = await getSeoMarketing();
+  const [seo, pwa] = await Promise.all([getSeoMarketing(), getPwaConfig()]);
   const verification =
     seo.googleSiteVerification || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '';
 
@@ -64,7 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       locale: 'en_US',
       url: baseUrl,
-      siteName: 'Auto Pac Machinery',
+      siteName: pwa.appName || 'Auto Pac Machinery',
       title: seo.ogTitle,
       description: seo.ogDescription,
       images: [
@@ -72,7 +72,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: seo.ogImageUrl,
           width: 1200,
           height: 630,
-          alt: 'Auto Pac Machinery',
+          alt: pwa.appName || 'Auto Pac Machinery',
         },
       ],
     },
@@ -105,7 +105,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     appleWebApp: {
       capable: true,
-      title: 'Auto Pac',
+      title: pwa.shortName || 'Auto Pac',
       statusBarStyle: 'black-translucent',
     },
     other: {
@@ -113,10 +113,10 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        { url: pwa.icon192Url || '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: pwa.icon512Url || '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
-      apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
+      apple: [{ url: pwa.appleIconUrl || '/icons/apple-touch-icon.png', sizes: '180x180' }],
     },
   };
 }
@@ -161,7 +161,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`scroll-smooth ${ibmPlex.variable} ${barlow.variable} ${hindSiliguri.variable}`}
+      className={`scroll-smooth ${barlowCondensed.variable} ${ibmPlexSans.variable} ${hindSiliguri.variable}`}
     >
       <body className="min-h-screen flex flex-col antialiased bg-brand-paper text-stone-800 dark:bg-stone-950 dark:text-stone-100 font-sans">
         <script

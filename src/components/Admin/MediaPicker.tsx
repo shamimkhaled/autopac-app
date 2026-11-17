@@ -71,117 +71,120 @@ export default function MediaPicker({ onSelect, onClose, selectedUrl, allowMulti
     multiple: allowMultiple,
   });
 
-  const filteredMedia = mediaItems.filter(item => 
-    item.alt?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.url.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMedia = mediaItems.filter(
+    (item) =>
+      item.alt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.url.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b flex items-center justify-between bg-white sticky top-0 z-10">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/60 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Media library picker"
+    >
+      <div className="bg-white w-full max-w-5xl h-[82vh] rounded-md border border-stone-200 shadow-2xl flex flex-col overflow-hidden">
+        <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-              <ImageIcon className="w-5 h-5 text-action-orange" />
+            <div className="w-9 h-9 bg-brand-paper border border-stone-200 rounded-md flex items-center justify-center">
+              <ImageIcon className="w-4 h-4 text-brand-maroon" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-industrial-dark">Media Library</h2>
-              <p className="text-sm text-gray-500">Select or upload images for your content</p>
+              <h2 className="font-display text-lg font-semibold text-stone-900">Media Library</h2>
+              <p className="text-xs text-stone-500">Select or upload images for Auto Pac CMS</p>
             </div>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-stone-100 rounded-md text-stone-500 hover:text-stone-800 transition-colors"
+            aria-label="Close media picker"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Search & Upload */}
-        <div className="p-6 border-b bg-gray-50/50 flex flex-col md:flex-row gap-4 items-center">
+        <div className="p-4 border-b border-stone-200 bg-brand-paper/50 flex flex-col sm:flex-row gap-3 items-center">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
             <input
-              type="text"
-              placeholder="Search images..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-action-orange/20 focus:border-action-orange transition-all outline-none"
+              type="search"
+              placeholder="Search images by filename..."
+              className="input-field pl-9 h-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
-          <div 
-            {...getRootProps()} 
-            className={`flex-shrink-0 px-6 py-2.5 border-2 border-dashed rounded-xl cursor-pointer transition-all flex items-center gap-2 font-medium ${
-              isDragActive ? 'border-action-orange bg-orange-50 text-action-orange' : 'border-gray-200 hover:border-action-orange hover:bg-orange-50 text-gray-600'
+
+          <div
+            {...getRootProps()}
+            className={`flex-shrink-0 px-5 py-2 border border-dashed rounded-md cursor-pointer transition-colors flex items-center gap-2 text-sm font-medium ${
+              isDragActive
+                ? 'border-brand-maroon bg-brand-maroon/5 text-brand-maroon'
+                : 'border-stone-300 bg-white hover:border-brand-maroon text-stone-700'
             }`}
           >
             <input {...getInputProps()} />
-            {uploading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Upload className="w-5 h-5" />
-            )}
-            {uploading ? 'Uploading...' : 'Upload New'}
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? 'Uploading...' : 'Upload file'}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-5">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-full gap-3">
-              <Loader2 className="w-10 h-10 text-action-orange animate-spin" />
-              <p className="text-gray-500 animate-pulse">Loading media items...</p>
+              <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+              <p className="text-sm text-stone-500">Loading media items…</p>
             </div>
           ) : filteredMedia.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-4">
-              <ImageIcon className="w-16 h-16 opacity-20" />
-              <p className="text-lg">No media items found</p>
+            <div className="flex flex-col items-center justify-center h-full text-stone-400 gap-3">
+              <ImageIcon className="w-12 h-12 opacity-40" />
+              <p className="text-sm font-medium text-stone-600">No media items found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {filteredMedia.map((item) => (
-                <div 
+                <button
+                  type="button"
                   key={item.id}
                   onClick={() => onSelect(item.url)}
-                  className={`group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-4 transition-all ${
-                    selectedUrl === item.url ? 'border-action-orange shadow-lg' : 'border-transparent hover:border-orange-200 shadow-sm'
+                  className={`group relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 transition-all bg-white text-left ${
+                    selectedUrl === item.url
+                      ? 'border-brand-maroon ring-2 ring-brand-maroon/20'
+                      : 'border-stone-200 hover:border-stone-400'
                   }`}
                 >
                   <Image
                     src={item.url}
                     alt={item.alt || 'Media'}
                     fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 15vw"
+                    className="object-contain p-1.5"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 15vw"
                   />
                   {selectedUrl === item.url && (
-                    <div className="absolute top-2 right-2 w-7 h-7 bg-action-orange rounded-full flex items-center justify-center shadow-md">
-                      <Check className="w-4 h-4 text-white" />
+                    <div className="absolute top-1.5 right-1.5 w-6 h-6 bg-brand-maroon rounded-md flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
-                  <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-[10px] text-white truncate font-medium">{item.alt || item.url.split('/').pop()}</p>
+                  <div className="absolute inset-x-0 bottom-0 p-1.5 bg-stone-950/75 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-[11px] text-white truncate">{item.alt || item.url.split('/').pop()}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t bg-white flex justify-end gap-3 sticky bottom-0 z-10 shadow-[0_-4px_6px_-1px_rgb(0,0,0,0.05)]">
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-xl transition-colors"
-          >
+        <div className="px-5 py-3.5 border-t border-stone-200 bg-white flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="btn-secondary text-sm">
             Cancel
           </button>
           <button
+            type="button"
             disabled={!selectedUrl}
             onClick={() => selectedUrl && onSelect(selectedUrl)}
-            className="px-8 py-2.5 bg-action-orange text-white font-bold rounded-xl shadow-lg shadow-action-orange/20 hover:bg-orange-600 disabled:opacity-50 disabled:shadow-none transition-all active:scale-95"
+            className="btn-primary text-sm disabled:opacity-40"
           >
             Select Asset
           </button>

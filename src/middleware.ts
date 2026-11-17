@@ -81,7 +81,6 @@ export default function middleware(req: NextRequest) {
       return rateLimitResponse(result.retryAfter ?? 60);
     }
     // next-auth withAuth middleware
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (protectAdminPages as unknown as (r: NextRequest) => Response | Promise<Response>)(req);
   }
 

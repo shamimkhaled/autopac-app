@@ -20,6 +20,7 @@ export default function MediaManagerPage() {
   const [mediaItems, setMediaItems] = useState<Media[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [picker, setPicker] = useState(false);
   const [kind, setKind] = useState<'all' | 'image' | 'video'>('all');
   const [sort, setSort] = useState<'new' | 'old' | 'size'>('new');
@@ -48,11 +49,11 @@ export default function MediaManagerPage() {
   };
 
   const deleteMedia = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this asset?')) return;
     try {
       const res = await fetch(`/api/upload/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setMediaItems(mediaItems.filter((item) => item.id !== id));
+        setMediaItems((prev) => prev.filter((item) => item.id !== id));
+        setConfirmDeleteId(null);
       }
     } catch (e) {
       console.error(e);
@@ -69,26 +70,26 @@ export default function MediaManagerPage() {
     });
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-industrial-dark">Media Library</h1>
-          <p className="text-gray-500">Images used on machinery cards, hero slides, and catalog pages</p>
+          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-stone-900 tracking-tight">
+            Media library
+          </h2>
+          <p className="text-sm text-stone-500 mt-1">
+            Uploaded machinery photos, hero banners, and partner logos
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setPicker(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-action-orange text-white font-bold rounded-2xl shadow-lg shadow-action-orange/20 hover:bg-orange-600 transition-all"
-        >
-          <Upload className="w-5 h-5" />
-          Upload New
+        <button type="button" onClick={() => setPicker(true)} className="btn-primary whitespace-nowrap">
+          <Upload className="w-4 h-4" />
+          Upload new asset
         </button>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4 mb-8 overflow-x-auto pb-2">
+      <div className="surface-card p-5 space-y-5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-stone-200 pb-4">
           {([
-            ['all', 'All Assets'],
+            ['all', 'All assets'],
             ['image', 'Images'],
             ['video', 'Videos'],
           ] as const).map(([id, label]) => (
@@ -96,77 +97,87 @@ export default function MediaManagerPage() {
               key={id}
               type="button"
               onClick={() => setKind(id)}
-              className={`px-5 py-2.5 font-bold rounded-xl whitespace-nowrap transition-colors ${
-                kind === id ? 'bg-industrial-dark text-white' : 'text-gray-500 hover:bg-gray-100'
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-md border whitespace-nowrap transition-colors ${
+                kind === id
+                  ? 'bg-brand-maroon text-white border-brand-maroon'
+                  : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'
               }`}
             >
               {label}
             </button>
           ))}
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-gray-400 font-medium">Sort by:</span>
+            <span className="text-xs text-stone-400">Sort by:</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as typeof sort)}
-              className="bg-transparent border-none text-sm font-bold text-industrial-dark outline-none cursor-pointer"
+              className="input-field h-9 text-xs cursor-pointer"
             >
-              <option value="new">Newest First</option>
-              <option value="old">Oldest First</option>
-              <option value="size">Largest Size</option>
+              <option value="new">Newest first</option>
+              <option value="old">Oldest first</option>
+              <option value="size">Largest size</option>
             </select>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <Loader2 className="w-12 h-12 text-action-orange animate-spin" />
-            <p className="text-gray-500 font-medium animate-pulse">Scanning assets...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 text-brand-maroon animate-spin" />
+            <p className="text-sm text-stone-500">Scanning media assets…</p>
           </div>
         ) : visible.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-6 text-gray-400 border-2 border-dashed border-gray-100 rounded-3xl">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
-              <ImageIcon className="w-10 h-10 opacity-30" />
-            </div>
-            <div className="text-center">
-              <p className="text-xl font-bold text-industrial-dark opacity-50">Your library is empty</p>
-              <p className="mt-1">Upload images to get started</p>
-            </div>
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-stone-400 border border-dashed border-stone-200 rounded-md">
+            <ImageIcon className="w-10 h-10 opacity-40" />
+            <p className="text-sm font-medium text-stone-600">No media assets found.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {visible.map((item) => (
-              <div key={item.id} className="group relative bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300">
-                <div className="aspect-square relative overflow-hidden">
+              <div key={item.id} className="group bg-white border border-stone-200 rounded-md overflow-hidden">
+                <div className="aspect-square relative overflow-hidden bg-brand-paper/40 border-b border-stone-200">
                   <Image
                     src={item.url}
                     alt={item.alt || 'Media'}
                     fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="object-contain p-2"
                     sizes="(max-width: 768px) 50vw, 20vw"
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                  <div className="absolute top-2 right-2 flex gap-1.5">
                     <button
                       type="button"
                       onClick={() => copyToClipboard(item.url, item.id)}
-                      className="p-3 bg-white/20 backdrop-blur-md rounded-xl hover:bg-white/40 transition-colors text-white"
-                      title="Copy URL"
+                      className="p-1.5 bg-white/95 border border-stone-200 rounded-md text-stone-700 hover:text-brand-maroon shadow-sm"
+                      title="Copy asset URL"
                     >
-                      {copiedId === item.id ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteMedia(item.id)}
-                      className="p-3 bg-red-500/80 backdrop-blur-md rounded-xl hover:bg-red-600 transition-colors text-white"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    {confirmDeleteId === item.id ? (
+                      <button
+                        type="button"
+                        onClick={() => deleteMedia(item.id)}
+                        className="px-2 py-1 bg-red-600 text-white text-[11px] font-semibold rounded-md shadow-sm"
+                      >
+                        Confirm
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(item.id)}
+                        className="p-1.5 bg-white/95 border border-stone-200 rounded-md text-stone-500 hover:text-red-600 shadow-sm"
+                        title="Delete asset"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="p-4">
-                  <p className="text-sm font-bold text-industrial-dark truncate mb-1">{item.alt || item.url.split('/').pop()}</p>
-                  <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                    {(item.size / 1024).toFixed(0)} KB • {item.width}x{item.height}
+                <div className="p-3">
+                  <p className="text-xs font-medium text-stone-900 truncate mb-0.5">
+                    {item.alt || item.url.split('/').pop()}
+                  </p>
+                  <span className="text-[11px] text-stone-400 tabular-nums">
+                    {(item.size / 1024).toFixed(0)} KB
+                    {item.width && item.height ? ` · ${item.width}×${item.height}` : ''}
                   </span>
                 </div>
               </div>

@@ -2,6 +2,21 @@ import { prisma } from '@/lib/prisma';
 
 export const WEBSITE_CONTENT_KEY = 'websiteContent';
 
+export interface LandingSectionVisibility {
+  showHeroStats: boolean;
+  showFindBar: boolean;
+  showProductLines: boolean;
+  showFeaturedMachines: boolean;
+  showVideoShowcase: boolean;
+  showCatalogBand: boolean;
+  showIndustries: boolean;
+  showStory: boolean;
+  showCertifications: boolean;
+  showLegacyStats: boolean;
+  showPartners: boolean;
+  showQuoteBand: boolean;
+}
+
 export interface WebsiteContent {
   hero: {
     eyebrowEn: string;
@@ -58,7 +73,23 @@ export interface WebsiteContent {
     blurbEn: string;
     blurbBn: string;
   };
+  sections: LandingSectionVisibility;
 }
+
+export const DEFAULT_LANDING_SECTIONS: LandingSectionVisibility = {
+  showHeroStats: true,
+  showFindBar: true,
+  showProductLines: true,
+  showFeaturedMachines: true,
+  showVideoShowcase: true,
+  showCatalogBand: true,
+  showIndustries: false,
+  showStory: true,
+  showCertifications: false,
+  showLegacyStats: false,
+  showPartners: true,
+  showQuoteBand: true,
+};
 
 export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
   hero: {
@@ -107,12 +138,12 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     imageUrl: '/images/slider1.png',
   },
   catalogBand: {
-    kickerEn: 'Purple cow',
+    kickerEn: 'Official Sales Catalog',
     kickerBn: 'অফিসিয়াল ক্যাটালগ',
-    titleEn: 'The same 122-page brochure the owner uses for sales',
+    titleEn: 'The complete 122-page machinery brochure — digitized',
     titleBn: 'মালিক যে ১২২ পৃষ্ঠার ক্যাটালগ দিয়ে বিক্রি করেন — একই শিট',
     descriptionEn:
-      'Not stock photos. Flip every sheet, jump by product line, quote the page you are looking at.',
+      'Flip every technical sheet online, jump straight by product line, or request a factory quotation for the exact page you are viewing.',
     descriptionBn:
       'স্টক ছবি নয়। প্রতিটি পৃষ্ঠা উল্টান, পণ্য লাইনে যান, যে পৃষ্ঠা দেখছেন তার কোটেশন চান।',
     ctaEn: 'Open official catalog',
@@ -123,11 +154,25 @@ export const DEFAULT_WEBSITE_CONTENT: WebsiteContent = {
     blurbBn:
       'বিশ্বমানের খাদ্য প্রক্রিয়াকরণ ও প্যাকেজিং মেশিনারি সরবরাহকারী প্রতিষ্ঠান। আমরা সেরা মানের মেশিন এবং বিক্রয়োত্তর সেবা প্রদান করি।',
   },
+  sections: { ...DEFAULT_LANDING_SECTIONS },
 };
 
-function mergeContent(partial: Partial<WebsiteContent> | null | undefined): WebsiteContent {
+export function mergeWebsiteContent(
+  partial: Partial<WebsiteContent> | null | undefined
+): WebsiteContent {
   const d = DEFAULT_WEBSITE_CONTENT;
-  if (!partial || typeof partial !== 'object') return { ...d, hero: { ...d.hero }, find: { ...d.find }, lines: { ...d.lines }, featured: { ...d.featured }, story: { ...d.story }, catalogBand: { ...d.catalogBand }, footer: { ...d.footer } };
+  if (!partial || typeof partial !== 'object') {
+    return {
+      hero: { ...d.hero },
+      find: { ...d.find },
+      lines: { ...d.lines },
+      featured: { ...d.featured },
+      story: { ...d.story },
+      catalogBand: { ...d.catalogBand },
+      footer: { ...d.footer },
+      sections: { ...d.sections },
+    };
+  }
   return {
     hero: { ...d.hero, ...(partial.hero || {}) },
     find: { ...d.find, ...(partial.find || {}) },
@@ -136,23 +181,25 @@ function mergeContent(partial: Partial<WebsiteContent> | null | undefined): Webs
     story: { ...d.story, ...(partial.story || {}) },
     catalogBand: { ...d.catalogBand, ...(partial.catalogBand || {}) },
     footer: { ...d.footer, ...(partial.footer || {}) },
+    sections: { ...d.sections, ...(partial.sections || {}) },
   };
 }
 
 export async function getWebsiteContent(): Promise<WebsiteContent> {
   try {
     const row = await prisma.siteSetting.findUnique({ where: { key: WEBSITE_CONTENT_KEY } });
-    if (!row?.value) return mergeContent(null);
+    if (!row?.value) return mergeWebsiteContent(null);
     const parsed = JSON.parse(row.value) as Partial<WebsiteContent>;
-    return mergeContent(parsed);
+    return mergeWebsiteContent(parsed);
   } catch {
-    return mergeContent(null);
+    return mergeWebsiteContent(null);
   }
 }
 
 export async function saveWebsiteContent(content: WebsiteContent) {
-  const value = JSON.stringify(mergeContent(content));
-  const description = 'Public website copy — hero, home sections, catalog band, footer (EN/BN)';
+  const value = JSON.stringify(mergeWebsiteContent(content));
+  const description =
+    'Public website copy and landing section visibility toggles (EN/BN)';
   await prisma.siteSetting.upsert({
     where: { key: WEBSITE_CONTENT_KEY },
     update: { value, description },
