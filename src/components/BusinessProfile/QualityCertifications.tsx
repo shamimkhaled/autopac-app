@@ -23,8 +23,8 @@ export default function QualityCertifications() {
           key={cert.name}
           className="surface-card p-5 flex items-start gap-3.5"
         >
-          <div className="w-10 h-10 rounded-md bg-brand-maroon/10 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5 text-brand-maroon" aria-hidden="true" />
+          <div className="w-10 h-10 rounded-md bg-brand-maroon/10 dark:bg-brand-ink/15 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-brand-ink" aria-hidden="true" />
           </div>
           <div>
             <h3 className="font-display text-lg font-semibold text-stone-900 dark:text-white tracking-tight">

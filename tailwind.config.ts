@@ -19,10 +19,10 @@ const config: Config = {
     extend: {
       colors: {
         industrial: {
-          dark: '#1C1917',
-          charcoal: '#44403C',
-          silver: '#A8A29E',
-          light: '#F7F4EF',
+          dark: '#18181B',
+          charcoal: '#3F3F46',
+          silver: '#A1A1AA',
+          light: '#F6F6F4',
           accent: 'var(--brand-maroon)',
         },
         action: {
@@ -36,6 +36,7 @@ const config: Config = {
           maroon: 'rgb(var(--brand-maroon-rgb) / <alpha-value>)',
           'maroon-hover': 'rgb(var(--brand-maroon-hover-rgb) / <alpha-value>)',
           'maroon-mid': 'rgb(var(--brand-maroon-mid-rgb) / <alpha-value>)',
+          ink: 'rgb(var(--brand-ink-rgb) / <alpha-value>)',
           paper: 'rgb(var(--brand-paper-rgb) / <alpha-value>)',
           purple: 'rgb(var(--brand-purple-rgb) / <alpha-value>)',
         },

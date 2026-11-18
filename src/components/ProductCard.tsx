@@ -85,13 +85,13 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       <div className="p-5 flex flex-col flex-grow">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-maroon truncate">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-ink truncate">
           {categoryName}
           {product.modelCode ? ` · ${product.modelCode}` : ''}
         </p>
 
         <Link href={`/products/${product.slug}`} className="mt-1.5 block">
-          <h3 className="text-base sm:text-lg font-semibold text-stone-900 dark:text-white leading-snug line-clamp-2 group-hover:text-brand-maroon transition-colors">
+          <h3 className="text-base sm:text-lg font-semibold text-stone-900 dark:text-white leading-snug line-clamp-2 group-hover:text-brand-ink transition-colors">
             {name}
           </h3>
         </Link>
@@ -127,7 +127,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {catalogHref && (
             <Link
               href={catalogHref}
-              className="inline-flex items-center justify-center min-h-[44px] w-11 border border-stone-300 dark:border-stone-700 rounded-md text-stone-700 dark:text-stone-300 hover:border-brand-maroon hover:text-brand-maroon transition-colors shrink-0"
+              className="inline-flex items-center justify-center min-h-[44px] w-11 border border-stone-300 dark:border-stone-700 rounded-md text-stone-700 dark:text-stone-300 hover:border-brand-maroon dark:hover:border-brand-ink hover:text-brand-ink transition-colors shrink-0"
               title={isBn ? `ক্যাটালগ পৃষ্ঠা ${product.brochurePage}` : `Brochure sheet p.${product.brochurePage}`}
               aria-label={isBn ? `ক্যাটালগ পৃষ্ঠা ${product.brochurePage}` : `Brochure sheet page ${product.brochurePage}`}
             >

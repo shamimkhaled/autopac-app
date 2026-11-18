@@ -194,7 +194,7 @@ export default function SupportHub({
                   onClick={() => setOpen(true)}
                   className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 rounded-md border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs font-semibold active:scale-[0.98] transition"
                 >
-                  <Bot className="w-4 h-4 text-brand-maroon shrink-0" aria-hidden="true" />
+                  <Bot className="w-4 h-4 text-brand-ink shrink-0" aria-hidden="true" />
                   <span className="truncate">{isBn ? 'সহায়তা চ্যাট' : 'Support AI'}</span>
                 </button>
               )}
@@ -250,13 +250,9 @@ export default function SupportHub({
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="inline-flex items-center gap-2.5 h-11 px-4 text-xs font-semibold text-stone-900 dark:text-stone-100 hover:bg-brand-paper dark:hover:bg-stone-800 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 h-11 px-4 text-xs font-semibold text-stone-900 dark:text-stone-100 hover:bg-brand-paper dark:hover:bg-stone-800 transition-colors cursor-pointer"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
-              </span>
-              <Bot className="w-4 h-4 text-brand-maroon" aria-hidden="true" />
+              <Bot className="w-4 h-4 text-brand-ink" aria-hidden="true" />
               <span>{isBn ? 'সাপোর্ট এজেন্ট (EN/বাংলা)' : 'Machinery Support'}</span>
             </button>
           )}
@@ -377,7 +373,7 @@ export default function SupportHub({
             {messages.length === 0 ? (
               <div className="space-y-4">
                 <div className="surface-card p-4 space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-brand-maroon">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-brand-ink">
                     {isBn ? 'স্বাগতম · Auto Pac Dhaka' : 'Welcome · Auto Pac Dhaka'}
                   </p>
                   <p className="text-sm text-stone-700 dark:text-stone-200 leading-relaxed">
@@ -397,7 +393,7 @@ export default function SupportHub({
                         key={prompt}
                         type="button"
                         onClick={() => sendMessage(prompt)}
-                        className="text-left px-3.5 py-2.5 rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-xs font-medium text-stone-800 dark:text-stone-200 hover:border-brand-maroon hover:text-brand-maroon transition-colors cursor-pointer"
+                        className="text-left px-3.5 py-2.5 rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-xs font-medium text-stone-800 dark:text-stone-200 hover:border-brand-maroon dark:hover:border-brand-ink hover:text-brand-ink transition-colors cursor-pointer"
                       >
                         {prompt}
                       </button>

@@ -127,23 +127,23 @@ export default function Footer() {
             <h3 className={heading}>{t('footer.contactUs') || 'Dhaka Headquarters'}</h3>
             <ul className="space-y-3 text-sm text-stone-400">
               <li className="flex gap-2.5">
-                <MapPin className="w-4 h-4 text-brand-maroon flex-shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-[#E8849A] flex-shrink-0 mt-0.5" />
                 <span>{address}</span>
               </li>
               <li className="flex gap-2.5">
-                <Phone className="w-4 h-4 text-brand-maroon flex-shrink-0 mt-0.5" />
+                <Phone className="w-4 h-4 text-[#E8849A] flex-shrink-0 mt-0.5" />
                 <a href={telHref} className="hover:text-white tabular-nums">
                   {phone}
                 </a>
               </li>
               <li className="flex gap-2.5">
-                <Mail className="w-4 h-4 text-brand-maroon flex-shrink-0 mt-0.5" />
+                <Mail className="w-4 h-4 text-[#E8849A] flex-shrink-0 mt-0.5" />
                 <a href={`mailto:${email}`} className="hover:text-white break-all">
                   {email}
                 </a>
               </li>
               <li className="flex gap-2.5">
-                <Clock className="w-4 h-4 text-brand-maroon flex-shrink-0 mt-0.5" />
+                <Clock className="w-4 h-4 text-[#E8849A] flex-shrink-0 mt-0.5" />
                 <span>{officeHours}</span>
               </li>
             </ul>

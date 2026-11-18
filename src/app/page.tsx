@@ -44,38 +44,35 @@ export default function HomePage() {
     <div className="bg-brand-paper dark:bg-stone-950">
       <HeroSlider showStats={sections?.showHeroStats !== false} />
 
-      {/* Fast Machine Finder & Material Filter Bar */}
+      {/* Streamlined Fast Machine Finder Strip */}
       {sections?.showFindBar !== false && (
         <section
           id="find-machinery"
           aria-label={isBn ? content.find.labelBn : content.find.labelEn}
-          className="scroll-mt-24 bg-white dark:bg-stone-950 border-b border-stone-200 dark:border-stone-800"
+          className="scroll-mt-24 bg-[var(--surface)] dark:bg-stone-950 border-b border-stone-200 dark:border-stone-800"
         >
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
             <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6">
-              <p className="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-ink whitespace-nowrap">
                 {isBn ? content.find.labelBn : content.find.labelEn}
               </p>
               <div className="flex-1 max-w-2xl">
                 <SiteSearch showButton inputId="home-machinery-search" />
               </div>
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                {isBn ? content.find.hintBn : content.find.hintEn}
-              </p>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-stone-500 dark:text-stone-400 mr-1">
-                {isBn ? 'দ্রুত খুঁজুন:' : 'Filter by product:'}
-              </span>
-              {PACK_CHIPS.map((chip) => (
-                <Link
-                  key={chip.q}
-                  href={`/products?q=${encodeURIComponent(chip.q)}`}
-                  className="filter-chip text-xs"
-                >
-                  {isBn ? chip.bn : chip.en}
-                </Link>
-              ))}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="text-stone-400 dark:text-stone-500">
+                  {isBn ? 'দ্রুত ফিল্টার:' : 'Quick lines:'}
+                </span>
+                {PACK_CHIPS.map((chip) => (
+                  <Link
+                    key={chip.q}
+                    href={`/products?q=${encodeURIComponent(chip.q)}`}
+                    className="font-medium text-stone-600 dark:text-stone-300 hover:text-brand-ink transition-colors py-0.5"
+                  >
+                    {isBn ? chip.bn : chip.en}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -110,7 +107,7 @@ export default function HomePage() {
 
       {/* Featured Machines */}
       {sections?.showFeaturedMachines !== false && fallback.length > 0 && (
-        <section className="section-pad border-y border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950">
+        <section className="section-pad border-y border-stone-200 dark:border-stone-800 bg-[var(--surface)] dark:bg-stone-950">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <SectionHeader
               kicker={isBn ? content.featured.kickerBn : content.featured.kickerEn}
@@ -158,39 +155,39 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Official 122-Page Sales Catalog Preview */}
+      {/* Official 122-Page Sales Catalog Preview (Architectural Dark Slate Anchor) */}
       {sections?.showCatalogBand !== false && (
-        <section className="border-b border-stone-200 dark:border-stone-800 bg-brand-maroon text-white">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 grid lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-center">
+        <section className="border-b border-stone-800 bg-stone-950 text-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75 mb-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#E8849A] mb-3">
                 {isBn ? content.catalogBand.kickerBn : content.catalogBand.kickerEn}
               </p>
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight [text-wrap:balance]">
+              <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-white [text-wrap:balance]">
                 {isBn ? content.catalogBand.titleBn : content.catalogBand.titleEn}
               </h2>
-              <p className="mt-3 text-white/85 leading-relaxed max-w-xl">
+              <p className="mt-3 text-stone-300 leading-relaxed max-w-xl">
                 {isBn ? content.catalogBand.descriptionBn : content.catalogBand.descriptionEn}
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/brochure" className="btn-white whitespace-nowrap shrink-0">
+                <Link href="/brochure" className="btn-primary whitespace-nowrap shrink-0">
                   <BookOpen className="w-4 h-4" aria-hidden="true" />
                   {isBn ? content.catalogBand.ctaBn : content.catalogBand.ctaEn}
                 </Link>
                 <Link
                   href="/contact?product=Official%20catalog"
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 border border-white/45 text-white text-sm font-semibold rounded-md hover:bg-white/10 transition-colors whitespace-nowrap shrink-0"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 border border-stone-700 text-stone-100 text-sm font-semibold rounded-md hover:border-stone-500 hover:bg-stone-900 transition-colors whitespace-nowrap shrink-0"
                 >
                   {isBn ? 'ক্যাটালগ থেকে কোট' : 'Quote from catalog'}
                 </Link>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {previewPages.map((page) => (
                 <Link
                   key={page}
                   href={`/brochure?page=${page}`}
-                  className="relative aspect-[3/4] rounded-md overflow-hidden border border-white/30 bg-white hover:border-white transition-colors cursor-pointer"
+                  className="relative aspect-[3/4] rounded-md overflow-hidden border border-stone-800 bg-white hover:border-[#E8849A] transition-colors cursor-pointer"
                 >
                   <Image
                     src={brochurePageSrc(page)}
@@ -234,12 +231,12 @@ export default function HomePage() {
                   </Link>
                 </div>
               </div>
-              <div className="relative aspect-[4/3] rounded-md overflow-hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+              <div className="relative aspect-[4/3] rounded-md overflow-hidden bg-white border border-stone-200 dark:border-stone-800">
                 <Image
                   src={content.story.imageUrl || '/machines/screw-auger-plc-packer.webp'}
                   alt={isBn ? 'অটো প্যাক মেশিনারি' : 'Auto Pac packaging machinery'}
                   fill
-                  className="object-contain p-4"
+                  className="object-contain p-5"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               </div>

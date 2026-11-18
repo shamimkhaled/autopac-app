@@ -56,7 +56,6 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
     [filtered, selectedId]
   );
 
-  // Check if the corresponding CMS machine has a configured YouTube link
   const cmsProduct = useMemo(
     () => products.find((p) => p.slug === activeVideo.productSlug),
     [products, activeVideo.productSlug]
@@ -87,12 +86,12 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
 
   const currentFrameSrc = reelFrames[stepIdx % reelFrames.length] || activeVideo.posterImage;
   const currentStep = activeVideo.steps[stepIdx] || activeVideo.steps[0];
-  const visibleCards = compact ? filtered.slice(0, 4) : filtered;
+  const visibleCards = compact ? filtered.slice(0, 3) : filtered;
   const channelUrl = company?.youtubeUrl || 'https://www.youtube.com/@autopacbd';
 
   return (
-    <div className="space-y-6">
-      {/* Category filter bar + YouTube channel header action */}
+    <div className="space-y-5">
+      {/* Category Filter Rail + YouTube Channel Link */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div
           className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide"
@@ -129,19 +128,19 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
           href={channelUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-brand-maroon hover:text-brand-maroon transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md border border-stone-200 dark:border-stone-700 bg-[var(--surface)] dark:bg-stone-900 text-xs font-semibold text-stone-800 dark:text-stone-200 hover:border-brand-maroon dark:hover:border-brand-ink hover:text-brand-ink transition-colors whitespace-nowrap shrink-0"
         >
           <Youtube className="w-4 h-4 text-red-600" aria-hidden="true" />
-          <span>{isBn ? 'অটো প্যাক ইউটিউব চ্যানেল' : 'Auto Pac YouTube (@autopacbd)'}</span>
+          <span>{isBn ? 'অটো প্যাক ইউটিউব চ্যানেল' : 'Auto Pac YouTube'}</span>
           <ExternalLink className="w-3.5 h-3.5 opacity-70" aria-hidden="true" />
         </a>
       </div>
 
-      {/* Main Theater Stage */}
-      <div className="surface-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+      {/* Main Theater Stage (Unobstructed Viewport + Single Clean Workflow Column) */}
+      <div className="surface-card overflow-hidden grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-stone-200 dark:divide-stone-800">
         {/* Visual Reel / YouTube Viewport */}
         <div className="lg:col-span-7 bg-stone-950 flex flex-col justify-between">
-          <div className="relative aspect-[16/10] bg-white dark:bg-stone-900 overflow-hidden">
+          <div className="relative aspect-[16/10] bg-white overflow-hidden">
             {viewMode === 'youtube' && youtubeEmbedUrl ? (
               <iframe
                 src={youtubeEmbedUrl}
@@ -151,27 +150,16 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
                 allowFullScreen
               />
             ) : (
-              <>
-                <Image
-                  key={`${activeVideo.id}-${currentFrameSrc}`}
-                  src={currentFrameSrc}
-                  alt={isBn ? activeVideo.titleBn : activeVideo.titleEn}
-                  fill
-                  className="object-contain p-4 sm:p-6 transition-all duration-700"
-                  sizes="(max-width: 1024px) 100vw, 58vw"
-                />
-                <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-                  <div className="px-3 py-1.5 bg-stone-950/85 text-white text-[11px] font-semibold uppercase tracking-[0.12em] rounded-md">
-                    {activeVideo.modelCode} · {activeVideo.capacityHighlight}
-                  </div>
-                  <div className="px-2.5 py-1.5 bg-stone-950/85 text-white text-[11px] font-medium tabular-nums rounded-md">
-                    {activeVideo.duration}
-                  </div>
-                </div>
-              </>
+              <Image
+                key={`${activeVideo.id}-${currentFrameSrc}`}
+                src={currentFrameSrc}
+                alt={isBn ? activeVideo.titleBn : activeVideo.titleEn}
+                fill
+                className="object-contain p-5 sm:p-7 transition-opacity duration-500"
+                sizes="(max-width: 1024px) 100vw, 58vw"
+              />
             )}
 
-            {/* Switcher if a YouTube video URL is configured in CMS */}
             {youtubeEmbedUrl && (
               <div className="absolute bottom-3 right-3 z-10 inline-flex bg-stone-950/90 p-1 rounded-md border border-stone-700">
                 <button
@@ -198,8 +186,8 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
             )}
           </div>
 
-          {/* Interactive Stage Scrubber Bar */}
-          <div className="bg-stone-950 text-white px-4 py-3.5 border-t border-stone-800 space-y-3">
+          {/* Sleek Single-Row Scrubber & Technical Spec Strip */}
+          <div className="bg-stone-950 text-white px-4 py-3.5 border-t border-stone-800 space-y-2.5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <button
@@ -230,52 +218,41 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
                 >
                   <SkipForward className="w-4 h-4" />
                 </button>
-                <div className="min-w-0 pl-1">
+                <div className="min-w-0 pl-1.5">
                   <p className="text-xs font-semibold text-white truncate">
                     {isBn ? currentStep.labelBn : currentStep.labelEn}
                   </p>
-                  <p className="text-xs text-stone-300 line-clamp-1">
-                    {isBn ? currentStep.detailBn : currentStep.detailEn}
+                  <p className="text-xs text-stone-400 truncate">
+                    {activeVideo.modelCode} · {activeVideo.capacityHighlight} · {activeVideo.duration}
                   </p>
                 </div>
               </div>
 
               <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400 whitespace-nowrap shrink-0 tabular-nums">
-                {stepIdx + 1} / {activeVideo.steps.length}
+                {String(stepIdx + 1).padStart(2, '0')} / {String(activeVideo.steps.length).padStart(2, '0')}
               </span>
             </div>
 
-            {/* 4-Step Interactive Timeline */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-              {activeVideo.steps.map((step, i) => {
-                const isCurrent = i === stepIdx && viewMode === 'walkthrough';
-                return (
-                  <button
-                    key={step.labelEn}
-                    type="button"
-                    onClick={() => {
-                      setViewMode('walkthrough');
-                      setStepIdx(i);
-                      setPlaying(false);
-                    }}
-                    className={`text-left px-2.5 py-2 rounded border transition-colors cursor-pointer ${
-                      isCurrent
-                        ? 'bg-brand-maroon border-brand-maroon text-white'
-                        : 'bg-stone-900 border-stone-800 text-stone-400 hover:text-stone-200 hover:border-stone-700'
-                    }`}
-                  >
-                    <span className="block text-[11px] font-semibold truncate">
-                      {isBn ? step.labelBn : step.labelEn}
-                    </span>
-                  </button>
-                );
-              })}
+            {/* Clean Progress Segments */}
+            <div className="grid grid-cols-4 gap-1.5" aria-hidden="true">
+              {activeVideo.steps.map((step, i) => (
+                <div
+                  key={step.labelEn}
+                  className={`h-1 rounded-full transition-colors ${
+                    i === stepIdx && viewMode === 'walkthrough'
+                      ? 'bg-brand-maroon'
+                      : i < stepIdx && viewMode === 'walkthrough'
+                        ? 'bg-stone-500'
+                        : 'bg-stone-800'
+                  }`}
+                />
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Right Info & Action Column */}
-        <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between bg-white dark:bg-stone-900 border-t lg:border-t-0 lg:border-l border-stone-200 dark:border-stone-800">
+        {/* Right Info & Single Interactive Workflow Column */}
+        <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between">
           <div>
             <p className="section-kicker">
               {isBn ? activeVideo.categoryLabelBn : activeVideo.categoryLabelEn} · {activeVideo.modelCode}
@@ -283,18 +260,18 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
             <h3 className="mt-2 font-display text-2xl sm:text-3xl font-semibold text-stone-900 dark:text-white tracking-tight leading-tight">
               {isBn ? activeVideo.titleBn : activeVideo.titleEn}
             </h3>
-            <p className="mt-3 text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed">
+            <p className="mt-2.5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
               {isBn ? activeVideo.subtitleBn : activeVideo.subtitleEn}
             </p>
 
-            {/* Step Breakdown List */}
-            <div className="mt-6 space-y-2.5">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">
+            {/* Clean Hairline-Separated Interactive Step List */}
+            <div className="mt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500 dark:text-stone-400 mb-2">
                 {isBn ? 'কাজের ধাপসমূহ' : 'Operation workflow'}
               </p>
-              <ol className="space-y-2">
+              <ol className="divide-y divide-stone-200 dark:divide-stone-800 border-y border-stone-200 dark:border-stone-800">
                 {activeVideo.steps.map((step, idx) => {
-                  const active = idx === stepIdx;
+                  const active = idx === stepIdx && viewMode === 'walkthrough';
                   return (
                     <li key={step.labelEn}>
                       <button
@@ -304,18 +281,31 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
                           setStepIdx(idx);
                           setPlaying(false);
                         }}
-                        className={`w-full text-left px-3.5 py-2.5 rounded-md border transition-colors cursor-pointer ${
+                        className={`w-full text-left px-3 py-2.5 flex items-start gap-3 transition-colors cursor-pointer ${
                           active
-                            ? 'bg-brand-paper dark:bg-stone-800 border-brand-maroon text-stone-900 dark:text-white'
-                            : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-stone-300'
+                            ? 'bg-brand-paper dark:bg-stone-800/70'
+                            : 'hover:bg-stone-50 dark:hover:bg-stone-800/30'
                         }`}
                       >
-                        <p className="text-xs font-semibold text-stone-900 dark:text-white">
-                          {isBn ? step.labelBn : step.labelEn}
-                        </p>
-                        <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5 leading-snug">
-                          {isBn ? step.detailBn : step.detailEn}
-                        </p>
+                        <span
+                          className={`font-display text-xs font-semibold tabular-nums mt-0.5 shrink-0 ${
+                            active ? 'text-brand-ink' : 'text-stone-400'
+                          }`}
+                        >
+                          {String(idx + 1).padStart(2, '0')}
+                        </span>
+                        <div className="min-w-0">
+                          <p
+                            className={`text-xs font-semibold leading-snug ${
+                              active ? 'text-brand-ink' : 'text-stone-900 dark:text-white'
+                            }`}
+                          >
+                            {isBn ? step.labelBn : step.labelEn}
+                          </p>
+                          <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5 leading-snug">
+                            {isBn ? step.detailBn : step.detailEn}
+                          </p>
+                        </div>
                       </button>
                     </li>
                   );
@@ -324,45 +314,49 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
             </div>
           </div>
 
-          {/* Stable Action Row */}
-          <div className="mt-6 pt-5 border-t border-stone-200 dark:border-stone-800 flex flex-wrap gap-2.5">
-            <Link
-              href={`/contact?product=${encodeURIComponent(isBn ? activeVideo.titleBn : activeVideo.titleEn)}`}
-              className="btn-primary flex-1 text-[13px] whitespace-nowrap shrink-0"
-            >
-              <MessageSquare className="w-4 h-4" />
-              {isBn ? 'কোটেশন চান' : 'Request Quote'}
-            </Link>
-            <Link
-              href={`/products/${activeVideo.productSlug}`}
-              className="btn-secondary text-[13px] whitespace-nowrap shrink-0"
-            >
-              {isBn ? 'স্পেসিফিকেশন' : 'Machine Specs'}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <Link
-              href={`/brochure?page=${activeVideo.brochurePage}`}
-              className="btn-secondary text-[13px] whitespace-nowrap shrink-0"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              {isBn ? `পৃষ্ঠা ${activeVideo.brochurePage}` : `Sheet p.${activeVideo.brochurePage}`}
-            </Link>
-            <a
-              href={configuredYoutubeUrl || channelUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-ghost text-[13px] whitespace-nowrap shrink-0"
-            >
-              <Youtube className="w-4 h-4 text-red-600" />
-              YouTube
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+          {/* Restrained Action Bar */}
+          <div className="mt-6 space-y-2.5">
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <Link
+                href={`/contact?product=${encodeURIComponent(isBn ? activeVideo.titleBn : activeVideo.titleEn)}`}
+                className="btn-primary flex-1 text-[13px] whitespace-nowrap"
+              >
+                <MessageSquare className="w-4 h-4" />
+                {isBn ? 'কোটেশন চান' : 'Request Quote'}
+              </Link>
+              <Link
+                href={`/products/${activeVideo.productSlug}`}
+                className="btn-secondary text-[13px] whitespace-nowrap"
+              >
+                {isBn ? 'স্পেসিফিকেশন' : 'Machine Specs'}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="flex items-center justify-between text-xs pt-1">
+              <Link
+                href={`/brochure?page=${activeVideo.brochurePage}`}
+                className="inline-flex items-center gap-1.5 font-semibold text-stone-600 dark:text-stone-400 hover:text-brand-ink transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                {isBn ? `ক্যাটালগ শিট p.${activeVideo.brochurePage}` : `Catalog Sheet p.${activeVideo.brochurePage}`}
+              </Link>
+              <a
+                href={configuredYoutubeUrl || channelUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-semibold text-stone-600 dark:text-stone-400 hover:text-brand-ink transition-colors"
+              >
+                <Youtube className="w-3.5 h-3.5 text-red-600" />
+                {isBn ? 'ইউটিউবে দেখুন' : 'Watch on YouTube'}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Selector Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Hairline-Divided Machine Reel Selector Bar */}
+      <div className="surface-card overflow-hidden grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800">
         {visibleCards.map((item) => {
           const isSelected = item.id === activeVideo.id;
           return (
@@ -373,33 +367,30 @@ export default function VideoShowcaseSection({ compact = false }: VideoShowcaseS
                 setSelectedId(item.id);
                 setPlaying(false);
               }}
-              className={`surface-card text-left p-3.5 flex items-center gap-3.5 transition-all cursor-pointer ${
+              className={`text-left p-4 flex items-center gap-3.5 transition-colors cursor-pointer ${
                 isSelected
-                  ? 'border-brand-maroon ring-1 ring-brand-maroon bg-white dark:bg-stone-900'
-                  : 'hover:border-brand-maroon/60'
+                  ? 'bg-brand-paper/80 dark:bg-stone-800/70 border-b-2 sm:border-b-0 sm:border-t-2 border-brand-maroon dark:border-brand-ink'
+                  : 'hover:bg-stone-50 dark:hover:bg-stone-800/40'
               }`}
             >
-              <div className="relative w-24 h-20 rounded bg-white border border-stone-200 dark:border-stone-700 shrink-0 overflow-hidden">
+              <div className="relative w-20 h-16 rounded bg-white border border-stone-200 dark:border-stone-700 shrink-0 overflow-hidden">
                 <Image
                   src={item.posterImage}
                   alt={isBn ? item.titleBn : item.titleEn}
                   fill
                   className="object-contain p-1.5"
-                  sizes="96px"
+                  sizes="80px"
                 />
-                <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-stone-950/85 text-white text-[10px] font-medium rounded tabular-nums">
-                  {item.duration}
-                </span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-maroon truncate">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-brand-ink truncate">
                   {isBn ? item.categoryLabelBn : item.categoryLabelEn}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-stone-900 dark:text-white line-clamp-2 leading-snug">
+                <p className="mt-0.5 text-sm font-semibold text-stone-900 dark:text-white line-clamp-1">
                   {isBn ? item.titleBn : item.titleEn}
                 </p>
-                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400 truncate tabular-nums">
-                  {item.capacityHighlight}
+                <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400 truncate tabular-nums">
+                  {item.capacityHighlight} · {item.duration}
                 </p>
               </div>
             </button>

@@ -6,29 +6,31 @@
   :root {
     --brand-maroon: #6d1a2d;
     --brand-maroon-rgb: 109 26 45;
-    --brand-maroon-hover: #551624;
-    --brand-maroon-hover-rgb: 85 22 36;
-    --brand-maroon-mid: #8b2e2e;
-    --brand-maroon-mid-rgb: 139 46 46;
-    --brand-paper: #f7f4ef;
-    --brand-paper-rgb: 247 244 239;
-    --brand-purple: #6b21a8;
-    --brand-purple-rgb: 107 33 168;
+    --brand-maroon-hover: #541221;
+    --brand-maroon-hover-rgb: 84 18 33;
+    --brand-maroon-mid: #8c2940;
+    --brand-maroon-mid-rgb: 140 41 64;
+    --brand-ink-rgb: var(--brand-maroon-rgb);
+    --brand-paper: #f6f6f4;
+    --brand-paper-rgb: 246 246 244;
+    --brand-purple: #334155;
+    --brand-purple-rgb: 51 65 85;
     --brand-button-text: #ffffff;
-    --background: #f7f4ef;
-    --foreground: #1c1917;
+    --background: #f6f6f4;
+    --foreground: #18181b;
     --surface: #ffffff;
-    --border: #e7e5e4;
-    --text-muted: #57534e;
+    --border: #e4e4e2;
+    --text-muted: #52525b;
     --radius-ui: 6px;
   }
 
   .dark {
-    --background: #1c1917;
+    --brand-ink-rgb: 232 132 154;
+    --background: #0f0f10;
     --foreground: #fafaf9;
-    --surface: #292524;
-    --border: #44403c;
-    --text-muted: #a8a29e;
+    --surface: #18181b;
+    --border: #27272a;
+    --text-muted: #a1a1aa;
   }
 
   html {
@@ -38,6 +40,7 @@
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color: var(--foreground);
   }
 
   *:focus-visible {
@@ -109,32 +112,32 @@
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5
-      border border-stone-300 bg-white text-stone-900 text-sm font-semibold rounded-md
-      hover:border-brand-maroon hover:text-brand-maroon transition-colors duration-200
-      cursor-pointer touch-manipulation dark:bg-stone-900 dark:border-stone-700 dark:text-stone-100;
+      border border-stone-300 bg-[var(--surface)] text-[var(--foreground)] text-sm font-semibold rounded-md
+      hover:border-brand-maroon hover:text-brand-ink transition-colors duration-200
+      cursor-pointer touch-manipulation dark:bg-stone-900 dark:border-stone-700 dark:text-stone-100 dark:hover:border-brand-ink;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2
-      text-sm font-semibold text-stone-700 hover:text-brand-maroon
+      text-sm font-semibold text-stone-700 hover:text-brand-ink
       transition-colors duration-200 cursor-pointer dark:text-stone-300;
   }
 
   .section-kicker {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-maroon;
+    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-ink;
   }
 
   .page-title {
-    @apply font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-stone-900 dark:text-white leading-[1.12];
+    @apply font-display text-3xl sm:text-4xl lg:text-[2.75rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white leading-[1.1];
   }
 
   .section-lede {
-    @apply text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl;
+    @apply text-[var(--text-muted)] dark:text-stone-400 leading-relaxed max-w-2xl;
   }
 
   .filter-chip {
     @apply flex-shrink-0 min-h-[40px] px-4 py-2 rounded-md text-sm font-medium border border-stone-200 dark:border-stone-700
-      text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-900 hover:border-brand-maroon transition-colors duration-200 cursor-pointer;
+      text-stone-700 dark:text-stone-300 bg-[var(--surface)] dark:bg-stone-900 hover:border-brand-maroon dark:hover:border-brand-ink transition-colors duration-200 cursor-pointer;
   }
 
   .filter-chip-active {
@@ -142,12 +145,12 @@
   }
 
   .surface-card {
-    @apply bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md
+    @apply bg-[var(--surface)] dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md
       transition-[border-color,box-shadow] duration-200;
   }
 
   .surface-card-hover {
-    @apply hover:border-brand-maroon hover:shadow-[0_12px_40px_-24px_rgba(109,26,45,0.45)];
+    @apply hover:border-brand-maroon dark:hover:border-brand-ink hover:shadow-[0_12px_36px_-22px_rgba(109,26,45,0.38)];
   }
 
   .page-shell {
@@ -159,9 +162,9 @@
   }
 
   .input-field {
-    @apply w-full h-11 px-3.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700
-      rounded-md text-sm text-stone-900 dark:text-stone-100 placeholder:text-stone-400
-      focus:outline-none focus:ring-2 focus:ring-brand-maroon/25 focus:border-brand-maroon;
+    @apply w-full h-11 px-3.5 bg-[var(--surface)] dark:bg-stone-900 border border-stone-200 dark:border-stone-700
+      rounded-md text-sm text-[var(--foreground)] dark:text-stone-100 placeholder:text-stone-400
+      focus:outline-none focus:ring-2 focus:ring-brand-maroon/25 focus:border-brand-maroon dark:focus:border-brand-ink;
   }
 
   .field-label {

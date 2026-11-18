@@ -17,7 +17,7 @@ export function LanguageToggle() {
         aria-pressed={locale === 'en'}
         className={`px-2.5 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
           locale === 'en'
-            ? 'bg-white dark:bg-stone-800 text-brand-maroon shadow-sm'
+            ? 'bg-white dark:bg-stone-800 text-brand-ink shadow-sm'
             : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
         }`}
       >
@@ -29,7 +29,7 @@ export function LanguageToggle() {
         aria-pressed={locale === 'bn'}
         className={`px-2.5 py-1.5 text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap ${
           locale === 'bn'
-            ? 'bg-white dark:bg-stone-800 text-brand-maroon shadow-sm'
+            ? 'bg-white dark:bg-stone-800 text-brand-ink shadow-sm'
             : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
         }`}
       >

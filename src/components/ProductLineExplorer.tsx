@@ -94,7 +94,7 @@ export default function ProductLineExplorer() {
 
   return (
     <div className="space-y-4">
-      {/* 16-Line Full-Visibility Selector Grid (Zero Scrollbar) */}
+      {/* 16-Line Hairline Selector */}
       <div
         role="tablist"
         aria-label={isBn ? '১৬টি মেশিনারি লাইন' : '16 Machinery Product Lines'}
@@ -113,12 +113,12 @@ export default function ProductLineExplorer() {
               className={`min-h-[44px] px-3.5 py-2.5 rounded-md border text-left flex items-center gap-2.5 transition-colors duration-150 cursor-pointer shrink-0 whitespace-nowrap lg:whitespace-normal ${
                 selected
                   ? 'bg-brand-maroon text-white border-brand-maroon shadow-sm'
-                  : 'bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-800 hover:border-brand-maroon/70 hover:text-brand-maroon dark:hover:text-white'
+                  : 'bg-[var(--surface)] dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-brand-maroon/70 dark:hover:border-brand-ink hover:text-stone-900 dark:hover:text-white'
               }`}
             >
               <span
                 className={`font-display text-xs font-semibold tracking-wider tabular-nums shrink-0 ${
-                  selected ? 'text-white/80' : 'text-brand-maroon'
+                  selected ? 'text-white/80' : 'text-brand-ink'
                 }`}
               >
                 {seq}
@@ -131,10 +131,10 @@ export default function ProductLineExplorer() {
         })}
       </div>
 
-      {/* High-Attention Line Spotlight Stage */}
-      <div className="surface-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+      {/* Unified Architectural Line Spotlight Stage (Zero Nested Card Borders) */}
+      <div className="surface-card overflow-hidden grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-stone-200 dark:divide-stone-800">
         {/* Left Editorial Summary & Actions */}
-        <div className="lg:col-span-4 p-6 sm:p-8 flex flex-col justify-between bg-white dark:bg-stone-900 border-b lg:border-b-0 lg:border-r border-stone-200 dark:border-stone-800">
+        <div className="lg:col-span-4 p-6 sm:p-8 flex flex-col justify-between">
           <div>
             <p className="section-kicker tabular-nums">
               {isBn ? `লাইন ${lineNumber} / ১৬` : `Line ${lineNumber} of ${BROCHURE_LINES.length}`}
@@ -147,7 +147,7 @@ export default function ProductLineExplorer() {
             </p>
 
             {/* Unboxed Clean Packables Spec */}
-            <div className="mt-5 pt-4 border-t border-stone-100 dark:border-stone-800 space-y-2 text-xs text-stone-600 dark:text-stone-400">
+            <div className="mt-5 pt-4 border-t border-stone-200 dark:border-stone-800 space-y-2 text-xs text-stone-600 dark:text-stone-400">
               <p>
                 <span className="font-semibold text-stone-900 dark:text-stone-200">
                   {isBn ? 'উপযোগী পণ্য: ' : 'Applications: '}
@@ -155,7 +155,7 @@ export default function ProductLineExplorer() {
                 {line.packables.join(' · ')}
               </p>
               <p className="inline-flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-brand-maroon shrink-0" aria-hidden="true" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-brand-ink shrink-0" aria-hidden="true" />
                 {matchedMachines.length > 0
                   ? isBn
                     ? `${matchedMachines.length}টি প্রস্তুত মেশিন কনফিগারেশন`
@@ -198,10 +198,10 @@ export default function ProductLineExplorer() {
           </div>
         </div>
 
-        {/* Right Studio Machinery Showcase (Uncropped & High-Focus) */}
-        <div className="lg:col-span-8 p-5 sm:p-7 bg-brand-paper/60 dark:bg-stone-950/60 flex flex-col justify-between gap-4">
+        {/* Right Studio Machinery Showcase (Clean Hairline Grid — Uncropped) */}
+        <div className="lg:col-span-8 flex flex-col justify-between">
           {spotlightMachines.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800 flex-1">
               {spotlightMachines.map((machine) => {
                 const imgSrc = parseFirstImage(machine);
                 const specText = parseKeySpec(machine, isBn);
@@ -210,25 +210,25 @@ export default function ProductLineExplorer() {
                   <Link
                     key={machine.id}
                     href={`/products/${machine.slug}`}
-                    className="surface-card surface-card-hover overflow-hidden flex flex-col group"
+                    className="flex flex-col group hover:bg-stone-50/80 dark:hover:bg-stone-800/40 transition-colors"
                   >
-                    <div className="relative aspect-[4/3] bg-white border-b border-stone-200 dark:border-stone-800 overflow-hidden">
+                    <div className="relative aspect-[4/3] bg-white border-b border-stone-100 dark:border-stone-800 overflow-hidden">
                       <Image
                         src={imgSrc}
                         alt={mName}
                         fill
-                        className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.04]"
-                        sizes="(max-width: 640px) 100vw, 240px"
+                        className="object-contain p-4 transition-transform duration-300 group-hover:scale-[1.04]"
+                        sizes="(max-width: 640px) 100vw, 260px"
                       />
                     </div>
-                    <div className="p-4 flex-1 flex flex-col justify-between gap-2">
+                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-2">
                       <div>
                         {machine.modelCode && (
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-maroon">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-ink">
                             {machine.modelCode}
                           </p>
                         )}
-                        <h4 className="mt-1 text-sm font-semibold text-stone-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-maroon transition-colors">
+                        <h4 className="mt-1 text-sm font-semibold text-stone-900 dark:text-white line-clamp-2 leading-snug group-hover:text-brand-ink transition-colors">
                           {mName}
                         </h4>
                       </div>
@@ -243,20 +243,20 @@ export default function ProductLineExplorer() {
               })}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 flex-1 items-stretch">
-              <div className="sm:col-span-7 surface-card overflow-hidden flex flex-col">
-                <div className="relative flex-1 min-h-[220px] bg-white border-b border-stone-200 dark:border-stone-800">
+            <div className="grid grid-cols-1 sm:grid-cols-12 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800 flex-1">
+              <div className="sm:col-span-7 flex flex-col">
+                <div className="relative flex-1 min-h-[240px] bg-white border-b border-stone-100 dark:border-stone-800">
                   <Image
                     src={fallbackStudioImage}
                     alt={isBn ? line.shortBn : line.shortEn}
                     fill
-                    className="object-contain p-4"
+                    className="object-contain p-5"
                     sizes="(max-width: 640px) 100vw, 400px"
                   />
                 </div>
-                <div className="p-4 flex items-center justify-between gap-2">
+                <div className="p-4 sm:p-5 flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-maroon">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-ink">
                       {isBn ? 'টার্নকি প্রোডাকশন লাইন' : 'Turnkey Processing Line'}
                     </p>
                     <p className="text-sm font-semibold text-stone-900 dark:text-white">
@@ -272,18 +272,18 @@ export default function ProductLineExplorer() {
 
               <Link
                 href={`/brochure?line=${line.id}&page=${line.startPage}`}
-                className="sm:col-span-5 surface-card surface-card-hover overflow-hidden flex flex-col group"
+                className="sm:col-span-5 flex flex-col group hover:bg-stone-50/80 dark:hover:bg-stone-800/40 transition-colors"
               >
-                <div className="relative flex-1 min-h-[220px] bg-white border-b border-stone-200 dark:border-stone-800">
+                <div className="relative flex-1 min-h-[240px] bg-white border-b border-stone-100 dark:border-stone-800">
                   <Image
                     src={brochurePageSrc(line.startPage)}
                     alt={`${isBn ? line.shortBn : line.shortEn} — Catalog page ${line.startPage}`}
                     fill
-                    className="object-contain p-2"
+                    className="object-contain p-3"
                     sizes="(max-width: 640px) 100vw, 260px"
                   />
                 </div>
-                <div className="p-4 flex items-center justify-between text-xs font-semibold text-brand-maroon">
+                <div className="p-4 sm:p-5 flex items-center justify-between text-xs font-semibold text-brand-ink">
                   <span className="tabular-nums">
                     {isBn ? `অফিসিয়াল শিট p.${line.startPage}` : `Catalog Sheet p.${line.startPage}`}
                   </span>
@@ -293,21 +293,21 @@ export default function ProductLineExplorer() {
             </div>
           )}
 
-          {/* Compact Uncropped Printed Brochure Sheet Strip */}
-          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Clean Hairline-Separated Catalog Footer Bar */}
+          <div className="border-t border-stone-200 dark:border-stone-800 bg-stone-50/70 dark:bg-stone-950/60 px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="relative w-10 h-12 rounded border border-stone-200 dark:border-stone-700 bg-white overflow-hidden shrink-0">
+              <div className="relative w-9 h-11 rounded border border-stone-200 dark:border-stone-700 bg-white overflow-hidden shrink-0">
                 <Image
                   src={brochurePageSrc(line.startPage)}
                   alt={`${isBn ? 'পৃষ্ঠা' : 'Page'} ${line.startPage}`}
                   fill
                   className="object-contain p-0.5"
-                  sizes="40px"
+                  sizes="36px"
                 />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-stone-900 dark:text-white flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-brand-maroon shrink-0" aria-hidden="true" />
+                  <Layers className="w-3.5 h-3.5 text-brand-ink shrink-0" aria-hidden="true" />
                   <span className="truncate">
                     {isBn
                       ? `১২২-পৃষ্ঠার অফিশিয়াল ক্যাটালগ শিট: পৃষ্ঠা ${line.pages.join(', ')}`
@@ -317,13 +317,13 @@ export default function ProductLineExplorer() {
                 <p className="text-xs text-stone-500 dark:text-stone-400 truncate mt-0.5">
                   {isBn
                     ? 'মূল প্রিন্টেড শিট দেখতে পাশের লিংকে ক্লিক করুন'
-                    : 'Inspect the original printed spec sheet side-by-side in our catalog viewer'}
+                    : 'Inspect the original printed spec sheet in our digital catalog viewer'}
                 </p>
               </div>
             </div>
             <Link
               href={`/brochure?line=${line.id}&page=${line.startPage}`}
-              className="text-xs font-semibold text-brand-maroon hover:underline whitespace-nowrap shrink-0 inline-flex items-center gap-1"
+              className="text-xs font-semibold text-brand-ink hover:underline whitespace-nowrap shrink-0 inline-flex items-center gap-1"
             >
               {isBn ? `পৃষ্ঠা ${line.startPage} খুলুন` : `Open p.${line.startPage}`}
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />

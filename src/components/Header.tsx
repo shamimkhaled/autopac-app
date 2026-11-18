@@ -114,10 +114,10 @@ export default function Header() {
                     onClick={() => setLinesOpen((o) => !o)}
                     aria-expanded={linesOpen}
                     aria-haspopup="true"
-                    className={`inline-flex items-center gap-1 text-[13px] font-semibold transition-colors duration-200 cursor-pointer whitespace-nowrap shrink-0 py-2 ${
+                    className={`inline-flex items-center gap-1 text-[13px] font-semibold transition-colors duration-200 cursor-pointer whitespace-nowrap shrink-0 py-2 border-b-2 ${
                       isActive('/products') || linesOpen
-                        ? 'text-brand-maroon'
-                        : 'text-stone-700 dark:text-stone-300 hover:text-brand-maroon'
+                        ? 'text-brand-ink border-brand-ink'
+                        : 'text-stone-700 dark:text-stone-300 border-transparent hover:text-brand-ink'
                     }`}
                   >
                     {link.label}
@@ -133,7 +133,7 @@ export default function Header() {
                         {/* Left Column: Main Categories & Quick Links */}
                         <div className="col-span-4 border-r border-stone-200 dark:border-stone-800 pr-4 flex flex-col justify-between">
                           <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-maroon mb-2.5">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-ink mb-2.5">
                               {isBn ? 'বিভাগসমূহ' : 'Categories'}
                             </p>
                             <ul className="space-y-1">
@@ -141,9 +141,9 @@ export default function Header() {
                                 <Link
                                   href="/products"
                                   onClick={() => setLinesOpen(false)}
-                                  className="flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold text-stone-900 dark:text-white bg-brand-paper dark:bg-stone-800 hover:text-brand-maroon"
+                                  className="flex items-center gap-2 px-2.5 py-2 rounded-md text-xs font-semibold text-stone-900 dark:text-white bg-brand-paper dark:bg-stone-800 hover:text-brand-ink"
                                 >
-                                  <Package className="w-3.5 h-3.5 text-brand-maroon shrink-0" />
+                                  <Package className="w-3.5 h-3.5 text-brand-ink shrink-0" />
                                   {isBn ? 'সব মেশিনারি দেখুন' : 'All Machinery'}
                                 </Link>
                               </li>
@@ -152,7 +152,7 @@ export default function Header() {
                                   <Link
                                     href={`/products?category=${cat.slug}`}
                                     onClick={() => setLinesOpen(false)}
-                                    className="block px-2.5 py-1.5 rounded-md text-xs font-medium text-stone-700 dark:text-stone-300 hover:bg-brand-paper dark:hover:bg-stone-800 hover:text-brand-maroon truncate"
+                                    className="block px-2.5 py-1.5 rounded-md text-xs font-medium text-stone-700 dark:text-stone-300 hover:bg-brand-paper dark:hover:bg-stone-800 hover:text-brand-ink truncate"
                                   >
                                     {isBn ? cat.nameBn : cat.nameEn}
                                   </Link>
@@ -165,17 +165,17 @@ export default function Header() {
                             <Link
                               href="/brochure"
                               onClick={() => setLinesOpen(false)}
-                              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-brand-maroon"
+                              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-brand-ink"
                             >
-                              <BookOpen className="w-3.5 h-3.5 text-brand-maroon" />
+                              <BookOpen className="w-3.5 h-3.5 text-brand-ink" />
                               {isBn ? '১২২-পৃষ্ঠার ক্যাটালগ' : '122-Page Catalog'}
                             </Link>
                             <Link
                               href="/gallery?tab=videos"
                               onClick={() => setLinesOpen(false)}
-                              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-brand-maroon"
+                              className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-stone-600 dark:text-stone-400 hover:text-brand-ink"
                             >
-                              <Film className="w-3.5 h-3.5 text-brand-maroon" />
+                              <Film className="w-3.5 h-3.5 text-brand-ink" />
                               {isBn ? 'মেশিন ভিডিও শোকেস' : 'Video Showcase'}
                             </Link>
                           </div>
@@ -184,13 +184,13 @@ export default function Header() {
                         {/* Right Column: 16 Numbered Brochure Product Lines */}
                         <div className="col-span-8">
                           <div className="flex items-center justify-between mb-2.5">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-maroon">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-ink">
                               {isBn ? '১৬টি প্রোডাক্ট লাইন' : '16 Machinery Lines'}
                             </p>
                             <Link
                               href="/contact"
                               onClick={() => setLinesOpen(false)}
-                              className="text-xs font-semibold text-stone-500 hover:text-brand-maroon"
+                              className="text-xs font-semibold text-stone-500 hover:text-brand-ink"
                             >
                               {isBn ? 'কোটেশন চান →' : 'Request Quote →'}
                             </Link>
@@ -201,9 +201,9 @@ export default function Header() {
                                 <Link
                                   href={lineHref(line.id, catalogMap)}
                                   onClick={() => setLinesOpen(false)}
-                                  className="flex items-baseline gap-2 px-2 py-1.5 rounded-md text-xs text-stone-700 dark:text-stone-300 hover:bg-brand-paper dark:hover:bg-stone-800 hover:text-brand-maroon transition-colors"
+                                  className="flex items-baseline gap-2 px-2 py-1.5 rounded-md text-xs text-stone-700 dark:text-stone-300 hover:bg-brand-paper dark:hover:bg-stone-800 hover:text-brand-ink transition-colors"
                                 >
-                                  <span className="font-display text-[11px] font-semibold text-brand-maroon w-5 shrink-0 tabular-nums">
+                                  <span className="font-display text-[11px] font-semibold text-brand-ink w-5 shrink-0 tabular-nums">
                                     {line.number}
                                   </span>
                                   <span className="truncate">{isBn ? line.shortBn : line.shortEn}</span>
@@ -221,10 +221,10 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   aria-current={isActive(link.href) ? 'page' : undefined}
-                  className={`text-[13px] font-semibold transition-colors duration-200 whitespace-nowrap shrink-0 py-2 ${
+                  className={`text-[13px] font-semibold transition-colors duration-200 whitespace-nowrap shrink-0 py-2 border-b-2 ${
                     isActive(link.href)
-                      ? 'text-brand-maroon'
-                      : 'text-stone-700 dark:text-stone-300 hover:text-brand-maroon'
+                      ? 'text-brand-ink border-brand-ink'
+                      : 'text-stone-700 dark:text-stone-300 border-transparent hover:text-brand-ink'
                   }`}
                 >
                   {link.label}
@@ -330,7 +330,7 @@ export default function Header() {
                             <Link
                               href="/products"
                               onClick={closeMenu}
-                              className="block px-4 py-2.5 text-sm font-semibold text-brand-maroon"
+                              className="block px-4 py-2.5 text-sm font-semibold text-brand-ink"
                             >
                               {isBn ? 'সব মেশিনারি' : 'All machinery'}
                             </Link>
@@ -342,7 +342,7 @@ export default function Header() {
                                 onClick={closeMenu}
                                 className="flex items-baseline gap-2 px-4 py-2 text-sm text-stone-600 dark:text-stone-400"
                               >
-                                <span className="font-display text-[11px] text-brand-maroon w-5 tabular-nums">
+                                <span className="font-display text-[11px] text-brand-ink w-5 tabular-nums">
                                   {line.number}
                                 </span>
                                 {isBn ? line.shortBn : line.shortEn}
